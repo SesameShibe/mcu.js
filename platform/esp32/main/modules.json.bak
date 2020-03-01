@@ -1,0 +1,244 @@
+{
+    "os": {
+        "function": {
+            "sleepMs": [
+                "void",
+                "u32"
+            ],
+            "getTickCountMs": [
+                "u32"
+            ],
+            "getFreeMem": [
+                "u32"
+            ],
+            "getMinFreeMem": [
+                "u32"
+            ]
+        }
+    },
+    "spiffs": {
+        "function": {
+            "mount": [
+                "void"
+            ]
+        }
+    },
+    "gpio": {
+        "function": {
+            "write": [
+                "void",
+                "i32",
+                "i32"
+            ],
+            "pinMode": [
+                "void",
+                "i32",
+                "i32"
+            ]
+        },
+        "const": {
+            "GPIO_MODE_OUTPUT": "GPIO_MODE_OUTPUT",
+            "GPIO_MODE_INPUT": "GPIO_MODE_INPUT"
+        }
+    },
+    "uart": {
+        "function": {
+            "initPort": [
+                "bool",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "readByte": [
+                "i32",
+                "i32"
+            ],
+            "writeString": [
+                "void",
+                "i32",
+                "str"
+            ],
+            "writeByte": [
+                "void",
+                "i32",
+                "i32"
+            ],
+            "availableBytes": [
+                "i32",
+                "i32"
+            ]
+        },
+        "const": {
+            "UART_PIN_NO_CHANGE": "-1"
+        }
+    },
+    "wifi": {
+        "function": {
+            "on": [
+                "void"
+            ],
+            "off": [
+                "void"
+            ],
+            "setMode": [
+                "void",
+                "u32"
+            ],
+            "getMode": [
+                "u32"
+            ],
+            "staConnect": [
+                "void",
+                "str",
+                "str"
+            ],
+            "staDisconnect": [
+                "void"
+            ],
+            "apStart": [
+                "void",
+                "str",
+                "str"
+            ],
+            "apStop": [
+                "void"
+            ],
+            "setStaHostname": [
+                "void",
+                "str"
+            ]
+        },
+        "const": {
+            "OK": "ESP_OK",
+            "MODE_NULL": "WIFI_MODE_NULL",
+            "MODE_STA": "WIFI_MODE_STA",
+            "MODE_AP": "WIFI_MODE_AP",
+            "MODE_APSTA": "WIFI_MODE_APSTA",
+            "AUTH_OPEN": "WIFI_AUTH_OPEN",
+            "AUTH_WEP": "WIFI_AUTH_WEP",
+            "AUTH_WPA_PSK": "WIFI_AUTH_WPA_PSK",
+            "AUTH_WPA2_PSK": "WIFI_AUTH_WPA2_PSK",
+            "AUTH_WPA_WPA2_PSK": "WIFI_AUTH_WPA_WPA2_PSK",
+            "AUTH_WPA2_ENTERPRISE": "WIFI_AUTH_WPA2_ENTERPRISE",
+            "AUTH_MAX": "WIFI_AUTH_MAX",
+            "ERR_NO_MEM": "ESP_ERR_NO_MEM",
+            "ERR_CONN": "ESP_ERR_WIFI_CONN",
+            "ERR_NOT_INIT": "ESP_ERR_WIFI_NOT_INIT",
+            "ERR_INVALID_MODE": "ESP_ERR_WIFI_MODE",
+            "ERR_INVALID_SSID": "ESP_ERR_WIFI_SSID",
+            "ERR_INVALID_PASSWORD": "ESP_ERR_WIFI_PASSWORD"
+        }
+    },
+    "spi": {
+        "function": {
+            "init": [
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "write": [
+                "i32",
+                "i32",
+                "buf", 
+                "i32"
+            ],
+            "xfer": [
+                "i32",
+                "i32",
+                "buf",
+                "i32",
+                "i32"
+            ],
+            "writeBits": [
+                "i32",
+                "i32",
+                "u32",
+                "i32"
+            ]
+        }
+    },
+    "socket": {
+        "function": {
+            "close": [
+                "i32",
+                "i32"
+            ],
+            "socket": [
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "connect": [
+                "i32",
+                "i32",
+                "str",
+                "i32"
+            ],
+            "getWorkBuffer": [
+                "buf"
+            ],
+            "recv": [
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "sendStr": [
+                "i32",
+                "i32",
+                "str",
+                "i32",
+                "u32"
+            ],
+            "send": [
+                "i32",
+                "i32",
+                "buf",
+                "i32",
+                "u32",
+                "u32"
+            ],
+            "shutdown": [
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "bind": [
+                "i32",
+                "i32",
+                "str",
+                "i32"
+            ],
+            "listen": [
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "accept": [
+                "i32",
+                "i32"
+            ],
+            "setNonblocking": [
+                "i32",
+                "i32"
+            ],
+            "errno": [
+                "i32"
+            ]
+        },
+        "const": {
+            "SOCK_RAW": "3",
+            "SOCK_STREAM": "1",
+            "SOCK_DGRAM": "2",
+            "AF_INET": "2",
+            "F_GETFL": "3",
+            "F_SETFL": "4",
+            "O_NONBLOCK": "1"
+        }
+    }
+}
