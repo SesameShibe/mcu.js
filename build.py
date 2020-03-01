@@ -1,16 +1,18 @@
 #!/usr/bin/env python
+
+
 import sys
 import os
 import zipfile
-import urllib
+import requests
 import platform
 
 sys.path.append('py')
-import shell
 import gluecodegen
+import shell
 
 PLATFORMS = {
-    'esp32' : {
+    'esp32': {
         'toolchain': {
             'esp32-toolchain': {
                 'url-windows': 'https://dl.espressif.com/dl/esp32_win32_msys2_environment_and_toolchain-20181001.zip',
@@ -21,6 +23,12 @@ PLATFORMS = {
             'esp-idf': {
                 'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v3.3.1.zip',
                 'version': 'v3.3.1',
+            },
+            'esp32-arduino': {
+                'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
+                'version': '1.0.4',
+                'path': 'platform/esp32/components/arduino',
+                'patch': b'PK'
             }
         }
     }
@@ -28,8 +36,10 @@ PLATFORMS = {
 
 CURRENT_PLATFORM = 'esp32'
 
+
 def isWindows():
     return platform.system().lower() == 'windows'
+
 
 def tryMkdir(dir):
     try:
@@ -39,12 +49,12 @@ def tryMkdir(dir):
         return False
 
 
-def progressbar(blocknum, blocksize, totalsize):
+def progressbar(currentSize, totalsize):
     bar_length = 50
-    percent = 100.0 * blocknum * blocksize / totalsize
+    percent = 100.0 * currentSize / totalsize
     hashes = '#' * int(percent / 100 * bar_length)
     spaces = ' ' * (bar_length - len(hashes))
-    sys.stdout.write("\rDownloading: [%s] %.1f%%"%(hashes + spaces, percent))
+    sys.stdout.write("\rDownloading: [%s] %.1f%%" % (hashes + spaces, percent))
     sys.stdout.flush()
     if int(percent) >= 100:
         print("\n...Done!")
@@ -56,22 +66,38 @@ def downlaodAndUnpack(toolName, tool):
         url = tool['url']
     else:
         url = tool['url-' + platform.system().lower()]
-    
+
     tryMkdir('downloads')
-    print('Downloading %s, version %s, URL: %s' % (toolName, tool['version'], url))
+    print('Downloading %s, version %s, URL: %s' %
+          (toolName, tool['version'], url))
     downloadPath = 'downloads/%s-%s.zip' % (toolName, tool['version'])
-    page = urllib.urlopen(url)
-    file_size = int(page.info()['Content-Length'])
-    page.close()
+    resp = requests.get(
+        url, headers={'User-Agent': 'mcujs'}, allow_redirects=True, stream=True)
+    totalFileLen = int(resp.headers.get('Content-Length'))
+    print('fileLen: %d' % totalFileLen)
 
     # Avoid re-download
-    if os.path.isfile(downloadPath) and os.path.getsize(downloadPath) == file_size:
+    if os.path.isfile(downloadPath) and os.path.getsize(downloadPath) == totalFileLen:
         print('Using cached: %s' % downloadPath)
+        resp.close()
         pass
     else:
-        urllib.urlretrieve(url, downloadPath, progressbar)
-    
+        recvLen = 0
+        with open(downloadPath, 'wb') as f:
+            for data in resp.iter_content(chunk_size=100*1024):
+                f.write(data)
+                recvLen += len(data)
+                progressbar(recvLen, totalFileLen)
+
+    if tool.has_key('patch'):
+        with open(downloadPath, 'r+b') as f:
+            f.seek(0)
+            f.write(tool['patch'])
+
     unpackPath = 'toolchain/%s' % (toolName)
+    if tool.has_key('path'):
+        unpackPath = tool['path']
+
     print('Unpacking to %s' % unpackPath)
     if url.endswith('.zip'):
         with zipfile.ZipFile(downloadPath) as zipf:
@@ -126,7 +152,6 @@ def generate():
     gluecodegen.generate('platform/esp32/main/modules.json')
 
 
-
 def build():
     if isWindows():
         pass
@@ -134,7 +159,7 @@ def build():
         generate()
         os.system('cd platform/esp32 && make -j4 app-flash')
 
-    
+
 def startShellInEnvironment():
     if isWindows():
         cwd = os.getcwd()
@@ -159,8 +184,10 @@ Available commands:
 
 
 action = ''
-os.environ['PATH'] += ':' + os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin'
-os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + PLATFORMS['esp32']['toolchain']['esp-idf']['version']
+os.environ['PATH'] += ':' + \
+    os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin'
+os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + \
+    PLATFORMS['esp32']['toolchain']['esp-idf']['version']
 if len(sys.argv) >= 2:
     action = sys.argv[1]
 if action == 'prepare-toolchain':
