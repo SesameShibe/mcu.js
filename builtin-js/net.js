@@ -3,7 +3,7 @@ var net = {};
 
     var activeConn = {};
     var activeServer = {};
-    var workBuffer = socket.getWorkBuffer()
+    var workBuffer = socket.getWorkBuffer();
 
     function pollTask() {
         var fd;
@@ -12,16 +12,16 @@ var net = {};
             var conn = activeConn[fd];
             ret = socket.recv(fd, 0);
             if (ret == 0) {
-                conn.close()
+                conn.close();
             } else if (ret > 0) {
                 if (conn.onrecv) {
-                    conn.onrecv(conn, workBuffer, ret)
+                    conn.onrecv(conn, workBuffer, ret);
                 }
             }
             if (conn.sendTarget) {
-                var sendTarget = conn.sendTarget
+                var sendTarget = conn.sendTarget;
                 if (typeof sendTarget == 'string') {
-                    ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset)
+                    ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset);
                     if (ret == -2) {
                         // finished
                         conn.sendTarget = null;
@@ -32,7 +32,7 @@ var net = {};
                         conn.sendOffset += ret;
                     }
                 } else {
-                    ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
+                    ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength);
                     if (ret == -2) {
                         // finished
                         conn.sendTarget = null;
@@ -40,7 +40,7 @@ var net = {};
                             conn.onsent(conn);
                         }
                     } else if (ret > 0) {
-                        conn.sendOffset += ret
+                        conn.sendOffset += ret;
                     }
                 }
             }
@@ -65,13 +65,13 @@ var net = {};
     }
 
     Conn.prototype.send = function (bufOrString, len) {
-        len = len || bufOrString.length
+        len = len || bufOrString.length;
         if (this.sendTarget !== null) {
             throw 'Conn is already sending.'
         }
         this.sendTarget = bufOrString;
         this.sendOffset = 0;
-        this.sendLength = len
+        this.sendLength = len;
     }
 
     Conn.prototype.close = function () {
@@ -81,7 +81,7 @@ var net = {};
             //print('close ' + this.fd + ' ' + ret);
             delete activeConn[this.fd];
             if (this.onclose) {
-                this.onclose(this)
+                this.onclose(this);
             }
         }
     }
@@ -103,8 +103,8 @@ var net = {};
     net.tcpConnect = function (addr, port) {
         var fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
         socket.setNonblocking(fd);
-        var conn = new Conn(fd);
         socket.connect(fd, addr, port);
+        return new Conn(fd);
     }
 
     net.createTcpServer = function (port, conncb, backlog) {
