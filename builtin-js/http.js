@@ -107,7 +107,7 @@ var http = {};
     }; 
 */      
     http.parseUrl = function (url) {
-        var reg = /^(http):\/\/([\w.]+):?([\d]*)([\w\/-]*)\??([\w=&.]*)/;
+        var reg = /^(http):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*)\??(.*)/;
         var parsed = url.match(reg);
         return {
             'hostname': parsed[2],
