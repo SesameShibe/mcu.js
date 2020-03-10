@@ -122,23 +122,22 @@ var http = {};
         return str + headersToStr(opt.headers) + '\r\n';
     }
 
-    http.request = function (opt,callback) {
+    http.request = function (opt,ondata) {
         opt.method = opt.method || 'GET';
         opt.headers = opt.headers || {'Host': opt.url.hostname+':'+opt.url.port,'User-Agent': 'mcujs','Connection': 'close'};
 
         var conn = net.tcpConnect(socket.getHostByName(opt.url.hostname), opt.url.port);
-        
-        if (opt.method == 'GET') {
-            conn.send(genRequestHeader(opt));
-            conn.onrecv = function(conn, workBuffer, ret){
-                callback(workBuffer.subarray(0,ret));
-            }
+
+        conn.send(genRequestHeader(opt));
+        conn.onrecv = function(conn, workBuffer, ret){
+            ondata(workBuffer.subarray(0,ret));
         }
+        
         return conn;
     }
 
-    http.get = function (url,callback) {
+    http.get = function (url,ondata) {
         var opt = {'url': http.parseUrl(url)};
-        http.request(opt,callback);
+        http.request(opt,ondata);
     }
 })();
