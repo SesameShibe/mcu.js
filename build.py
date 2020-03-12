@@ -31,10 +31,24 @@ PLATFORMS = {
                 'patch': b'PK'
             }
         }
+    },
+    'k210': {
+        'toolchain': {
+            'k210-standalone-sdk': {
+                'url':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-standalone-sdk-0.5.6.zip',
+                'version':'0.5.6',
+            },
+            'riscv64-toolchain': {
+                'url-linux':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-ubuntu-amd64-8.2.0-20190213.tar.gz',
+                'url-darwin':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-osx-mojave-8.2.0-20190213.tar.gz',
+                'url-windows':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-win-amd64-8.2.0-20190213.zip',
+                'version':'20190213'
+            }
+        }
     }
 }
 
-CURRENT_PLATFORM = 'esp32'
+CURRENT_PLATFORM = ''
 
 
 def isWindows():
@@ -157,8 +171,14 @@ def build():
         pass
     else:
         generate()
-        os.system('cd platform/esp32 && make -j4 app-flash')
+        os.system('cd platform/esp32 && make -j4')
 
+def flash():
+    if isWindows():
+        pass
+    else:
+        build()
+        os.system('cd platform/esp32 && make flash')
 
 def startShellInEnvironment():
     if isWindows():
@@ -175,10 +195,17 @@ Usage: python build.py COMMAND [OPTIONS]
 
 Available commands:
     prepare-toolchain   Download and install toolchain.
+    env                 Start bash shell in build environment.
     generate            Generate files for build.
-    build               Build mcu.js.
-    env                 Start a shell in build environment.
-    shell               Start the debug shell.
+    build               Generate and build mcu.js.
+    flash               Generate, build and flash mcu.js.
+
+    shell               Start the javascript console.
+
+Available options:
+    --platform          Select target platform (esp32 or k210).
+    --port              Select the serial port for flash/shell. 
+
 
 """)
 
@@ -196,6 +223,8 @@ elif action == 'generate':
     generate()
 elif action == 'build':
     build()
+elif action == 'flash':
+    flash()
 elif action == 'env':
     startShellInEnvironment()
 elif action == 'shell':

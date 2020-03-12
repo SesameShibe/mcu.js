@@ -47,6 +47,7 @@ extern "C"
 #include "hal/uart.h"
 #include "hal/fs.h"
 #include "hal/spi.h"
+#include "hal/crypto.h"
 }
 
 #include "__generated/gen_js.h"

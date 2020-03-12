@@ -1,9 +1,37 @@
 var net = {};
+
 (function () {
 
     var activeConn = {};
     var activeServer = {};
     var workBuffer = socket.getWorkBuffer()
+
+    function handleSend(conn) {
+        var sendTarget = conn.sendTarget
+        if (typeof sendTarget == 'string') {
+            ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset)
+            if (ret == -2) {
+                // finished
+                conn.sendTarget = null;
+                if (conn.onsent) {
+                    conn.onsent(conn);
+                }
+            } else if (ret > 0) {
+                conn.sendOffset += ret;
+            }
+        } else {
+            ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
+            if (ret == -2) {
+                // finished
+                conn.sendTarget = null;
+                if (conn.onsent) {
+                    conn.onsent(conn);
+                }
+            } else if (ret > 0) {
+                conn.sendOffset += ret
+            }
+        }
+    }
 
     function pollTask() {
         var fd;
@@ -15,34 +43,11 @@ var net = {};
                 conn.close()
             } else if (ret > 0) {
                 if (conn.onrecv) {
-                    conn.onrecv(conn, workBuffer, ret)
+                    conn.onrecv(conn, workBuffer.subarray(0, ret))
                 }
             }
             if (conn.sendTarget) {
-                var sendTarget = conn.sendTarget
-                if (typeof sendTarget == 'string') {
-                    ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset)
-                    if (ret == -2) {
-                        // finished
-                        conn.sendTarget = null;
-                        if (conn.onsent) {
-                            conn.onsent(conn);
-                        }
-                    } else if (ret > 0) {
-                        conn.sendOffset += ret;
-                    }
-                } else {
-                    ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
-                    if (ret == -2) {
-                        // finished
-                        conn.sendTarget = null;
-                        if (conn.onsent) {
-                            conn.onsent(conn);
-                        }
-                    } else if (ret > 0) {
-                        conn.sendOffset += ret
-                    }
-                }
+                handleSend(conn)
             }
         }
         for (fd in activeServer) {
@@ -72,6 +77,7 @@ var net = {};
         this.sendTarget = bufOrString;
         this.sendOffset = 0;
         this.sendLength = len
+        handleSend(this)
     }
 
     Conn.prototype.close = function () {

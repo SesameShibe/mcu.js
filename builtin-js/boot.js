@@ -1,4 +1,5 @@
 const global = this;
+
 global.console = {
     log: print
 };
@@ -67,3 +68,4 @@ function boot() {
     mainLoop();
     delete global.boot
 }
+

@@ -1,4 +1,5 @@
 var http = {};
+
 (function () {
 
     var decoder = new TextDecoder();
@@ -64,24 +65,25 @@ var http = {};
         return net.createTcpServer(port,function (conn){
             var isReqline = true; //Assuming that the first packet contains the full request line
             var req, res; 
-            conn.onrecv = function (conn, workBuffer, ret) {
+            conn.onrecv = function (conn, buf) {
+                var recvLen = buf.length
                 var boundary = 0;
                 if (isReqline) {
-                    boundary = findBoundary(workBuffer,ret)+1;
+                    boundary = findBoundary(buf,recvLen)+1;
                     if (!boundary) {
                         print("PARSE ERROR!");
                         conn.send("HTTP/1.1 400 Bad Request\r\nconnection: close\r\n\r\n");
                         conn.close();
                         return;
                     }
-                    var reqline = decoder.decode(workBuffer.subarray(0,boundary-2)).split(' ');
+                    var reqline = decoder.decode(buf.subarray(0,boundary-2)).split(' ');
                     req = new Request(reqline[0].toUpperCase(), reqline[1]);
                     res = new Response(conn);
                     requestListener(req,res);
                     isReqline = false;
                 }
-                if (req.ondata && boundary < ret) {
-                    req.ondata(workBuffer.subarray(boundary,ret));
+                if (req.ondata && boundary < recvLen) {
+                    req.ondata(buf.subarray(boundary,recvLen));
                 }
             }
         });
