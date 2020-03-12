@@ -133,6 +133,10 @@
             ],
             "errno": [
                 "i32"
+            ],
+            "getHostByName": [
+                "str",
+                "str"
             ]
         },
         "const": {

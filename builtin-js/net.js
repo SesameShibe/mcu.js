@@ -4,7 +4,7 @@ var net = {};
 
     var activeConn = {};
     var activeServer = {};
-    var workBuffer = socket.getWorkBuffer()
+    var workBuffer = socket.getWorkBuffer();
 
     function handleSend(conn) {
         var sendTarget = conn.sendTarget
@@ -40,7 +40,7 @@ var net = {};
             var conn = activeConn[fd];
             ret = socket.recv(fd, 0);
             if (ret == 0) {
-                conn.close()
+                conn.close();
             } else if (ret > 0) {
                 if (conn.onrecv) {
                     conn.onrecv(conn, workBuffer.subarray(0, ret))
@@ -70,7 +70,7 @@ var net = {};
     }
 
     Conn.prototype.send = function (bufOrString, len) {
-        len = len || bufOrString.length
+        len = len || bufOrString.length;
         if (this.sendTarget !== null) {
             throw 'Conn is already sending.'
         }
@@ -87,7 +87,7 @@ var net = {};
             //print('close ' + this.fd + ' ' + ret);
             delete activeConn[this.fd];
             if (this.onclose) {
-                this.onclose(this)
+                this.onclose(this);
             }
         }
     }
@@ -109,8 +109,8 @@ var net = {};
     net.tcpConnect = function (addr, port) {
         var fd = socket.socket(socket.AF_INET, socket.SOCK_STREAM);
         socket.setNonblocking(fd);
-        var conn = new Conn(fd);
         socket.connect(fd, addr, port);
+        return new Conn(fd);
     }
 
     net.createTcpServer = function (port, conncb, backlog) {

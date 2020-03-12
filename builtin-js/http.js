@@ -4,6 +4,14 @@ var http = {};
 
     var decoder = new TextDecoder();
 
+    function headersToStr (headers) {
+        var str = '';
+        for (var key in headers) {
+            str += key + ': ' + headers[key] + "\r\n";
+        }
+        return str;
+    }
+
     function Request (method, url) {
         this.method = method;
         this.url = url;
@@ -16,11 +24,7 @@ var http = {};
     Response.prototype.writeHead = function (stateCode,headersDict) {
         stateCode = stateCode || 200;
         headersDict = headersDict || {"connection":"close"};
-        this.headers = "HTTP/1.1 " + stateCode + "\r\n";
-        for (var key in headersDict) {
-            this.headers = this.headers + key + ': ' + headersDict[key] + "\r\n";
-        }
-        this.headers += "\r\n";
+        this.headers = "HTTP/1.1 " + stateCode + "\r\n" + headersToStr(headersDict) + "\r\n";
     }
     Response.prototype.send = function (body) {
         //this.headers = this.headers + "content-length: " + Buffer.byteLength(body, 'utf8') + "\r\n\r\n";
@@ -33,7 +37,7 @@ var http = {};
         if (!fs.exists(path)) {
             print("No such file!");
             this.writeHead(404);
-            this.send();
+            this.send('404');
             return;
         }
         var filebuf = new Uint8Array(1024);
@@ -89,4 +93,54 @@ var http = {};
         });
     }
 
+
+/*
+    const options = {
+        'url': {
+            hostname: 'mcujs.org',
+            port: 80,
+            path: '/dl',
+            args: 'a=2'
+        },
+        'method': 'GET',
+        'headers': {
+          'Connection': 'close'
+        }
+    }; 
+*/      
+    http.parseUrl = function (url) {
+        var reg = /^(http):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*)\??(.*)/;
+        var parsed = url.match(reg);
+        return {
+            'hostname': parsed[2],
+            'port': parsed[3] || 80,
+            'path': parsed[4] || '/',
+            'args': parsed[5]
+        }
+    }
+
+    function genRequestHeader (opt) {
+        var str = opt.method+' '+opt.url.path+' HTTP/1.1\r\n';
+        return str + headersToStr(opt.headers) + '\r\n';
+    }
+
+    http.request = function (opt,callback) {
+        opt.method = opt.method || 'GET';
+        opt.headers = opt.headers || {'Host': opt.url.hostname+':'+opt.url.port,'User-Agent': 'mcujs','Connection': 'close'};
+
+        var conn = net.tcpConnect(socket.getHostByName(opt.url.hostname), opt.url.port);
+        
+        if (opt.method == 'GET') {
+            conn.send(genRequestHeader(opt));
+            conn.onrecv = function(conn, workBuffer, ret){
+                callback(workBuffer.subarray(0,ret));
+            }
+        }
+        return conn;
+    }
+
+    http.get = function (url,callback) {
+        var opt = {'url': http.parseUrl(url)};
+        http.request(opt,callback);
+    }
 })();

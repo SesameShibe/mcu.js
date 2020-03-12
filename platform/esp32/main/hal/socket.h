@@ -1,7 +1,9 @@
 
 #include "lwip/sockets.h"
+#include "lwip/netdb.h"
 
 uint8_t workBuffer[4500];
+char host[16];
 
 i32 halSocketSocket(i32 a0, i32 a1, i32 a2)
 {
@@ -122,6 +124,17 @@ JS_BUFFER halSocketGetWorkBuffer() {
         .size = sizeof(workBuffer)
     };
     return ret;
+}
+
+const char * halSocketGetHostByName(const char * name) {
+    struct hostent *hptr;
+    if ((hptr = gethostbyname(name)) == NULL) {
+        return NULL;
+    }
+    if (hptr->h_addrtype == AF_INET) {
+        return inet_ntop(hptr->h_addrtype,hptr->h_addr,host,sizeof(host));
+    }
+    return NULL;
 }
 
 #if 0
