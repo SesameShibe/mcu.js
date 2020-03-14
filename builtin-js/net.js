@@ -14,9 +14,7 @@
             if (ret == -2) {
                 // finished
                 conn.sendTarget = null;
-                if (conn.onsent) {
-                    conn.onsent(conn);
-                }
+                conn.sent = true
             } else if (ret > 0) {
                 conn.sendOffset += ret;
             }
@@ -25,9 +23,7 @@
             if (ret == -2) {
                 // finished
                 conn.sendTarget = null;
-                if (conn.onsent) {
-                    conn.onsent(conn);
-                }
+                conn.sent = true
             } else if (ret > 0) {
                 conn.sendOffset += ret
             }
@@ -60,6 +56,17 @@
                 server.onconn(conn);
             }
         }
+        for (fd in activeConn) {
+            var conn = activeConn[fd]
+            if (conn.sent) {
+                if (conn.onsent) {
+                    while(conn.sent) {
+                        conn.sent = false
+                        conn.onsent(conn)
+                    }
+                }
+            }
+        }
     }
 
     function Conn(fd) {
@@ -68,6 +75,7 @@
         this.sendTarget = null;
         this.sendOffset = 0;
         this.status = 1;
+        this.sent = false
     }
 
     Conn.prototype.send = function (bufOrString, len) {
