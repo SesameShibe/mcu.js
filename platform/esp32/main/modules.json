@@ -242,7 +242,7 @@
                 "u32"
             ],
             "write16": [
-                "void", 
+                "void",
                 "u32"
             ],
             "write32": [
@@ -281,9 +281,92 @@
                 "u32"
             ]
         },
-        "const":{
+        "const": {
             "BLACK": "TFT_BLACK",
             "WHITE": "TFT_WHITE"
+        }
+    },
+    "ui": {
+        "function": {
+            "init": [
+                "halFbInit",
+                "void"
+            ],
+            "update": [
+                "halFbUpdate",
+                "void"
+            ],
+            "setPenColor": [
+                "halFbSetPenColor",
+                "void",
+                "u32"
+            ],
+            "getPenColor": [
+                "halFbGetPenColor",
+                "u32"
+            ],
+            "drawLine": [
+                "halFbDrawLine",
+                "void",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "drawRectangle": [
+                "halFbDrawRectangle",
+                "void",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "fillRectangle": [
+                "halFbFillRectangle",
+                "void",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "drawTriangle": [
+                "halFbDrawTriangle",
+                "void",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "fillTriangle": [
+                "halFbFillTriangle",
+                "void",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "drawCircle": [
+                "halFbDrawCircle",
+                "void",
+                "i32",
+                "i32",
+                "i32"
+            ],
+            "drawText": [
+                "halFbDrawText",
+                "void",
+                "str",
+                "i32",
+                "i32"
+            ],
+            "clear": [
+                "halFbClearScreen",
+                "void"
+            ]
         }
     }
 }
