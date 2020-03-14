@@ -17,9 +17,9 @@
 #include "esp_spi_flash.h"
 
 #include "duktape.h"
-#include "TFT_eSPI.h"
+//#include "TFT_eSPI.h"
 
-TFT_eSPI tft = TFT_eSPI(135, 240);
+//TFT_eSPI tft = TFT_eSPI(135, 240);
 
 static void mcujs_fatal_handler(void *udata, const char *msg)
 {
@@ -48,6 +48,7 @@ extern "C"
 #include "hal/fs.h"
 #include "hal/spi.h"
 }
+#include "hal/fb.h"
 
 #include "__generated/gen_js.h"
 #include "__generated/gen_jsmods.h"
@@ -83,6 +84,7 @@ int mainLoop()
     loadBuiltinJS(ctx, js_shell, "shell");
     loadBuiltinJS(ctx, js_net, "net");
     loadBuiltinJS(ctx, js_http, "http");
+    loadBuiltinJS(ctx, js_uianim, "uianim");
     //loadBuiltinJS(ctx, js_tft, "tft");
 
     /* callback */
@@ -124,12 +126,12 @@ TaskHandle_t mcuJsTaskHandle;
 extern "C" void app_main()
 {
     initArduino();
-    tft.init();
-    tft.setRotation(0);
-    tft.fillScreen(TFT_BLACK);
-    tft.setCursor(0, 0);
-    tft.setTextColor(TFT_GREEN);
-    tft.setTextSize(2);
-    tft.print("hello mcu.js!\n");
+    // tft.init();
+    // tft.setRotation(0);
+    // tft.fillScreen(TFT_BLACK);
+    // tft.setCursor(0, 0);
+    // tft.setTextColor(TFT_GREEN);
+    // tft.setTextSize(2);
+    // tft.print("hello mcu.js!\n");
     xTaskCreateUniversal(mcuJsTask, "mcuJsTask", 16384, NULL, 1, &mcuJsTaskHandle, 1);
 }
