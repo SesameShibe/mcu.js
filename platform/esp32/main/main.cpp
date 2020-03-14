@@ -21,15 +21,6 @@
 
 TFT_eSPI tft = TFT_eSPI(135, 240);
 
-static void mcujs_fatal_handler(void *udata, const char *msg)
-{
-    (void)udata; /* ignored in this case, silence warning */
-
-    /* Note that 'msg' may be NULL. */
-    fprintf(stderr, "*** DUKTAPE FATAL ERROR: %s\n", (msg ? msg : "no message"));
-    fflush(stderr);
-    /* abort(); */
-}
 
 static duk_ret_t simple_print(duk_context *ctx)
 {
@@ -52,6 +43,20 @@ extern "C"
 
 #include "__generated/gen_js.h"
 #include "__generated/gen_jsmods.h"
+
+
+static void mcujs_fatal_handler(void *udata, const char *msg)
+{
+    (void)udata; /* ignored in this case, silence warning */
+
+    /* Note that 'msg' may be NULL. */
+    printf("*** DUKTAPE FATAL ERROR: %s\n", (msg ? msg : "no message"));
+    halOsSleepMs(5000);
+    printf("rebooting...\n");
+    halOsReboot();
+    /* abort(); */
+}
+
 
 void loadBuiltinJS(duk_context *ctx, const u8 *bin, const char *filename)
 {

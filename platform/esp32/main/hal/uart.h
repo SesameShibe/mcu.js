@@ -8,7 +8,7 @@ static const uart_config_t uart_config = {
     .flow_ctrl = UART_HW_FLOWCTRL_DISABLE
 };
 
-static const int RX_BUF_SIZE = 4096,
+static const int RX_BUF_SIZE = 16384,
                  TX_BUF_SIZE = 1024;
 
 int halUartInitPort(

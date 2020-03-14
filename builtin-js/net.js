@@ -1,15 +1,16 @@
-var net = {};
+'use strict';
 
 (function () {
-
+    var net = {}
     var activeConn = {};
     var activeServer = {};
     var workBuffer = socket.getWorkBuffer();
 
     function handleSend(conn) {
         var sendTarget = conn.sendTarget
+        var ret = 0
         if (typeof sendTarget == 'string') {
-            ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset)
+            ret = socket.sendStr(conn.fd, sendTarget, 0, conn.sendOffset)
             if (ret == -2) {
                 // finished
                 conn.sendTarget = null;
@@ -20,7 +21,7 @@ var net = {};
                 conn.sendOffset += ret;
             }
         } else {
-            ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
+            ret = socket.send(conn.fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
             if (ret == -2) {
                 // finished
                 conn.sendTarget = null;
@@ -130,5 +131,7 @@ var net = {};
     }
 
     setInterval(pollTask, 20);
+
+    global.net = net
 })();
 

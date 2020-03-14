@@ -3,6 +3,10 @@ const global = this;
 global.console = {
     log: print
 };
+
+global.textEnc = new TextEncoder()
+global.textDec = new TextDecoder()
+
 (function () {
     const MAX_TIMEOUT = 0x40000000;
     const LOOP_PERIOD_IN_MS = 20;
