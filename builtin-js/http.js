@@ -184,8 +184,8 @@
         var conn = net.tcpConnect(socket.getHostByName(opt.url.hostname), opt.url.port);
 
         conn.send(genRequestHeader(opt));
-        conn.onrecv = function(conn, workBuffer, ret){
-            ondata(workBuffer.subarray(0,ret));
+        conn.onrecv = function(conn, buf){
+            ondata(buf);
         }
         
         return conn;
