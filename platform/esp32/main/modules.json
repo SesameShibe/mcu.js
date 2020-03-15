@@ -13,6 +13,9 @@
             ],
             "getMinFreeMem": [
                 "u32"
+            ],
+            "reboot": [
+                "u32"
             ]
         }
     },
@@ -284,6 +287,16 @@
         "const":{
             "BLACK": "TFT_BLACK",
             "WHITE": "TFT_WHITE"
+        }
+    },
+    "crypto": {
+        "function": {
+            "hashBuf": [
+                "i32",
+                "str",
+                "buf",
+                "buf"
+            ]
         }
     }
 }

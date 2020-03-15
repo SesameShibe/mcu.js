@@ -17,3 +17,8 @@ uint32_t halOsGetFreeMem() {
 uint32_t halOsGetMinFreeMem() {
     return esp_get_minimum_free_heap_size();
 }
+
+uint32_t halOsReboot() {
+    esp_restart();
+    return 0;
+}
