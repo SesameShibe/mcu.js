@@ -5,6 +5,7 @@ __generated
 downloads
 toolchain
 build
+tmp
 /platform/*/.settings
 /platform/*/.*project
 *.old

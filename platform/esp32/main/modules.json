@@ -13,6 +13,9 @@
             ],
             "getMinFreeMem": [
                 "u32"
+            ],
+            "reboot": [
+                "u32"
             ]
         }
     },
@@ -366,6 +369,16 @@
             "clear": [
                 "halFbClearScreen",
                 "void"
+            ]
+        }
+    },
+    "crypto": {
+        "function": {
+            "hashBuf": [
+                "i32",
+                "str",
+                "buf",
+                "buf"
             ]
         }
     }

@@ -8,7 +8,7 @@ function uartLog(s) { if (typeof (s) === 'string') s = s.replace('\n', '\r\n'); 
 function uartByte(c) { uart.writeByte(0, c) }
 
 var lineBuf = '';
-var shellMode = 0;
+var shellMode = 1;
 
 function tryEval(code, err) {
     try {

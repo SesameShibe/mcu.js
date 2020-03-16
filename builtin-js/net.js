@@ -1,9 +1,34 @@
-var net = {};
-(function () {
+'use strict';
 
+(function () {
+    var net = {}
     var activeConn = {};
     var activeServer = {};
     var workBuffer = socket.getWorkBuffer();
+
+    function handleSend(conn) {
+        var sendTarget = conn.sendTarget
+        var ret = 0
+        if (typeof sendTarget == 'string') {
+            ret = socket.sendStr(conn.fd, sendTarget, 0, conn.sendOffset)
+            if (ret == -2) {
+                // finished
+                conn.sendTarget = null;
+                conn.sent = true
+            } else if (ret > 0) {
+                conn.sendOffset += ret;
+            }
+        } else {
+            ret = socket.send(conn.fd, sendTarget, 0, conn.sendOffset, conn.sendLength)
+            if (ret == -2) {
+                // finished
+                conn.sendTarget = null;
+                conn.sent = true
+            } else if (ret > 0) {
+                conn.sendOffset += ret
+            }
+        }
+    }
 
     function pollTask() {
         var fd;
@@ -15,34 +40,11 @@ var net = {};
                 conn.close();
             } else if (ret > 0) {
                 if (conn.onrecv) {
-                    conn.onrecv(conn, workBuffer, ret);
+                    conn.onrecv(conn, workBuffer.subarray(0, ret))
                 }
             }
             if (conn.sendTarget) {
-                var sendTarget = conn.sendTarget;
-                if (typeof sendTarget == 'string') {
-                    ret = socket.sendStr(fd, sendTarget, 0, conn.sendOffset);
-                    if (ret == -2) {
-                        // finished
-                        conn.sendTarget = null;
-                        if (conn.onsent) {
-                            conn.onsent(conn);
-                        }
-                    } else if (ret > 0) {
-                        conn.sendOffset += ret;
-                    }
-                } else {
-                    ret = socket.send(fd, sendTarget, 0, conn.sendOffset, conn.sendLength);
-                    if (ret == -2) {
-                        // finished
-                        conn.sendTarget = null;
-                        if (conn.onsent) {
-                            conn.onsent(conn);
-                        }
-                    } else if (ret > 0) {
-                        conn.sendOffset += ret;
-                    }
-                }
+                handleSend(conn)
             }
         }
         for (fd in activeServer) {
@@ -54,6 +56,17 @@ var net = {};
                 server.onconn(conn);
             }
         }
+        for (fd in activeConn) {
+            var conn = activeConn[fd]
+            if (conn.sent) {
+                if (conn.onsent) {
+                    while(conn.sent) {
+                        conn.sent = false
+                        conn.onsent(conn)
+                    }
+                }
+            }
+        }
     }
 
     function Conn(fd) {
@@ -62,6 +75,7 @@ var net = {};
         this.sendTarget = null;
         this.sendOffset = 0;
         this.status = 1;
+        this.sent = false
     }
 
     Conn.prototype.send = function (bufOrString, len) {
@@ -71,7 +85,8 @@ var net = {};
         }
         this.sendTarget = bufOrString;
         this.sendOffset = 0;
-        this.sendLength = len;
+        this.sendLength = len
+        handleSend(this)
     }
 
     Conn.prototype.close = function () {
@@ -124,5 +139,7 @@ var net = {};
     }
 
     setInterval(pollTask, 20);
+
+    global.net = net
 })();
 

@@ -1,7 +1,9 @@
 const global = this;
+
 global.console = {
     log: print
 };
+
 (function () {
     const MAX_TIMEOUT = 0x40000000;
     const LOOP_PERIOD_IN_MS = 20;
@@ -67,3 +69,4 @@ function boot() {
     mainLoop();
     delete global.boot
 }
+
