@@ -175,42 +175,42 @@
 
                 return
             }
-            var desiredHeaderLen = 2
-            for (var p = 0; p < buf.length; p++) {
-                if (wsConn.state == 1) {
-                    wsConn.recvHeaderBuf[wsConn.recvHeaderLen] = buf[p]
-                    wsConn.recvHeaderLen++
-                    if (wsConn.recvHeaderLen == desiredHeaderLen) {
-                        desiredHeaderLen = wsConn.checkAndParseRecvHeader()
-                    }
-                    if (desiredHeaderLen == 0) {
-                        // header received
-                        desiredHeaderLen = 2
-                        if (wsConn.recvPayloadLen == 0) {
-                            // just call the callback with null data
-                            if (wsConn.onframe) {
-                                wsConn.onframe(wsConn, wsConn.recvOpCode, null, wsConn.recvFin)
-                            }
-                        } else {
-                            wsConn.state = 2
-                        }
-                        wsConn.recvHeaderLen = 0
-                    }
-                } else if (wsConn.state == 2) {
-                    wsConn.recvPayloadBuf[wsConn.recvPayloadPtr] = buf[p]
-                    wsConn.recvPayloadPtr++
-                    if (wsConn.recvPayloadPtr >= wsConn.recvPayloadLen) {
-                        // payload received, unmask if needed
-                        if (wsConn.recvMaskEnabled) {
-                            for (var i = 0; i < wsConn.recvPayloadLen; i++) {
-                                wsConn.recvPayloadBuf[i] ^= wsConn.recvMask[i % 4]
-                            }
-                        }
+        }
+        var desiredHeaderLen = 2
+        for (var p = 0; p < buf.length; p++) {
+            if (wsConn.state == 1) {
+                wsConn.recvHeaderBuf[wsConn.recvHeaderLen] = buf[p]
+                wsConn.recvHeaderLen++
+                if (wsConn.recvHeaderLen == desiredHeaderLen) {
+                    desiredHeaderLen = wsConn.checkAndParseRecvHeader()
+                }
+                if (desiredHeaderLen == 0) {
+                    // header received
+                    desiredHeaderLen = 2
+                    if (wsConn.recvPayloadLen == 0) {
+                        // just call the callback with null data
                         if (wsConn.onframe) {
-                            wsConn.onframe(wsConn, wsConn.recvOpCode, wsConn.recvPayloadBuf.subarray(0, wsConn.recvPayloadLen), wsConn.recvFin)
+                            wsConn.onframe(wsConn, wsConn.recvOpCode, null, wsConn.recvFin)
                         }
-                        wsConn.state = 1
+                    } else {
+                        wsConn.state = 2
                     }
+                    wsConn.recvHeaderLen = 0
+                }
+            } else if (wsConn.state == 2) {
+                wsConn.recvPayloadBuf[wsConn.recvPayloadPtr] = buf[p]
+                wsConn.recvPayloadPtr++
+                if (wsConn.recvPayloadPtr >= wsConn.recvPayloadLen) {
+                    // payload received, unmask if needed
+                    if (wsConn.recvMaskEnabled) {
+                        for (var i = 0; i < wsConn.recvPayloadLen; i++) {
+                            wsConn.recvPayloadBuf[i] ^= wsConn.recvMask[i % 4]
+                        }
+                    }
+                    if (wsConn.onframe) {
+                        wsConn.onframe(wsConn, wsConn.recvOpCode, wsConn.recvPayloadBuf.subarray(0, wsConn.recvPayloadLen), wsConn.recvFin)
+                    }
+                    wsConn.state = 1
                 }
             }
         }
