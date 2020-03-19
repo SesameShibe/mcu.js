@@ -1,8 +1,6 @@
 const global = this;
 
-global.console = {
-    log: print
-};
+global.print = console.log;
 
 (function () {
     const MAX_TIMEOUT = 0x40000000;
