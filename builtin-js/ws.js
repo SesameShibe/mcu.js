@@ -3,6 +3,7 @@
 (function () {
     var ws = {};
     ws.MAX_DATA_SIZE = 1024
+    ws.OPCODE_CLOSE = 0x8
     ws.OPCODE_PING = 0x9
     ws.OPCODE_PONG = 0xA
     ws.OPCODE_CONT_FRAME = 0x0
