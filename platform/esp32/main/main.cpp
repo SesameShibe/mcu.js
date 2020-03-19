@@ -90,6 +90,7 @@ int mainLoop()
     loadBuiltinJS(ctx, js_shell, "shell");
     loadBuiltinJS(ctx, js_net, "net");
     loadBuiltinJS(ctx, js_http, "http");
+    loadBuiltinJS(ctx, js_ws, "ws");
     loadBuiltinJS(ctx, js_uianim, "uianim");
     //loadBuiltinJS(ctx, js_tft, "tft");
 
