@@ -1,6 +1,50 @@
 const global = this;
 
-global.print = console.log;
+//global.print = console.log;
+
+// Minimal console object.
+global.console = (function(){
+    var useProxyWrapper = true;
+    var c = {};
+    function console_log(args, errName) {
+        var msg = Array.prototype.map.call(args, function (v) {
+            if (typeof v === "object" && v !== null) { return console.format(v); };
+            return v;
+        }).join(" ");
+        if (errName) {
+            var err = new Error(msg);
+            err.name = "Trace";
+            print(err.stack || err);
+        } else {
+            print(msg);
+        }
+    };
+    c.format = function format(v) { try { return Duktape.enc("jx", v); } catch (e) { return String(v); } };
+    c.assert = function assert(v) {
+        if (arguments[0]) { return; }
+        console_log(arguments.length > 1 ? Array.prototype.slice.call(arguments, 1) : [ "false == true" ], "AssertionError");
+    };
+    c.log = function log() { console_log(arguments, null); };
+    c.debug = function debug() { console_log(arguments, null); };
+    c.trace = function trace() { console_log(arguments, "Trace"); };
+    c.info = function info() { console_log(arguments, null); };
+    c.warn = function warn() { console_log(arguments, null); };
+    c.error = function error() { console_log(arguments, "Error"); };
+    c.exception = function exception() { console_log(arguments, "Error"); };
+    c.dir = function dir() { console_log(arguments, null); };
+    if (typeof Proxy === "function" && useProxyWrapper) {
+        var orig = c;
+        var dummy = function () {};
+        c = new Proxy(orig, {
+            get: function (targ, key, recv) {
+                var v = targ[key];
+                return typeof v === "function" ? v : dummy;
+            }
+        });
+    }
+    return c;
+})();
+
 
 (function () {
     const MAX_TIMEOUT = 0x40000000;

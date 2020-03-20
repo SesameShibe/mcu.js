@@ -1,5 +1,5 @@
 COMPONENT_ADD_INCLUDEDIRS := src extras
-COMPONENT_OBJS := src/duktape.o extras/console/duk_console.o
+COMPONENT_OBJS := src/duktape.o extras/print-alert/duk_print_alert.o
 COMPONENT_SRCDIRS := . src extras
 
 #-std=gnu99 -Os -ggdb -ffunction-sections -fdata-sections -fstrict-volatile-bitfields -mlongcalls -nostdlib -Wall -Werror=all -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-error=deprecated-declarations -Wextra -Wno-unused-parameter -Wno-sign-compare -Wno-old-style-declaration -O3 -DESP_PLATFORM -D IDF_VER=\"v3.2.2-dirty\" -MMD -MP 
