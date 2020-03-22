@@ -3,7 +3,6 @@ var x = 100, y = 200, r = 0;
 var tx = 0, ty = 0;
 
 function updateFrame() {
-    print('Free Mem: '+os.getFreeMem()+'\r');
     ui.clear();
     ui.drawTriangle(x0, y0, x1, y1, x2, y2);
 

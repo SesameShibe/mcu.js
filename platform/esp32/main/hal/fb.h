@@ -261,60 +261,31 @@ void halFbDrawCircle(int32_t px, int32_t py, int32_t r)
     }
 }
 
-uint16_t *decodeUtf8(size_t *pStrSize, const char *string)
+size_t readUtf8Char(uint16_t *readChar, int32_t *ppos, const char *string)
 {
-    size_t len = strlen(string);
-    size_t max_len = len * 3;
-    uint16_t *decodeBuff = (uint16_t *)malloc(max_len * sizeof(uint16_t));
-    int32_t decodeState = 0;
-    size_t strSize = 0;
+    size_t byteCount = 0;
+    uint16_t unicode = 0;
+    uint32_t pos = *ppos;
 
-    for (int32_t i = 0; i < len; i++)
+    if ((string[pos] & 0x80) == 0)
     {
-        if ((string[i] & 0x80) == 0)
-        {
-            decodeBuff[strSize] = (uint16_t)string[i];
-            strSize = strSize + 1;
-            continue;
-        }
-        if (decodeState == 0)
-        {
-            if ((string[i] & 0xE0) == 0xC0)
-            {
-                decodeBuff[strSize] = ((string[i] & 0x1F) << 6);
-                decodeState = 1;
-                continue;
-            }
-            if ((string[i] & 0xF0) == 0xE0)
-            {
-                decodeBuff[strSize] = ((string[i] & 0x0F) << 12);
-                decodeState = 2;
-                continue;
-            }
-        }
-        else
-        {
-            if (decodeState == 2)
-            {
-                decodeBuff[strSize] |= ((string[i] & 0x3F) << 6);
-                decodeState--;
-                continue;
-            }
-            else
-            {
-                decodeBuff[strSize] |= (string[i] & 0x3F);
-                decodeState = 0;
-                strSize = strSize + 1;
-                continue;
-            }
-        }
+        unicode = (uint16_t)string[pos];
+        byteCount = 1;
+    }
+    else if ((string[pos] & 0xE0) == 0xC0)
+    {
+        unicode = ((string[pos] & 0x1F) << 6) | (string[pos + 1] & 0x3F);
+        byteCount = 2;
+    }
+    else if ((string[0] & 0xF0) == 0xE0)
+    {
+        unicode = ((string[pos] & 0x0F) << 12) | ((string[pos + 1] & 0x3F) << 6) | (string[pos + 2] & 0x3F);
+        byteCount = 3;
     }
 
-    uint16_t *retv = (uint16_t *)malloc(strSize * sizeof(uint16_t));
-    memcpy(retv, decodeBuff, strSize * sizeof(uint16_t));
-    free(decodeBuff);
-    *pStrSize = strSize;
-    return retv;
+    *readChar = unicode;
+    *ppos = pos + byteCount;
+    return byteCount;
 }
 
 void halFbDrawChar(uint16_t c, int32_t x, int32_t y)
@@ -344,14 +315,16 @@ void halFbDrawChar(uint16_t c, int32_t x, int32_t y)
 
 void halFbDrawText(const char *string, int32_t x, int32_t y)
 {
-    size_t strSize = 0;
-    uint16_t *unicodes = decodeUtf8(&strSize, string);
+    uint16_t unicode = 0;
+    int32_t currPos = 0;
+    readUtf8Char(&unicode, &currPos, string);
 
-    for (int i = 0; i < strSize; i++)
+    while (unicode)
     {
-        halFbDrawChar(unicodes[i], x, y);
+        printf("%d, %d\n", unicode, currPos);
+        halFbDrawChar(unicode, x, y);
         x += 16;
-    }
 
-    free(unicodes);
+        readUtf8Char(&unicode, &currPos, string);
+    }
 }
