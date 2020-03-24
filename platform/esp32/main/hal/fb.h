@@ -1,11 +1,18 @@
-#include "TFT_eSPI.h"
+#include "TTGO.h"
 #include "global.h"
 #include "../__generated/gen_font.h"
+
+#define FONT font_12
+#define FONT_CELL_WIDTH font_12_cell_width
+#define FONT_CELL_HEIGHT font_12_cell_height
+#define FONT_CHARS chars_12
+#define FONT_CHAR_COUNT font_12_char_count
 
 static uint16_t *FrameBuffer;
 static uint32_t PenColor = 0;
 
-TFT_eSPI tft = TFT_eSPI(TFT_WIDTH, TFT_HEIGHT);
+TTGOClass *ttgo;
+TFT_eSPI tft;
 
 void halFbClearScreen();
 
@@ -23,7 +30,12 @@ float_t triangleArea(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2,
 
 void halFbInit()
 {
-    tft.init();
+    ttgo = TTGOClass::getWatch();
+    tft = *ttgo->eTFT;
+
+    ttgo->begin();
+    ttgo->openBL();
+
     tft.setRotation(0);
     tft.fillScreen(TFT_BLACK);
 
@@ -52,7 +64,7 @@ void halFbClearScreen()
     memset(FrameBuffer, 0, TFT_WIDTH * TFT_HEIGHT * sizeof(uint16_t));
 }
 
-void halFbDrawDot(int32_t x, int32_t y, int32_t color = -1)
+void IRAM_ATTR halFbDrawDot(int32_t x, int32_t y, int32_t color = -1)
 {
     if (x < 0 || x >= TFT_WIDTH || y < 0 || y >= TFT_HEIGHT)
         return;
@@ -261,7 +273,7 @@ void halFbDrawCircle(int32_t px, int32_t py, int32_t r)
     }
 }
 
-size_t readUtf8Char(uint16_t *readChar, int32_t *ppos, const char *string)
+size_t IRAM_ATTR readUtf8Char(uint16_t *readChar, int32_t *ppos, const char *string)
 {
     size_t byteCount = 0;
     uint16_t unicode = 0;
@@ -288,24 +300,46 @@ size_t readUtf8Char(uint16_t *readChar, int32_t *ppos, const char *string)
     return byteCount;
 }
 
-void halFbDrawChar(uint16_t c, int32_t x, int32_t y)
+static inline uint8_t IRAM_ATTR readBit(const uint8_t *data, int32_t index)
 {
-    for (int32_t i = 0; i < font_16_count; i++)
+    uint8_t retv = 0;
+
+    uint8_t bits = data[(index >> 3)];
+    retv = (bits >> (index & 7)) & 1;
+
+    return retv;
+}
+
+void IRAM_ATTR halFbDrawChar(uint16_t c, int32_t x, int32_t y)
+{
+    uint16_t mask = 1;
+    uint32_t bitsIndex = 0;
+
+    for (int32_t i = 0; i < FONT_CHAR_COUNT; i++)
     {
-        if (chars_16[i] == c)
+        if (FONT_CHARS[i] == c)
         {
-            const uint8_t *glyphData = &font_16[i * 16 * 16];
-            for (int32_t yi = 0; yi < 16; yi++)
+            const uint8_t *glyph = &FONT[i][0];
+            for (int32_t yi = 0; yi < FONT_CELL_HEIGHT; yi++)
             {
-                for (int32_t xi = 0; xi < 16; xi++)
+                for (int32_t xi = 0; xi < FONT_CELL_WIDTH; xi++)
                 {
-                    uint8_t c = glyphData[yi * 16 + xi];
+                    uint8_t bit = readBit(glyph, yi * FONT_CELL_WIDTH + xi);
+                    uint8_t c = bit == 0 ? 0 : 255;
+
                     uint16_t b = (c >> 3) & 0x1f;
                     uint16_t g = ((c >> 2) & 0x3f) << 5;
                     uint16_t r = ((c >> 3) & 0x1f) << 11;
                     uint16_t c565 = r | g | b;
                     if (c565 != 0)
                         halFbDrawDot(x + xi, y + yi, c565);
+
+                    mask = mask << 1;
+                    if (mask == 256)
+                    {
+                        mask = 1;
+                        bitsIndex++;
+                    }
                 }
             }
             return;
@@ -321,9 +355,14 @@ void halFbDrawText(const char *string, int32_t x, int32_t y)
 
     while (unicode)
     {
-        printf("%d, %d\n", unicode, currPos);
+        if (unicode == 0xd || unicode == 0x0a || x + FONT_CELL_WIDTH >= TFT_WIDTH)
+        {
+            x = 0;
+            y += FONT_CELL_HEIGHT;
+        }
+
         halFbDrawChar(unicode, x, y);
-        x += 16;
+        x += FONT_CELL_WIDTH;
 
         readUtf8Char(&unicode, &currPos, string);
     }

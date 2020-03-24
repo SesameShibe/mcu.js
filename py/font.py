@@ -77,24 +77,24 @@ class Font(object):
 
     def saveHeader(self, path):
         with open(path, 'w')as hdr:
-            s = ''
-            m = ''
-            i = 0
+            chars_str = ''
+            glyphs_strs = []
             for k in sorted(self.Chars.keys()):
-                v = self.Chars[k]
-                m += '0x%04x, ' % ord(k)
-                for c in v:
+                val = self.Chars[k]
+                chars_str += '0x%04x, ' % ord(k)
+
+                s = '{'
+                for c in val:
                     s += '0x%02x, ' % (c)
-                    i += 1
-                    if(i == 16):
-                        s += '\n'
-                        i = 0
-            hdr.write('const uint8_t font_%d[] =  {\n' % self.FontSize)
-            hdr.write(s)
+                s += '}'
+                glyphs_strs.append(s)
+            
+            hdr.write('const uint8_t font_%d[%d][%d] =  {\n' % (self.FontSize, len(self.Chars), len(self.Chars.values()[0])))
+            hdr.write(',\n'.join(glyphs_strs))
             hdr.write('};\n\n')
 
             hdr.write('const uint16_t chars_%d[] =  {\n' % self.FontSize)
-            hdr.write(m)
+            hdr.write(chars_str)
             hdr.write('};\n\n')
 
             hdr.write('const size_t font_%d_char_count =  %d;\n\n' %
