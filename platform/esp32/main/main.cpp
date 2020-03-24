@@ -17,19 +17,10 @@
 #include "esp_spi_flash.h"
 
 #include "duktape.h"
+#include "console/duk_console.h"
 //#include "TFT_eSPI.h"
 
 //TFT_eSPI tft = TFT_eSPI(135, 240);
-
-
-static duk_ret_t simple_print(duk_context *ctx)
-{
-    duk_push_string(ctx, " ");
-    duk_insert(ctx, 0);
-    duk_join(ctx, duk_get_top(ctx) - 1);
-    printf("%s\n", duk_safe_to_string(ctx, -1));
-    return 0;
-}
 
 extern "C"
 {
@@ -77,9 +68,8 @@ int mainLoop()
         exit(1);
     }
 
-    /* JS: print(str); */
-    duk_push_c_function(ctx, simple_print, 1);
-    duk_put_global_string(ctx, "print");
+    /* init console */
+    duk_console_init(ctx, DUK_CONSOLE_PROXY_WRAPPER /*flags*/);
 
     /* init modules */
     genJSInit(ctx);
@@ -90,6 +80,7 @@ int mainLoop()
     loadBuiltinJS(ctx, js_shell, "shell");
     loadBuiltinJS(ctx, js_net, "net");
     loadBuiltinJS(ctx, js_http, "http");
+    loadBuiltinJS(ctx, js_ws, "ws");
     loadBuiltinJS(ctx, js_uianim, "uianim");
     //loadBuiltinJS(ctx, js_tft, "tft");
 
