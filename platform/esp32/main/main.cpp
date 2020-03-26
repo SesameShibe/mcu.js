@@ -17,6 +17,7 @@
 #include "esp_spi_flash.h"
 
 #include "duktape.h"
+#include "print-alert/duk_print_alert.h"
 //#include "TFT_eSPI.h"
 
 //TFT_eSPI tft = TFT_eSPI(135, 240);
@@ -66,6 +67,9 @@ int mainLoop()
         fprintf(stderr, "Failed to create a Duktape heap.\n");
         exit(1);
     }
+
+    /* init print-alert */
+    duk_print_alert_init(ctx,0);
 
     /* init modules */
     genJSInit(ctx);

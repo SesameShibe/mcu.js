@@ -1,6 +1,25 @@
 const global = this;
 
-global.print = console.log;
+(function () {
+    var isCalling = false;
+    nativePrint = print;
+
+    global.interfacePrint = print;
+    global.print = function(data){
+        if (isCalling){
+            return nativePrint(data);
+        }else{
+            isCalling = true;
+            try {
+                interfacePrint(data);
+            } catch (e) {
+                print('Unhandled error: ' + e) ;
+            }
+            isCalling = false;
+            return;
+        }
+    };
+})();
 
 (function () {
     const MAX_TIMEOUT = 0x40000000;
