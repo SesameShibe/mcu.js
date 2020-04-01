@@ -66,7 +66,7 @@
             if (this.recvHeaderLen < ptr) {
                 return ptr
             }
-            payloadLen = (buf[ptr - 1] << 8) | buf[ptr]
+            payloadLen = (buf[ptr - 2] << 8) | buf[ptr - 1]
         } else if (payloadLen == 127) {
             errPrint('ws error: payloadLen too large to be decoded.')
             this.close()
