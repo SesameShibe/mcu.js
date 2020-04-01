@@ -73,6 +73,7 @@
         }
         if (payloadLen > ws.MAX_DATA_SIZE) {
             errPrint('ws error: payloadLen too large: ' + payloadLen)
+            this.close()
         }
 
         if (this.recvMaskEnabled) {
