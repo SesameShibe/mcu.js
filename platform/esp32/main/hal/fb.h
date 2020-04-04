@@ -1,12 +1,21 @@
 #include "TTGO.h"
 #include "global.h"
-#include "../__generated/gen_font.h"
+#include "../__generated/gen_font_ascii.h"
+#include "../__generated/gen_font_unicode.h"
 
-#define FONT font_12
-#define FONT_CELL_WIDTH font_12_cell_width
-#define FONT_CELL_HEIGHT font_12_cell_height
-#define FONT_CHARS chars_12
-#define FONT_CHAR_COUNT font_12_char_count
+#define ASCII_FONT font_8
+#define ASCII_FONT_CELL_WIDTH font_8_cell_width
+#define ASCII_FONT_CELL_HEIGHT font_8_cell_height
+#define ASCII_FONT_CHARS chars_8
+#define ASCII_FONT_CHAR_COUNT font_8_char_count
+
+#define UNICODE_FONT font_16
+#define UNICODE_FONT_CELL_WIDTH font_16_cell_width
+#define UNICODE_FONT_CELL_HEIGHT font_16_cell_height
+#define UNICODE_FONT_CHARS chars_16
+#define UNICODE_FONT_CHAR_COUNT font_16_char_count
+
+#define TEXT_LINE_HEIGHT 16
 
 static uint16_t *FrameBuffer;
 static uint32_t PenColor = 0;
@@ -310,40 +319,80 @@ static inline uint8_t IRAM_ATTR readBit(const uint8_t *data, int32_t index)
     return retv;
 }
 
-void IRAM_ATTR halFbDrawChar(uint16_t c, int32_t x, int32_t y)
+static inline int32_t searchCharIndex(uint16_t c, uint16_t const *charTable, size_t tableLen)
+{
+    int retv = -1;
+
+    while (c != *charTable)
+    {
+        charTable++;
+        retv++;
+
+        if (retv >= tableLen)
+        {
+            retv = -1;
+            break;
+        }
+    }
+
+    return retv;
+}
+
+void IRAM_ATTR drawGlyph(const uint8_t *glyph, uint16_t width, uint16_t height, int32_t x, int32_t y)
 {
     uint16_t mask = 1;
     uint32_t bitsIndex = 0;
 
-    for (int32_t i = 0; i < FONT_CHAR_COUNT; i++)
+    for (int32_t yi = 0; yi < height; yi++)
     {
-        if (FONT_CHARS[i] == c)
+        for (int32_t xi = 0; xi < width; xi++)
         {
-            const uint8_t *glyph = &FONT[i][0];
-            for (int32_t yi = 0; yi < FONT_CELL_HEIGHT; yi++)
+            uint8_t bit = readBit(glyph, yi * width + xi);
+            uint8_t c = bit == 0 ? 0 : 255;
+
+            uint16_t b = (c >> 3) & 0x1f;
+            uint16_t g = ((c >> 2) & 0x3f) << 5;
+            uint16_t r = ((c >> 3) & 0x1f) << 11;
+            uint16_t c565 = r | g | b;
+            if (c565 != 0)
+                halFbDrawDot(x + xi, y + yi, c565);
+
+            mask = mask << 1;
+            if (mask == 256)
             {
-                for (int32_t xi = 0; xi < FONT_CELL_WIDTH; xi++)
-                {
-                    uint8_t bit = readBit(glyph, yi * FONT_CELL_WIDTH + xi);
-                    uint8_t c = bit == 0 ? 0 : 255;
-
-                    uint16_t b = (c >> 3) & 0x1f;
-                    uint16_t g = ((c >> 2) & 0x3f) << 5;
-                    uint16_t r = ((c >> 3) & 0x1f) << 11;
-                    uint16_t c565 = r | g | b;
-                    if (c565 != 0)
-                        halFbDrawDot(x + xi, y + yi, c565);
-
-                    mask = mask << 1;
-                    if (mask == 256)
-                    {
-                        mask = 1;
-                        bitsIndex++;
-                    }
-                }
+                mask = 1;
+                bitsIndex++;
             }
-            return;
         }
+    }
+}
+
+int32_t IRAM_ATTR halFbDrawChar(uint16_t c, int32_t x, int32_t y)
+{
+    int32_t charIndex = -1;
+    const uint8_t *glyph = nullptr;
+
+    switch (c)
+    {
+    case 0 ... 0x4FF:
+        charIndex = searchCharIndex(c, ASCII_FONT_CHARS, ASCII_FONT_CHAR_COUNT);
+        if (charIndex == -1)
+            return 0;
+
+        glyph = &ASCII_FONT[charIndex][0];
+        drawGlyph(glyph, ASCII_FONT_CELL_WIDTH, ASCII_FONT_CELL_HEIGHT, x, y);
+        return ASCII_FONT_CELL_WIDTH;
+    case 0x3000 ... 0x9FFF:
+    case 0xF900 ... 0xFFFF:
+        charIndex = searchCharIndex(c, UNICODE_FONT_CHARS, UNICODE_FONT_CHAR_COUNT);
+        if (charIndex == -1)
+            return 0;
+
+        glyph = &UNICODE_FONT[charIndex][0];
+        drawGlyph(glyph, UNICODE_FONT_CELL_WIDTH, UNICODE_FONT_CELL_HEIGHT, x, y);
+        return UNICODE_FONT_CELL_WIDTH;
+    default:
+        return 0;
     }
 }
 
@@ -355,14 +404,13 @@ void halFbDrawText(const char *string, int32_t x, int32_t y)
 
     while (unicode)
     {
-        if (unicode == 0xd || unicode == 0x0a || x + FONT_CELL_WIDTH >= TFT_WIDTH)
+        if (unicode == 0xd || unicode == 0x0a)
         {
             x = 0;
-            y += FONT_CELL_HEIGHT;
+            y += TEXT_LINE_HEIGHT;
         }
 
-        halFbDrawChar(unicode, x, y);
-        x += FONT_CELL_WIDTH;
+        x += halFbDrawChar(unicode, x, y);
 
         readUtf8Char(&unicode, &currPos, string);
     }

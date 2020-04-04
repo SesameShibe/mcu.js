@@ -27,13 +27,17 @@ def f16d16_to_int(val):
 
 
 class Font(object):
-    def __init__(self, ttfPath, pxSize, fltr, padding, baseline):
+    def __init__(self, ttfPath, pxWidth, pxHeight, fltr, padding, baseline, isAscii=False):
         self.FtFont = freetype.Face(ttfPath)
-        self.FtFont.set_pixel_sizes(pxSize, pxSize)
-        self.FontSize = pxSize
-        self.CellWidth = pxSize+padding
-        self.CellHeight = pxSize+padding
-        self.BaseLine = pxSize-baseline
+        if isAscii:
+            self.FtFont.set_pixel_sizes(pxHeight, pxHeight)
+        else:
+            self.FtFont.set_pixel_sizes(pxWidth, pxHeight)
+        self.FontSize = pxWidth
+        self.CellWidth = pxWidth+padding
+        self.CellHeight = pxHeight+padding
+        self.GlyphSize = (self.CellWidth, self.CellHeight)
+        self.BaseLine = pxHeight-baseline
         self.Filter = fltr
         self.Chars = {}
 
@@ -57,7 +61,6 @@ class Font(object):
         dy = self.BaseLine - horiBearingY
 
         b = bytearray('\x00'*(self.CellWidth*self.CellHeight))
-        # dxo += horiBearingX
         if(dxo + bitmap.width) > self.CellWidth:
             dxo -= dxo+bitmap.width-self.CellWidth
         for y in range(bitmap.rows):
@@ -88,8 +91,9 @@ class Font(object):
                     s += '0x%02x, ' % (c)
                 s += '}'
                 glyphs_strs.append(s)
-            
-            hdr.write('const uint8_t font_%d[%d][%d] =  {\n' % (self.FontSize, len(self.Chars), len(self.Chars.values()[0])))
+
+            hdr.write('const uint8_t font_%d[%d][%d] =  {\n' % (
+                self.FontSize, len(self.Chars), len(self.Chars.values()[0])))
             hdr.write(',\n'.join(glyphs_strs))
             hdr.write('};\n\n')
 
@@ -113,7 +117,7 @@ class Font(object):
 
     def saveImage(self, path):
         glyphsToImg(path, [self.Chars[k]
-                           for k in sorted(self.Chars.keys())], self.CellHeight, self.Filter)
+                           for k in sorted(self.Chars.keys())], self.GlyphSize, self.Filter)
 
 
 def getFileEncoding(path):
@@ -148,7 +152,29 @@ def scanFiles(paths):
 
 
 def generateFont(ttfPath, size, chars, fltr, padding, baseline, savePath, imgSavePath):
-    font = Font(ttfPath, size, fltr, padding, baseline)
+    font = Font(ttfPath, size[0], size[1], fltr, padding, baseline)
+    font.addChars(chars)
+    font.saveHeader(savePath)
+    if(imgSavePath):
+        font.saveImage(imgSavePath)
+
+
+def generateAsciiFont16(ttfPath, fltr, padding, baseline, savePath, imgSavePath):
+    font = Font(ttfPath, 8, 16, fltr, padding, baseline, True)
+    chars = [unichr(i) for i in range(0, 0x4FF)]
+    font.addChars(chars)
+    font.saveHeader(savePath)
+    if(imgSavePath):
+        font.saveImage(imgSavePath)
+
+
+def generateUnicodeFont16(ttfPath, fltr, padding, baseline, savePath, imgSavePath):
+    font = Font(ttfPath, 16, 16, fltr, padding, baseline)
+    chars = []
+    chars.extend([unichr(i)
+                  for i in range(0x3000, 0x9FFF)])
+    chars.extend([unichr(i)
+                  for i in range(0xF900, 0xFFFF)])
     font.addChars(chars)
     font.saveHeader(savePath)
     if(imgSavePath):
@@ -177,7 +203,7 @@ def compressGlyphBmp(bs, fltr):
 
 
 def toImg(pixels1bpp, size):
-    img = Image.new('RGBA', (size, size))
+    img = Image.new('RGBA', (size[0], size[1]))
     x = 0
     y = 0
     for bits in pixels1bpp:
@@ -189,7 +215,7 @@ def toImg(pixels1bpp, size):
             mask <<= 1
 
             x += 1
-            if(x == size):
+            if(x == size[0]):
                 x = 0
                 y += 1
 
@@ -198,13 +224,13 @@ def toImg(pixels1bpp, size):
 
 def glyphsToImg(path, glyphs, glyphSize, fltr):
     rows = len(glyphs) / 16 + 1
-    img = Image.new('RGBA', (16*glyphSize, rows*glyphSize))
+    img = Image.new('RGBA', (16*glyphSize[0], rows*glyphSize[1]))
 
     x = 0
     y = 0
     for g in glyphs:
         i = toImg(g, glyphSize)
-        img.paste(i, (x*glyphSize, y*glyphSize))
+        img.paste(i, (x*glyphSize[0], y*glyphSize[1]))
 
         x += 1
         if(x == 16):
@@ -215,15 +241,19 @@ def glyphsToImg(path, glyphs, glyphSize, fltr):
 
 
 if __name__ == "__main__":
+    # generateAsciiFont16(
+    #     r'.\fonts\SourceHanSansSC-ExtraLight.otf ', 59, 0, 3, 'test.h', 'test.png')
+
     import argparse
 
     def parse_options():
         parser = argparse.ArgumentParser(
             description="Nintendo CTR Font Converter Text Filter(xllt) Generator.")
         parser.add_argument('-t', '--ttf', help="Set TrueType font file path.")
-        parser.add_argument('-s', '--size', help="Set font size.", type=int)
-        parser.add_argument('-f', '--files', help="Files to scan.",
-                            required=True, nargs='*', type=str)
+        parser.add_argument(
+            '-s', '--size', help="Set font width.", nargs=2, type=int)
+        parser.add_argument(
+            '-f', '--files', help="Files to scan.", nargs='*', type=str)
         parser.add_argument(
             '-l', '--filter', help="Set bitmap grey filter.", default=90, type=int)
         parser.add_argument(
@@ -234,13 +264,27 @@ if __name__ == "__main__":
         parser.add_argument(
             '-x', '--charset', help="Set raw charset path. If not set, the charset will not save.", default=None)
         parser.add_argument(
-            '-i', '--image', help="Set image path. If not set, the image will not save.", default=None)
+            '-i', '--image', help="Set image path. If not set, the image will not save.", default=False)
+        parser.add_argument(
+            '-a', '--ascii', help="Generate ASCII font.", action='store_true')
+        parser.add_argument(
+            '-u', '--unicode', help="Generate Unicode font.", action='store_true')
         return parser.parse_args()
 
     def main():
         options = parse_options()
         if not options:
             return False
+
+        if options.ascii:
+            generateAsciiFont16(options.ttf, options.filter, options.padding,
+                                options.baseline, options.output, options.image)
+            return
+
+        if options.unicode:
+            generateUnicodeFont16(options.ttf, options.filter, options.padding,
+                                options.baseline, options.output, options.image)
+            return
 
         chars = scanFiles(options.files)
         if(options.charset):
