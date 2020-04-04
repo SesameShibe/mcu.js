@@ -17,7 +17,7 @@
 #include "esp_spi_flash.h"
 
 #include "duktape.h"
-#include "console/duk_console.h"
+#include "print-alert/duk_print_alert.h"
 //#include "TFT_eSPI.h"
 
 //TFT_eSPI tft = TFT_eSPI(135, 240);
@@ -68,8 +68,8 @@ int mainLoop()
         exit(1);
     }
 
-    /* init console */
-    duk_console_init(ctx, DUK_CONSOLE_PROXY_WRAPPER /*flags*/);
+    /* init print-alert */
+    duk_print_alert_init(ctx,0);
 
     /* init modules */
     genJSInit(ctx);
