@@ -15,7 +15,7 @@
 #define UNICODE_FONT_CHARS chars_16
 #define UNICODE_FONT_CHAR_COUNT font_16_char_count
 
-#define TEXT_LINE_HEIGHT 16
+#define TEXT_LINE_HEIGHT 10
 
 static uint16_t *FrameBuffer;
 static uint32_t PenColor = 0;
@@ -321,7 +321,7 @@ static inline uint8_t IRAM_ATTR readBit(const uint8_t *data, int32_t index)
 
 static inline int32_t searchCharIndex(uint16_t c, uint16_t const *charTable, size_t tableLen)
 {
-    int retv = -1;
+    int retv = 0;
 
     while (c != *charTable)
     {
@@ -404,13 +404,15 @@ void halFbDrawText(const char *string, int32_t x, int32_t y)
 
     while (unicode)
     {
-        if (unicode == 0xd || unicode == 0x0a)
+        if (unicode == 0xd || unicode == 0xa)
         {
             x = 0;
             y += TEXT_LINE_HEIGHT;
         }
-
-        x += halFbDrawChar(unicode, x, y);
+        else
+        {
+            x += halFbDrawChar(unicode, x, y);
+        }
 
         readUtf8Char(&unicode, &currPos, string);
     }
