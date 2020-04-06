@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import codecs
 import serial
 import sys
 import time
@@ -11,9 +12,10 @@ COM_PORT = 'COM6'
 ser = ''
 
 def recvLoop():
+    reader = codecs.getreader('utf-8')(ser)
     while True:
-        line = ser.read_until(b'\n')
-        print(line)
+        char = reader.read(1)
+        sys.stdout.write(char)
 
 def runfile(fn):
     with open(fn, 'rb') as f:
