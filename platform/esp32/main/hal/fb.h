@@ -381,6 +381,31 @@ static inline hal_font_section_info_t *halGetFontSection(uint16_t c)
     return nullptr;
 }
 
+int32_t halFbMeasureTextWidth(const char *string)
+{
+    uint16_t unicode = 0;
+    int32_t currPos = 0, width = 0;
+    readUtf8Char(&unicode, &currPos, string);
+
+    while (unicode)
+    {
+        hal_font_section_info_t *section = halGetFontSection(unicode);
+        readUtf8Char(&unicode, &currPos, string);
+
+        if (section == nullptr)
+            continue;
+
+        width += section->charWidth;
+    }
+
+    return width;
+}
+
+int32_t halFbMeasureTextHeight(const char *string)
+{
+    return 16;
+}
+
 void IRAM_ATTR drawGlyph(const uint8_t *glyph, uint16_t width, uint16_t height, int32_t x, int32_t y)
 {
     uint16_t mask = 1;

@@ -366,10 +366,24 @@
                 "i32",
                 "i32"
             ],
+            "measureTextWidth":[
+                "halFbMeasureTextWidth",
+                "i32",
+                "str"
+            ],
+            "measureTextHeight":[
+                "halFbMeasureTextHeight",
+                "i32",
+                "str"
+            ],
             "clear": [
                 "halFbClearScreen",
                 "void"
             ]
+        },
+        "const": {
+            "SCREEN_WIDTH": "TFT_WIDTH",
+            "SCREEN_HEIGHT": "TFT_HEIGHT"
         }
     },
     "crypto": {
