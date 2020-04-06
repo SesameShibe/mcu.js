@@ -4,6 +4,7 @@ from freetype import (FT_LOAD_DEFAULT, FT_LOAD_NO_BITMAP, FT_LOAD_NO_HINTING,
                       FT_LOAD_RENDER, FT_RENDER_MODE_NORMAL, Face, Vector)
 from io import BytesIO
 import codecs
+import struct
 from PIL import Image
 
 
@@ -76,7 +77,9 @@ class Font(object):
                 dx += 1
             dy += 1
 
-        self.Chars[c] = compressGlyphBmp(b, self.Filter)
+        b = compressGlyphBmp(b, self.Filter)
+        self.Chars[c] = b
+        self.GlyphDataLength = len(b)
 
     def saveHeader(self, path):
         with open(path, 'w')as hdr:
@@ -181,6 +184,61 @@ def generateUnicodeFont16(ttfPath, fltr, padding, baseline, savePath, imgSavePat
         font.saveImage(imgSavePath)
 
 
+def generateBinaryFont16(ttfPath, fltr, padding, baseline, savePath):
+    halfWidthFont = Font(ttfPath, 8, 16, fltr, padding, baseline, True)
+    halfWidthFont.addChars([unichr(i) for i in range(0, 0x4FF)])
+
+    fullWidthFont1 = Font(ttfPath, 16, 16, fltr, padding, baseline, False)
+    fullWidthFont1.addChars([unichr(i) for i in range(0x3000, 0x9FFF)])
+
+    fullWidthFont2 = Font(ttfPath, 16, 16, fltr, padding, baseline, False)
+    fullWidthFont2.addChars([unichr(i) for i in range(0xF900, 0xFFFF)])
+
+    with open(savePath, 'wb')as fnt:
+        w = fnt.write
+        w('FONT')
+
+        # Section count
+        w(struct.pack('H', 3))
+        w('\x00'*12*3)
+
+        keys1 = sorted(halfWidthFont.Chars.keys())
+        keys2 = sorted(fullWidthFont1.Chars.keys())
+        keys3 = sorted(fullWidthFont2.Chars.keys())
+
+        font1DataOffset = fnt.tell()
+        for c in keys1:
+            w(bytearray(halfWidthFont.Chars[c]))
+
+        font2DataOffset = fnt.tell()
+        for c in keys2:
+            w(bytearray(fullWidthFont1.Chars[c]))
+
+        font3DataOffset = fnt.tell()
+        for c in keys3:
+            w(bytearray(fullWidthFont2.Chars[c]))
+
+        fnt.seek(6, 0)
+
+        # Code range
+        w(struct.pack('<HH', 0, 0x4FF))
+        # Char width
+        w(struct.pack('<H', 8))
+        # Glyph data lenght
+        w(struct.pack('<H', halfWidthFont.GlyphDataLength))
+        w(struct.pack('<I', font1DataOffset))
+
+        w(struct.pack('<HH', 0x3000, 0x9FFF))
+        w(struct.pack('<H', 16))
+        w(struct.pack('<H', fullWidthFont1.GlyphDataLength))
+        w(struct.pack('<I', font2DataOffset))
+
+        w(struct.pack('<HH', 0xF900, 0xFFFF))
+        w(struct.pack('<H', 16))
+        w(struct.pack('<H', fullWidthFont2.GlyphDataLength))
+        w(struct.pack('<I', font3DataOffset))
+
+
 def compressGlyphBmp(bs, fltr):
     bits = 0
     rotate = 0
@@ -269,6 +327,8 @@ if __name__ == "__main__":
             '-a', '--ascii', help="Generate ASCII font.", action='store_true')
         parser.add_argument(
             '-u', '--unicode', help="Generate Unicode font.", action='store_true')
+        parser.add_argument(
+            '-r', '--binary', help="Generate Unicode font.", action='store_true')
         return parser.parse_args()
 
     def main():
@@ -283,7 +343,12 @@ if __name__ == "__main__":
 
         if options.unicode:
             generateUnicodeFont16(options.ttf, options.filter, options.padding,
-                                options.baseline, options.output, options.image)
+                                  options.baseline, options.output, options.image)
+            return
+
+        if options.binary:
+            generateBinaryFont16(options.ttf, options.filter, options.padding,
+                                 options.baseline, options.output)
             return
 
         chars = scanFiles(options.files)
