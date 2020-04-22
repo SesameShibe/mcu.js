@@ -82,7 +82,7 @@ int mainLoop()
     loadBuiltinJS(ctx, js_http, "http");
     loadBuiltinJS(ctx, js_ws, "ws");
     loadBuiltinJS(ctx, js_ui, "ui");
-    //loadBuiltinJS(ctx, js_tft, "tft");
+    loadBuiltinJS(ctx, js_devserver, "devserver");
 
     /* callback */
     duk_eval_string(ctx, "boot();");
