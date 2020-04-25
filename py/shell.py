@@ -8,6 +8,8 @@ import threading
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
+from font import getFileEncoding
+
 COM_PORT = 'COM6'
 ser = ''
 
@@ -18,9 +20,10 @@ def recvLoop():
         sys.stdout.write(char)
 
 def runfile(fn):
-    with open(fn, 'rb') as f:
+    with codecs.open(fn, 'rb', getFileEncoding(fn)) as f:
         data = f.read()
-    ser.write(data)
+    writer = codecs.getwriter('utf-8')(ser)
+    writer.write(data)
     ser.write(b'\xF8')
 
 def start():
