@@ -1,4 +1,3 @@
 pyserial
 prompt-toolkit
 requests
-freetype-py
