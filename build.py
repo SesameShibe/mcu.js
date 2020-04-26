@@ -21,8 +21,8 @@ PLATFORMS = {
                 'version': '5.2.0',
             },
             'esp-idf': {
-                'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v3.3.2.zip',
-                'version': 'v3.3.2',
+                'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v3.3.1.zip',
+                'version': 'v3.3.1',
             },
             'esp32-arduino': {
                 'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
