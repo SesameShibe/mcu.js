@@ -1,0 +1,83 @@
+{
+    "function": {
+        "close": [
+            "i32",
+            "i32"
+        ],
+        "socket": [
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "connect": [
+            "i32",
+            "i32",
+            "str",
+            "i32"
+        ],
+        "getWorkBuffer": [
+            "buf"
+        ],
+        "recv": [
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "sendStr": [
+            "i32",
+            "i32",
+            "str",
+            "i32",
+            "u32"
+        ],
+        "send": [
+            "i32",
+            "i32",
+            "buf",
+            "i32",
+            "u32",
+            "u32"
+        ],
+        "shutdown": [
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "bind": [
+            "i32",
+            "i32",
+            "str",
+            "i32"
+        ],
+        "listen": [
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "accept": [
+            "i32",
+            "i32"
+        ],
+        "setNonblocking": [
+            "i32",
+            "i32"
+        ],
+        "errno": [
+            "i32"
+        ],
+        "getHostByName": [
+            "str",
+            "str"
+        ]
+    },
+    "const": {
+        "SOCK_RAW": "3",
+        "SOCK_STREAM": "1",
+        "SOCK_DGRAM": "2",
+        "AF_INET": "2",
+        "F_GETFL": "3",
+        "F_SETFL": "4",
+        "O_NONBLOCK": "1"
+    }
+}

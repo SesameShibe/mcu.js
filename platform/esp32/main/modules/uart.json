@@ -1,0 +1,33 @@
+{
+    "function": {
+        "initPort": [
+            "bool",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "readByte": [
+            "i32",
+            "i32"
+        ],
+        "writeString": [
+            "void",
+            "i32",
+            "str"
+        ],
+        "writeByte": [
+            "void",
+            "i32",
+            "i32"
+        ],
+        "availableBytes": [
+            "i32",
+            "i32"
+        ]
+    },
+    "const": {
+        "UART_PIN_NO_CHANGE": "-1"
+    }
+}

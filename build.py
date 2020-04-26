@@ -162,8 +162,8 @@ def generate():
     tryMkdir('platform/esp32/main/__generated')
     with open('platform/esp32/main/__generated/gen_js.h', 'wb') as f:
         f.write(js)
-    print('Generating glue code from modules.json')
-    gluecodegen.generate('platform/esp32/main/modules.json')
+    print('Generating glue code from module json')
+    gluecodegen.generate('platform/esp32/main/modules')
 
 
 def build():

@@ -1,0 +1,52 @@
+{
+    "function": {
+        "mountSpiffs": [
+            "void"
+        ],
+        "exists": [
+            "i32",
+            "str"
+        ],
+        "open": [
+            "open",
+            "i32",
+            "str",
+            "i32"
+        ],
+        "close": [
+            "close",
+            "i32",
+            "i32"
+        ],
+        "lseek": [
+            "lseek",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "read": [
+            "i32",
+            "i32",
+            "buf",
+            "i32"
+        ],
+        "write": [
+            "i32",
+            "i32",
+            "buf",
+            "i32"
+        ]
+    },
+    "const": {
+        "O_RDWR": "O_RDWR",
+        "O_CREAT": "O_CREAT",
+        "O_RDONLY": "O_RDONLY",
+        "O_WRONLY": "O_WRONLY",
+        "O_TRUNC": "O_TRUNC",
+        "O_APPEND": "O_APPEND",
+        "SEEK_SET": "SEEK_SET",
+        "SEEK_CUR": "SEEK_CUR",
+        "SEEK_END": "SEEK_END"
+    }
+}

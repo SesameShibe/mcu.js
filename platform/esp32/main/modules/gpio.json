@@ -1,0 +1,25 @@
+{
+    "function": {
+        "config": [
+            "void",
+            "u32",
+            "u32",
+            "u32"
+        ],
+        "write": [
+            "void",
+            "u32",
+            "u32"
+        ],
+        "read": [
+            "u32",
+            "u32"
+        ]
+    },
+    "const": {
+        "INPUT": "GPIO_MODE_INPUT",
+        "OUTPUT": "GPIO_MODE_OUTPUT",
+        "PULLUP": 1,
+        "PULLDOWN": 2
+    }
+}

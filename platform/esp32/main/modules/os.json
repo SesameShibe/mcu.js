@@ -1,0 +1,20 @@
+{
+    "function": {
+        "sleepMs": [
+            "void",
+            "u32"
+        ],
+        "getTickCountMs": [
+            "u32"
+        ],
+        "getFreeMem": [
+            "u32"
+        ],
+        "getMinFreeMem": [
+            "u32"
+        ],
+        "reboot": [
+            "u32"
+        ]
+    }
+}

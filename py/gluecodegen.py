@@ -6,6 +6,7 @@ import os
 
 TYPE_RULES = {
     'void': ('void ', '', ''),
+    'int': ('int32_t ', 'duk_to_int32', 'duk_push_int'),
     'i32': ('int32_t ', 'duk_to_int32', 'duk_push_int'),
     'u32': ('uint32_t ', 'duk_to_uint32', 'duk_push_uint'),
     #'u16': ('uint16_t ', 'duk_to_uint16', 'duk_push_uint'),
@@ -13,7 +14,6 @@ TYPE_RULES = {
     'bool': ('int ', 'duk_to_boolean', 'duk_push_boolean'),
     'str': ('const char *', 'duk_to_string', 'duk_push_string'),
     'buf': ('JS_BUFFER ', 'duk_get_buffer_data', ''),
-    #'ptr': ('void *', 'duk_get_pointer', 'duk_push_pointer')
 }
 
 
@@ -244,9 +244,14 @@ def genModule(moduleDict):
 
 def generate(path):
     #usage()
-
-    with open(path, 'r') as f:
-        modulesJson = json.loads(f.read())
-
+    modulesJson = {}
+    for fname in os.listdir(path):
+        if fname[0] == '.' :
+            continue
+        if fname[-5:] != '.json':
+            continue
+        print(fname)
+        with open(path + '/' + fname, 'r') as f:
+            modulesJson[fname[:-5]] = json.loads(f.read())
     genJSInit(modulesJson)
     print('...Done!')

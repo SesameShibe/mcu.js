@@ -1,0 +1,10 @@
+{
+    "function": {
+        "hashBuf": [
+            "i32",
+            "str",
+            "buf",
+            "buf"
+        ]
+    }
+}

@@ -12,25 +12,17 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "global.h"
-#include <Arduino.h>
-#include <SPI.h>
-#include <WiFi.h>
 
 #include "duktape.h"
 #include "print-alert/duk_print_alert.h"
-//#include "TFT_eSPI.h"
 
-// TFT_eSPI tft = TFT_eSPI(135, 240);
 
-extern "C" {
 #include "hal/crypto.h"
 #include "hal/fs.h"
 #include "hal/os.h"
 #include "hal/socket.h"
-#include "hal/spi.h"
 #include "hal/uart.h"
-}
-#include "hal/fb.h"
+#include "hal/gpio.h"
 
 #include "__generated/gen_js.h"
 #include "__generated/gen_jsmods.h"
@@ -84,24 +76,7 @@ int mainLoop() {
 	return 0;
 }
 
-/**
-void setup()
-{
-    printf("Hello mcu.js!\n");
 
-    // Print chip information
-    esp_chip_info_t chip_info;
-    esp_chip_info(&chip_info);
-    printf("This is ESP32 chip with %d CPU cores, WiFi%s%s, ",
-           chip_info.cores,
-           (chip_info.features & CHIP_FEATURE_BT) ? "/BT" : "",
-           (chip_info.features & CHIP_FEATURE_BLE) ? "/BLE" : "");
-
-    printf("silicon revision %d, ", chip_info.revision);
-    printf("%dMB %s flash\n", spi_flash_get_chip_size() / (1024 * 1024),
-           (chip_info.features & CHIP_FEATURE_EMB_FLASH) ? "embedded" : "external");
-}
-**/
 
 void mcuJsTask(void* arg) {
 	while (1) {
@@ -112,13 +87,5 @@ void mcuJsTask(void* arg) {
 TaskHandle_t mcuJsTaskHandle;
 
 extern "C" void app_main() {
-	initArduino();
-	// tft.init();
-	// tft.setRotation(0);
-	// tft.fillScreen(TFT_BLACK);
-	// tft.setCursor(0, 0);
-	// tft.setTextColor(TFT_GREEN);
-	// tft.setTextSize(2);
-	// tft.print("hello mcu.js!\n");
-	xTaskCreateUniversal(mcuJsTask, "mcuJsTask", 16384, NULL, 1, &mcuJsTaskHandle, 1);
+	xTaskCreatePinnedToCore(mcuJsTask, "mcuJsTask", 32768, NULL, 1, &mcuJsTaskHandle, 1);
 }
