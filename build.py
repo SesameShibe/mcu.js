@@ -15,20 +15,20 @@ PLATFORMS = {
     'esp32': {
         'toolchain': {
             'esp32-toolchain': {
-                'url-windows': 'https://dl.espressif.com/dl/esp32_win32_msys2_environment_and_toolchain-20181001.zip',
-                'url-linux': 'https://dl.espressif.com/dl/xtensa-esp32-elf-linux64-1.22.0-80-g6c4433a-5.2.0.tar.gz',
-                'url-darwin': 'https://dl.espressif.com/dl/xtensa-esp32-elf-osx-1.22.0-80-g6c4433a-5.2.0.tar.gz',
-                'version': '5.2.0',
+                'url-windows': 'https://dl.espressif.com/dl/esp32_win32_msys2_environment_and_toolchain-20190611.zip',
+                'url-linux': 'https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-linux-amd64.tar.gz',
+                'url-darwin': 'https://dl.espressif.com/dl/xtensa-esp32-elf-gcc8_2_0-esp-2019r2-macos.tar.gz',
+                'version': '2019r2',
             },
             'esp-idf': {
-                'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v3.3.1.zip',
-                'version': 'v3.3.1',
-            },
-            'esp32-arduino': {
-                'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
-                'version': '1.0.4',
-                'path': 'platform/esp32/components/arduino',
-                'patch': b'PK'
+                'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v4.0.zip',
+                'version': 'v4.0',
+            # },
+            # 'esp32-arduino': {
+            #     'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
+            #     'version': '1.0.4',
+            #     'path': 'platform/esp32/components/arduino',
+            #     'patch': b'PK'
             }
         }
     },
@@ -171,14 +171,14 @@ def build():
         pass
     else:
         generate()
-        os.system('cd platform/esp32 && make -j4')
+        os.system('cd platform/esp32 && idf.py build')
 
 def flash():
     if isWindows():
         pass
     else:
-        build()
-        os.system('cd platform/esp32 && make flash')
+        generate()
+        os.system('cd platform/esp32 && idf.py flash')
 
 def startShellInEnvironment():
     if isWindows():
@@ -211,10 +211,12 @@ Available options:
 
 
 action = ''
-os.environ['PATH'] += ':' + \
-    os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin'
+os.environ['ESPPORT'] = os.getcwd() + '/COM6' # set serial port name
 os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + \
     PLATFORMS['esp32']['toolchain']['esp-idf']['version']
+os.environ['PATH'] += ':' + \
+    os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin' + ':' + \
+    os.environ['IDF_PATH'] + '/tools'
 if len(sys.argv) >= 2:
     action = sys.argv[1]
 if action == 'prepare-toolchain':
