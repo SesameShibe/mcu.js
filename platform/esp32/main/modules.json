@@ -322,11 +322,13 @@
                 "i32",
                 "i32",
                 "i32",
+                "i32",
                 "i32"
             ],
             "fillRectangle": [
                 "halFbFillRectangle",
                 "void",
+                "i32",
                 "i32",
                 "i32",
                 "i32",
@@ -357,12 +359,25 @@
                 "void",
                 "i32",
                 "i32",
+                "i32",
+                "i32"
+            ],
+            "fillCircle": [
+                "halFbFillCircle",
+                "void",
+                "i32",
+                "i32",
+                "i32",
                 "i32"
             ],
             "drawText": [
                 "halFbDrawText",
                 "void",
                 "str",
+                "i32",
+                "i32",
+                "i32",
+                "i32",
                 "i32",
                 "i32"
             ],

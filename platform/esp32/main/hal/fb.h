@@ -1,36 +1,29 @@
 #include "esp_partition.h"
 #include "TTGO.h"
 #include "global.h"
-// #include "../__generated/gen_font_ascii.h"
-// #include "../__generated/gen_font_unicode.h"
-
-// #define ASCII_FONT font_8
-// #define ASCII_FONT_CELL_WIDTH font_8_cell_width
-// #define ASCII_FONT_CELL_HEIGHT font_8_cell_height
-// #define ASCII_FONT_CHARS chars_8
-// #define ASCII_FONT_CHAR_COUNT font_8_char_count
-
-// #define UNICODE_FONT font_16
-// #define UNICODE_FONT_CELL_WIDTH font_16_cell_width
-// #define UNICODE_FONT_CELL_HEIGHT font_16_cell_height
-// #define UNICODE_FONT_CHARS chars_16
-// #define UNICODE_FONT_CHAR_COUNT font_16_char_count
 
 #define TEXT_LINE_HEIGHT 16
+
+#define CIRCLE_CORNER_TL 1 << 0
+#define CIRCLE_CORNER_TR 1 << 1
+#define CIRCLE_CORNER_BL 1 << 2
+#define CIRCLE_CORNER_BR 1 << 3
 
 typedef struct hal_font_section_info_t
 {
     uint16_t codeStart;
     uint16_t codeEnd;
     uint16_t charWidth;
+    uint16_t charHeight;
     uint16_t glyphEntrySize;
     uint32_t dataOffset;
-} hal_font_section_info_t;
+} __attribute__((aligned(1), packed)) hal_font_section_info_t;
 
 typedef struct hal_font_t
 {
     uint32_t magic; // "FONT"
     uint16_t sectionCount;
+    uint16_t version;
 } hal_font_t;
 
 static hal_font_t *font;
@@ -69,17 +62,24 @@ void initFont()
     ESP_ERROR_CHECK(error);
 
     font = (hal_font_t *)font_data;
-    sections = (hal_font_section_info_t *)(((uint8_t *)font_data) + 6);
+    sections = (hal_font_section_info_t *)(((uint8_t *)font_data) + 8);
 
     printf("Font partition address > 0x%x\n", part->address);
     printf("Font partition size > 0x%x\n", part->size);
-    printf("Magic %x\n", font->magic);
-    printf("First section info:\n    code start=0x%x\n    code end=0x%x\n    char width=0x%x\n    data offset=0x%x\n    entry size=0x%x\n",
+    printf("Magic %x\nVersion:%x\n", font->magic, font->version);
+    printf("First section info:\n"
+           "    code start=0x%x\n"
+           "    code end=0x%x\n"
+           "    char width=0x%x\n"
+           "    char height=0x%x\n"
+           "    entry size=0x%x\n"
+           "    data offset=0x%x\n",
            sections->codeStart,
            sections->codeEnd,
            sections->charWidth,
-           sections->dataOffset,
-           sections->glyphEntrySize);
+           sections->charHeight,
+           sections->glyphEntrySize,
+           sections->dataOffset);
 }
 
 void halFbInit()
@@ -240,21 +240,140 @@ void halFbDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1)
     }
 }
 
-void halFbDrawRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom)
+void halFbDrawCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask = 0xF)
 {
-    halFbDrawLine(left, top, right, top);
-    halFbDrawLine(right, top, right, bottom);
-    halFbDrawLine(left, top, left, bottom);
-    halFbDrawLine(left, bottom, right, bottom);
+    int32_t x = 0,
+            y = r,
+            d = 1 - r;
+
+    while (y >= x)
+    {
+        // Bottom right
+        if ((cornerMask & CIRCLE_CORNER_BR) == CIRCLE_CORNER_BR)
+        {
+            halFbDrawDot(x + px, y + py);
+            halFbDrawDot(y + px, x + py);
+        }
+        // Bottom left
+        if ((cornerMask & CIRCLE_CORNER_BL) == CIRCLE_CORNER_BL)
+        {
+            halFbDrawDot(-x + px, y + py);
+            halFbDrawDot(-y + px, x + py);
+        }
+        // Top left
+        if ((cornerMask & CIRCLE_CORNER_TL) == CIRCLE_CORNER_TL)
+        {
+            halFbDrawDot(-x + px, -y + py);
+            halFbDrawDot(-y + px, -x + py);
+        }
+        // Top right
+        if ((cornerMask & CIRCLE_CORNER_TR) == CIRCLE_CORNER_TR)
+        {
+            halFbDrawDot(x + px, -y + py);
+            halFbDrawDot(y + px, -x + py);
+        }
+
+        if (d <= 0)
+        {
+            d += (x << 2) + 6;
+        }
+        else
+        {
+            d += ((x - y) << 2) + 10;
+            y--;
+        }
+        x++;
+    }
 }
 
-void halFbFillRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom)
+void halFbFillCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask = 0xF)
 {
-    while (top <= bottom)
+    int32_t x = 0,
+            y = r,
+            d = 1 - r;
+
+    while (y >= x)
     {
-        halFbDrawLine(left, top, right, top);
-        top++;
+        // Bottom right
+        if ((cornerMask & CIRCLE_CORNER_BR) == CIRCLE_CORNER_BR)
+        {
+            halFbDrawHLine(px, x + px, y + py);
+            halFbDrawHLine(px, y + px, x + py);
+        }
+        // Bottom left
+        if ((cornerMask & CIRCLE_CORNER_BL) == CIRCLE_CORNER_BL)
+        {
+            halFbDrawHLine(px, -x + px, y + py);
+            halFbDrawHLine(px, -y + px, x + py);
+        }
+        // Top left
+        if ((cornerMask & CIRCLE_CORNER_TL) == CIRCLE_CORNER_TL)
+        {
+            halFbDrawHLine(px, -x + px, -y + py);
+            halFbDrawHLine(px, -y + px, -x + py);
+        }
+        // Top right
+        if ((cornerMask & CIRCLE_CORNER_TR) == CIRCLE_CORNER_TR)
+        {
+            halFbDrawHLine(px, x + px, -y + py);
+            halFbDrawHLine(px, y + px, -x + py);
+        }
+
+        if (d <= 0)
+        {
+            d += (x << 2) + 6;
+        }
+        else
+        {
+            d += ((x - y) << 2) + 10;
+            y--;
+        }
+        x++;
     }
+}
+
+void halFbDrawRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t cornerRadius = 0)
+{
+    halFbDrawLine(left + cornerRadius, top, right - cornerRadius, top);
+    halFbDrawLine(right, top + cornerRadius, right, bottom - cornerRadius);
+    halFbDrawLine(left, top + cornerRadius, left, bottom - cornerRadius);
+    halFbDrawLine(left + cornerRadius, bottom, right - cornerRadius, bottom);
+
+    halFbDrawCircle(left + cornerRadius, top + cornerRadius, cornerRadius, CIRCLE_CORNER_TL);
+    halFbDrawCircle(right - cornerRadius, top + cornerRadius, cornerRadius, CIRCLE_CORNER_TR);
+    halFbDrawCircle(left + cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BL);
+    halFbDrawCircle(right - cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BR);
+}
+
+void halFbFillRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t cornerRadius = 0)
+{
+    int32_t y = 0;
+
+    y = top + cornerRadius;
+    while (y <= bottom - cornerRadius)
+    {
+        halFbDrawLine(left, y, right, y);
+        y++;
+    }
+
+    y = top;
+    while (y < top + cornerRadius)
+    {
+        halFbDrawLine(left + cornerRadius, y, right - cornerRadius, y);
+        y++;
+    }
+
+    y = bottom - cornerRadius;
+    while (y <= bottom)
+    {
+        halFbDrawLine(left + cornerRadius, y, right - cornerRadius, y);
+        y++;
+    }
+
+    halFbFillCircle(left + cornerRadius, top + cornerRadius, cornerRadius, CIRCLE_CORNER_TL);
+    halFbFillCircle(right - cornerRadius, top + cornerRadius, cornerRadius, CIRCLE_CORNER_TR);
+    halFbFillCircle(left + cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BL);
+    halFbFillCircle(right - cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BR);
 }
 
 void halFbDrawTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2)
@@ -295,37 +414,6 @@ void halFbFillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x
                 halFbDrawDot(x, y);
             }
         }
-    }
-}
-
-void halFbDrawCircle(int32_t px, int32_t py, int32_t r)
-{
-    int32_t x = 0,
-            y = r,
-            d = 1 - r;
-
-    while (y >= x)
-    {
-        halFbDrawDot(x + px, y + py);
-        halFbDrawDot(y + px, x + py);
-        halFbDrawDot(-x + px, y + py);
-        halFbDrawDot(-y + px, x + py);
-
-        halFbDrawDot(-x + px, -y + py);
-        halFbDrawDot(-y + px, -x + py);
-        halFbDrawDot(x + px, -y + py);
-        halFbDrawDot(y + px, -x + py);
-
-        if (d <= 0)
-        {
-            d += (x << 2) + 6;
-        }
-        else
-        {
-            d += ((x - y) << 2) + 10;
-            y--;
-        }
-        x++;
     }
 }
 
@@ -406,7 +494,8 @@ int32_t halFbMeasureTextHeight(const char *string)
     return 16;
 }
 
-void IRAM_ATTR drawGlyph(const uint8_t *glyph, uint16_t width, uint16_t height, int32_t x, int32_t y)
+void IRAM_ATTR drawGlyph(const uint8_t *glyphData, uint16_t width, uint16_t height, int32_t x, int32_t y,
+                         int32_t bLeft, int32_t bTop, int32_t bRight, int32_t bBottom)
 {
     uint16_t mask = 1;
     uint32_t bitsIndex = 0;
@@ -415,15 +504,19 @@ void IRAM_ATTR drawGlyph(const uint8_t *glyph, uint16_t width, uint16_t height, 
     {
         for (int32_t xi = 0; xi < width; xi++)
         {
-            uint8_t bit = readBit(glyph, yi * width + xi);
-            uint8_t c = bit == 0 ? 0 : 255;
+            // Don't draw outside bbox
+            if ((x + xi < bLeft) ||
+                (x + xi > bRight) ||
+                (y + yi < bTop) ||
+                (y + yi > bBottom))
+            {
+                continue;
+            }
 
-            uint16_t b = (c >> 3) & 0x1f;
-            uint16_t g = ((c >> 2) & 0x3f) << 5;
-            uint16_t r = ((c >> 3) & 0x1f) << 11;
-            uint16_t c565 = r | g | b;
-            if (c565 != 0)
-                halFbDrawDot(x + xi, y + yi, c565);
+            uint8_t bit = readBit(glyphData, yi * width + xi);
+
+            if (bit != 0)
+                halFbDrawDot(x + xi, y + yi);
 
             mask = mask << 1;
             if (mask == 256)
@@ -435,36 +528,36 @@ void IRAM_ATTR drawGlyph(const uint8_t *glyph, uint16_t width, uint16_t height, 
     }
 }
 
-int32_t IRAM_ATTR halFbDrawChar(uint16_t c, int32_t x, int32_t y)
+int32_t IRAM_ATTR halFbDrawChar(uint16_t c, int32_t x, int32_t y, int32_t bLeft, int32_t bTop, int32_t bRight, int32_t bBottom)
 {
-    int32_t charIndex = -1;
-    const uint8_t *glyph = nullptr;
+    const uint8_t *glyphData = nullptr;
     hal_font_section_info_t *section = halGetFontSection(c);
 
     if (section == nullptr)
         return 0;
 
-    glyph = (const uint8_t *)(&((uint8_t *)font)[0] + (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
-    drawGlyph(glyph, section->charWidth, 16, x, y);
+    glyphData = (const uint8_t *)(&((uint8_t *)font)[0] + (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
+    drawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight), bLeft, bTop, bRight, bBottom);
     return section->charWidth;
 }
 
-void halFbDrawText(const char *string, int32_t x, int32_t y)
+void halFbDrawText(const char *string, int32_t x, int32_t y, int32_t bLeft, int32_t bTop, int32_t bRight, int32_t bBottom)
 {
     uint16_t unicode = 0;
     int32_t currPos = 0;
+    int32_t dx = x, dy = y;
     readUtf8Char(&unicode, &currPos, string);
 
     while (unicode)
     {
         if (unicode == 0xd || unicode == 0xa)
         {
-            x = 0;
-            y += TEXT_LINE_HEIGHT;
+            dx = x;
+            dy += TEXT_LINE_HEIGHT;
         }
         else
         {
-            x += halFbDrawChar(unicode, x, y);
+            dx += halFbDrawChar(unicode, dx, dy, bLeft, bTop, bRight, bBottom);
         }
 
         readUtf8Char(&unicode, &currPos, string);
