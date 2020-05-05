@@ -48,7 +48,7 @@ PLATFORMS = {
     }
 }
 
-CURRENT_PLATFORM = ''
+CURRENT_PLATFORM = 'esp32'
 
 
 def isWindows():

@@ -151,6 +151,10 @@ static duk_ret_t glue%s%s(duk_context *ctx)
 }
 ''' % (camelFormat(MODULE_NAME), camelFormat(funcName), genLocalVarDefine(transTypeList(typeList)), genArgumentFetchCode(typeList), genFunctionCallAndResult(funcName, targetFuncName, typeList))
 
+def arity(typeList):
+    if not TYPE_RULES.has_key(typeList[0]):
+        typeList = typeList[1:]
+    return len(typeList) - 1
 
 # magic: function 0, const 1.
 def genRegList(moduleDict, magic):
@@ -159,7 +163,7 @@ def genRegList(moduleDict, magic):
         funcDict = moduleDict['function']
         for func in funcDict:
             ret += '''    { "%s", glue%s%s , %d },\n''' % (func, camelFormat(
-                MODULE_NAME), camelFormat(func), len(funcDict[func])-1)
+                MODULE_NAME), camelFormat(func), arity(funcDict[func]))
     if magic == 1:
         if "const" in moduleDict:
             for constName in moduleDict['const']:
