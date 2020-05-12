@@ -1,0 +1,13 @@
+{
+    "function" :{
+        "init": [
+            "void"
+        ],
+        "update": [
+            "void"
+        ],
+        "getFB": [
+            "buf"
+        ]
+    }
+}

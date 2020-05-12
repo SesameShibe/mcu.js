@@ -1,0 +1,16 @@
+{
+    "function": {
+        "begin" : [
+            "void",
+            "u32",
+            "u32",
+            "u32",
+            "u32"
+        ],
+        "writeBits": [
+            "void",
+            "u32",
+            "u32"
+        ]
+    }
+}

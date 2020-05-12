@@ -1,4 +1,5 @@
 
+#pragma once
 
 void halOsSleepMs(uint32_t t)
 {

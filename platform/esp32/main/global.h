@@ -1,4 +1,7 @@
 #pragma once
+
+#define CONFIG_DISABLE_HAL_LOCKS 1
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
