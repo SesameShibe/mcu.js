@@ -57,8 +57,30 @@ void loadBuiltinJS(duk_context* ctx, const u8* bin, const char* filename) {
 	}
 }
 
+#define MCUJS_MALLOC_CAPS (MALLOC_CAP_SPIRAM)
+
+DUK_INTERNAL void *mcujs_alloc_function(void *udata, duk_size_t size) {
+	void *res;
+	DUK_UNREF(udata);
+	res = heap_caps_malloc(size, MCUJS_MALLOC_CAPS);
+	return res;
+}
+
+DUK_INTERNAL void *mcujs_realloc_function(void *udata, void *ptr, duk_size_t newsize) {
+	void *res;
+	DUK_UNREF(udata);
+	res = heap_caps_realloc(ptr, newsize, MCUJS_MALLOC_CAPS);
+	return res;
+}
+
+DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
+	DUK_UNREF(udata);
+	heap_caps_free(ptr);
+}
+
+
 int mainLoop() {
-	duk_context* ctx = duk_create_heap(NULL, NULL, NULL, NULL, mcujs_fatal_handler);
+	duk_context* ctx = duk_create_heap(mcujs_alloc_function, mcujs_realloc_function, mcujs_free_function, NULL, mcujs_fatal_handler);
 	if (!ctx) {
 		fprintf(stderr, "Failed to create a Duktape heap.\n");
 		exit(1);
