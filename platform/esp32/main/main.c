@@ -25,6 +25,7 @@
 #include "hal/gpio.h"
 #include "hal/lcd.h"
 #include "hal/spi.h"
+#include "hal/i2c.h"
 
 
 #include "__generated/gen_js.h"
@@ -39,6 +40,14 @@ static void mcujs_fatal_handler(void* udata, const char* msg) {
 	printf("rebooting...\n");
 	halOsReboot();
 	/* abort(); */
+}
+
+int mcujsHandleAssertFailed(const char* expr, const char* file, int line) {
+	printf("*** MCUJS ASSERT FAILED: %s %s %d\n", expr, file, line);
+	halOsSleepMs(5000);
+	printf("rebooting...\n");
+	halOsReboot();
+	return 0;
 }
 
 void loadBuiltinJS(duk_context* ctx, const u8* bin, const char* filename) {

@@ -1,6 +1,12 @@
 #pragma once
 
-#define CONFIG_DISABLE_HAL_LOCKS 1
+int mcujsHandleAssertFailed(const char* expr, const char* file, int line) ;
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#define MCUJS_ASSERT(expression) (void)(                                                       \
+            (!!(expression)) ||                                                              \
+            (mcujsHandleAssertFailed((#expression), (__FILE__), (__LINE__)), 0) \
+        )
+
 
 #include <stdlib.h>
 #include <stdio.h>

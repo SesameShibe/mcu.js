@@ -1,10 +1,14 @@
 
 #pragma once
 
-void halOsSleepMs(uint32_t t)
+void halOsSleepMs(u32 ms)
 {
-    vTaskDelay(t / portTICK_PERIOD_MS);
+    vTaskDelay(ms / portTICK_PERIOD_MS);
 }
+
+
+#define halOsDelayUs ets_delay_us
+
 
 uint32_t halOsGetTickCountMs()
 {

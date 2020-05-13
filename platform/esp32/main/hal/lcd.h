@@ -52,7 +52,7 @@ spi_device_handle_t lcdSpiDev;
 static uint16_t lcdFB[LCD_WIDTH * LCD_HEIGHT];
 u16 lcdRowOffset, lcdColOffset;
 
-static inline void halLcdSpiWrite(u32 dat, u8 bitlen) {
+static ALWAYS_INLINE void halLcdSpiWrite(u32 dat, u8 bitlen) {
 	LCD_SPI_HW.mosi_dlen.val = bitlen - 1;
 	LCD_SPI_HW.miso_dlen.val = 0;
 	LCD_SPI_HW.data_buf[0] = dat;
@@ -61,21 +61,21 @@ static inline void halLcdSpiWrite(u32 dat, u8 bitlen) {
 		;
 }
 
-void halLcdWriteCmd8(u8 dat) {
+void IRAM_ATTR halLcdWriteCmd8(u8 dat) {
 	LCD_SET_DC(0);
 	LCD_SET_CS(0);
 	halLcdSpiWrite(dat, 8);
 	LCD_SET_CS(1);
 }
 
-void halLcdWriteDat8(u8 dat) {
+void IRAM_ATTR halLcdWriteDat8(u8 dat) {
 	LCD_SET_DC(1);
 	LCD_SET_CS(0);
 	halLcdSpiWrite(dat, 8);
 	LCD_SET_CS(1);
 }
 
-static inline void halLcdWritePixels(u32* buf, u32 lenInU32) {
+static ALWAYS_INLINE void halLcdWritePixels(u32* buf, u32 lenInU32) {
 	const int maxSendU32ForOnce = 16;
 	int i;
 
@@ -123,7 +123,7 @@ void halLcdExecuteInitCode(const u8* code) {
 	}
 }
 
-void halLcdUpdate() {
+void IRAM_ATTR halLcdUpdate() {
 	u16 c1 = 0, c2 = LCD_WIDTH - 1;
 	u16 r1 = 0, r2 = LCD_HEIGHT - 1;
 
