@@ -29,13 +29,23 @@
         "staSetHostname": [
             "bool",
             "str"
+        ],
+        "apConfig": [
+            "void",
+            "str",
+            "str",
+            "u32",
+            "u32",
+            "bool"
+        ],
+        "apBegin": [
+            "bool"
+        ],
+        "apEnd": [
+            "bool"
         ]
     },
     "const": {
-        "MODE_NULL": "WIFI_MODE_NULL",
-        "MODE_STA": "WIFI_MODE_STA",
-        "MODE_AP": "WIFI_MODE_AP",
-        "MODE_APSTA": "WIFI_MODE_APSTA",
         "AUTH_OPEN": "WIFI_AUTH_OPEN",
         "AUTH_WEP": "WIFI_AUTH_WEP",
         "AUTH_WPA_PSK": "WIFI_AUTH_WPA_PSK",

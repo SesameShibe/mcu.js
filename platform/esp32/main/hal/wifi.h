@@ -16,8 +16,6 @@ static bool _persistent = true;
 
 static EventGroupHandle_t wifi_event_group;
 
-//char STA_HOSTNAME[17] = "mcujs";
-
 /**
  * ESP32 WiFi event handler.
  */
@@ -41,18 +39,11 @@ static void wifiEventHandler(void* arg, esp_event_base_t event_base,
         } else {
             printf("disconnected!\n");
         }
+    } else if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+        //pass
+    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        //pass
     }
-
-    // case SYSTEM_EVENT_AP_STACONNECTED:
-    //     wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-    //     printf("station "+MAC2STR(event->mac)+" join, AID=%d\n",event->aid);
-    //     break;
-
-    // case SYSTEM_EVENT_AP_STADISCONNECTED:
-    //     wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-    //     printf("station "+MAC2STR(event->mac)+" leave, AID=%d\n",event->aid);
-    //     break;
-
 }
 
 bool hasStatus(i32 statusBit){
@@ -247,14 +238,13 @@ int halWifiStaBegin()
         printf("STA enable failed!\n");
         return false;
     }
-    //tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, STA_HOSTNAME);
 
     esp_wifi_connect();
 
     return true;
 }
 
-int halWifiStaDisconnect(bool off){
+int halWifiStaDisconnect(bool end){
     if(getMode() & WIFI_MODE_STA){
         retry_num = 6; //disable reconnect
         if(esp_wifi_disconnect()){
@@ -262,7 +252,7 @@ int halWifiStaDisconnect(bool off){
             printf("disconnect failed!\n");
             return false;
         }
-        if(off) {
+        if(end) {
              return enableSTA(false);
         }
         return true;
@@ -294,4 +284,46 @@ bool halWifiStaSetHostname(const char * hostname)
 
 /* AP */
 
+// Default: auth=open max=5
+void halWifiApConfig(const char* ssid, const char* pass, uint32_t auth,
+                                            uint32_t max, bool persistent){
+                                    
+    wifi_auth_mode_t auth_mode = (wifi_auth_mode_t)auth;
+    wifi_config_t conf;
+    memset(&conf, 0, sizeof(wifi_config_t));
+    strncpy((char*) conf.ap.ssid, ssid, sizeof(conf.ap.ssid));
+    if (strcmp(pass,"undefined"))
+    {
+        strncpy((char*) conf.ap.password, pass, sizeof(conf.ap.password));
+        conf.ap.authmode = auth_mode;
+    }else{
+        conf.ap.authmode = WIFI_AUTH_OPEN;
+    }
+    if (max)
+    {
+        conf.ap.max_connection = max;
+    }else{
+        conf.ap.max_connection = 5;
+    }
+
+    wifi_config_t current_conf;
+    esp_wifi_get_config(ESP_IF_WIFI_AP, &current_conf);
+    if(!isConfigEqual(&current_conf, &conf)) {
+        esp_wifi_set_config(ESP_IF_WIFI_AP, &conf);
+    }
+
+    _persistent = persistent;
+}
+
+int halWifiApBegin(){
+    if (!enableAP(true)){
+        printf("AP enable failed!\n");
+        return false;
+    }
+    return true;
+}
+
+int halWifiApEnd(){
+    return enableAP(false);
+}
 
