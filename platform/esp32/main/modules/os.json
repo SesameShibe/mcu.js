@@ -10,6 +10,9 @@
         "getFreeMem": [
             "u32"
         ],
+        "getFreeSRAM": [
+            "u32"
+        ],
         "getMinFreeMem": [
             "u32"
         ],

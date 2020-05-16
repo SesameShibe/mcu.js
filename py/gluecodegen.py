@@ -9,6 +9,7 @@ TYPE_RULES = {
     'int': ('int32_t ', 'duk_to_int32', 'duk_push_int'),
     'i32': ('int32_t ', 'duk_to_int32', 'duk_push_int'),
     'u32': ('uint32_t ', 'duk_to_uint32', 'duk_push_uint'),
+    'u8': ('uint8_t ', 'duk_to_uint32', 'duk_push_uint'),
     #'u16': ('uint16_t ', 'duk_to_uint16', 'duk_push_uint'),
     'double': ('double ', 'duk_to_number', 'duk_push_number'),
     'bool': ('int ', 'duk_to_boolean', 'duk_push_boolean'),

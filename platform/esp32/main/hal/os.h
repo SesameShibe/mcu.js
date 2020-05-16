@@ -1,9 +1,14 @@
 
+#pragma once
 
-void halOsSleepMs(uint32_t t)
+void halOsSleepMs(u32 ms)
 {
-    vTaskDelay(t / portTICK_PERIOD_MS);
+    vTaskDelay(ms / portTICK_PERIOD_MS);
 }
+
+
+#define halOsDelayUs ets_delay_us
+
 
 uint32_t halOsGetTickCountMs()
 {
@@ -12,6 +17,10 @@ uint32_t halOsGetTickCountMs()
 
 uint32_t halOsGetFreeMem() {
     return esp_get_free_heap_size();
+}
+
+uint32_t halOsGetFreeSRAM() {
+    return heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
 }
 
 uint32_t halOsGetMinFreeMem() {

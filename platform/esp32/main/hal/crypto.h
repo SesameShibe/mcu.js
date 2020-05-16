@@ -3,7 +3,6 @@
 
 int halCryptoHashBuf(const char *algorithm, JS_BUFFER src, JS_BUFFER dst)
 {
-    size_t dstLen = 0;
     if (strcmp(algorithm, "sha1") == 0)
     {
         if (20 > dst.size)
