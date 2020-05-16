@@ -16,31 +16,17 @@ static bool _persistent = true;
 
 static EventGroupHandle_t wifi_event_group;
 
-char STA_HOSTNAME[17] = "mcujs";
+//char STA_HOSTNAME[17] = "mcujs";
 
 /**
  * ESP32 WiFi event handler.
- *
- * SYSTEM_EVENT_AP_PROBEREQRECVED
- * SYSTEM_EVENT_AP_STACONNECTED
- * SYSTEM_EVENT_AP_STADISCONNECTED
- * SYSTEM_EVENT_AP_START
- * SYSTEM_EVENT_AP_STOP
- * SYSTEM_EVENT_STA_AUTHMODE_CHANGE
- * SYSTEM_EVENT_STA_CONNECTED
- * SYSTEM_EVENT_STA_DISCONNECTED
- * SYSTEM_EVENT_STA_GOT_IP
- * SYSTEM_EVENT_STA_START
- * SYSTEM_EVENT_STA_STOP
- * SYSTEM_EVENT_SCAN_DONE
- * SYSTEM_EVENT_WIFI_READY
  */
 static void wifiEventHandler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
     if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        printf("got ip:%s",ip4addr_ntoa(&event->ip_info.ip));
+        printf("got ip:%s\n",ip4addr_ntoa(&event->ip_info.ip));
         retry_num = 0;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
@@ -49,10 +35,12 @@ static void wifiEventHandler(void* arg, esp_event_base_t event_base,
             esp_wifi_connect();
             retry_num++;
             printf("retry to connect to the AP\n");
-        } else {
+        } else if (retry_num == MAXIMUM_RETRY) {
             xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
+            printf("connect to the AP fail!\n");
+        } else {
+            printf("disconnected!\n");
         }
-        printf("connect to the AP fail!\n");
     }
 
     // case SYSTEM_EVENT_AP_STACONNECTED:
@@ -65,41 +53,14 @@ static void wifiEventHandler(void* arg, esp_event_base_t event_base,
     //     printf("station "+MAC2STR(event->mac)+" leave, AID=%d\n",event->aid);
     //     break;
 
-
 }
 
-// static esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
-// {
-//     switch(event->event_id) {
-//         case SYSTEM_EVENT_STA_START:
-//             break;
-//         case SYSTEM_EVENT_STA_GOT_IP:
-//             printf("sta ip: %s\n",ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
-//             retry_num = 0;
-//             xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
-//             break;
-//         case SYSTEM_EVENT_STA_DISCONNECTED:
-//             {
-//                 xEventGroupClearBits(wifi_event_group, WIFI_CONNECTED_BIT);
-//                 if (retry_num < MAXIMUM_RETRY) {
-//                     esp_wifi_connect();
-//                     retry_num++;
-//                     printf("retry to connect to the AP\n");
-//                 } else {
-//                     xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
-//                 }
-//                 printf("connect to the AP fail!\n");
-//                 break;
-//             }
-//         case SYSTEM_EVENT_AP_STACONNECTED:
-//             break;
-//         case SYSTEM_EVENT_AP_STADISCONNECTED:
-//             break;
-//         default:
-//             break;
-//     }
-//     return ESP_OK;
-// }
+bool hasStatus(i32 statusBit){
+    if (!wifi_event_group){
+        return false;
+    }
+    return (xEventGroupClearBits(wifi_event_group, 0)&statusBit) != 0;
+}
 
 /* init */
 
@@ -255,15 +216,14 @@ bool enableAP(bool enable){
 
 /* STA */
 
-static bool isConfigEqual(const wifi_config_t& lhs, const wifi_config_t& rhs)
+static bool isConfigEqual(const wifi_config_t *lhs, const wifi_config_t *rhs)
 {
-    if(memcmp(&lhs, &rhs, sizeof(wifi_config_t)) != 0) {
+    if(memcmp(lhs, rhs, sizeof(wifi_config_t)) != 0) {
         return false;
     }
     return true;
 }
 
-// 工作到这里了~
 void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
@@ -274,24 +234,64 @@ void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
 
     wifi_config_t current_conf;
     esp_wifi_get_config(ESP_IF_WIFI_STA, &current_conf);
-    if(!isConfigEqual(current_conf, conf)) {
+    if(!isConfigEqual(&current_conf, &conf)) {
         esp_wifi_set_config(ESP_IF_WIFI_STA, &conf);
     }
 
     _persistent = persistent;
 }
 
-int halWifiStaBegin(const char* ssid, const char* pass)
+int halWifiStaBegin()
 {
     if (!enableSTA(true)){
         printf("STA enable failed!\n");
         return false;
     }
-    tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, STA_HOSTNAME);
+    //tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, STA_HOSTNAME);
 
     esp_wifi_connect();
 
     return true;
 }
+
+int halWifiStaDisconnect(bool off){
+    if(getMode() & WIFI_MODE_STA){
+        retry_num = 6; //disable reconnect
+        if(esp_wifi_disconnect()){
+            retry_num = 0;
+            printf("disconnect failed!\n");
+            return false;
+        }
+        if(off) {
+             return enableSTA(false);
+        }
+        return true;
+    }
+    return false;
+}
+
+int halWifiStaIsConnected(){
+    return hasStatus(WIFI_CONNECTED_BIT);
+}
+
+const char * halWifiStaIp()
+{
+    if(!halWifiStaIsConnected()){
+        return "";
+    }
+    tcpip_adapter_ip_info_t ip;
+    tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip);
+    return ip4addr_ntoa(&ip.ip);
+}
+
+bool halWifiStaSetHostname(const char * hostname)
+{
+    if(getMode() == WIFI_MODE_NULL){
+        return false;
+    }
+    return tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, hostname) == 0;
+}
+
+/* AP */
 
 

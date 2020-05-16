@@ -8,15 +8,27 @@
             "bool"
         ],
         "staBegin": [
+            "bool"
+        ],
+        "staDisconnect": [
             "bool",
-            "str",
-            "str"
+            "bool"
         ],
         "staConfig": [
             "void",
             "str",
             "str",
             "bool"
+        ],
+        "staIsConnected": [
+            "bool"
+        ],
+        "staIp": [
+            "str"
+        ],
+        "staSetHostname": [
+            "bool",
+            "str"
         ]
     },
     "const": {
