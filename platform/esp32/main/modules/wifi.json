@@ -1,0 +1,35 @@
+{
+    "function": {
+        "on": [
+            "bool",
+            "bool"
+        ],
+        "off": [
+            "bool"
+        ],
+        "staBegin": [
+            "bool",
+            "str",
+            "str"
+        ],
+        "staConfig": [
+            "void",
+            "str",
+            "str",
+            "bool"
+        ]
+    },
+    "const": {
+        "MODE_NULL": "WIFI_MODE_NULL",
+        "MODE_STA": "WIFI_MODE_STA",
+        "MODE_AP": "WIFI_MODE_AP",
+        "MODE_APSTA": "WIFI_MODE_APSTA",
+        "AUTH_OPEN": "WIFI_AUTH_OPEN",
+        "AUTH_WEP": "WIFI_AUTH_WEP",
+        "AUTH_WPA_PSK": "WIFI_AUTH_WPA_PSK",
+        "AUTH_WPA2_PSK": "WIFI_AUTH_WPA2_PSK",
+        "AUTH_WPA_WPA2_PSK": "WIFI_AUTH_WPA_WPA2_PSK",
+        "AUTH_WPA2_ENTERPRISE": "WIFI_AUTH_WPA2_ENTERPRISE",
+        "AUTH_MAX": "WIFI_AUTH_MAX"
+    }
+}

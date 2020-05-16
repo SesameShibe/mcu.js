@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "global.h"
+#include "nvs_flash.h"
 
 #include "duktape.h"
 #include "print-alert/duk_print_alert.h"
@@ -23,6 +24,7 @@
 #include "hal/socket.h"
 #include "hal/uart.h"
 #include "hal/gpio.h"
+#include "hal/wifi.h"
 
 #include "__generated/gen_js.h"
 #include "__generated/gen_jsmods.h"
@@ -68,6 +70,13 @@ int mainLoop() {
 	loadBuiltinJS(ctx, js_ws, "ws");
 	loadBuiltinJS(ctx, js_ui, "ui");
 	loadBuiltinJS(ctx, js_devserver, "devserver");
+
+	/* init nvs */
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+      nvs_flash_erase();
+      nvs_flash_init();
+    }
 
 	/* callback */
 	duk_eval_string(ctx, "boot();");
