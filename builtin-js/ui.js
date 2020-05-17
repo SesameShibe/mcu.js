@@ -8,8 +8,13 @@ Array.prototype.findIndex = function (f) {
 };
 
 (function () {
-    ui.ViewGroup = function (name) {
-        this.Name = name;
+    ui.makeColor = function (r, g, b) {
+        return (((r >> 3) & 0x1F) << 11)
+            | (((g >> 2) & 0x3F) << 5)
+            | ((b >> 3) & 0x1F);
+    }
+
+    ui.ViewGroup = function () {
         this.Views = new Array();
     }
 
@@ -29,7 +34,6 @@ Array.prototype.findIndex = function (f) {
     }
 
     ui.ViewGroup.prototype.removeView = function (view) {
-        print("Remove " + view.Name + " from " + this.Name);
         var index = this.Views.findIndex(function (v) { return v === view });
         if (index == -1)
             throw "Cannot found view in view group.";
@@ -60,47 +64,96 @@ Array.prototype.findIndex = function (f) {
     }
 
 
+    // View base class
     ui.View = function () {
         this.position = { x: 0, y: 0 };
         this.size = { width: 0, height: 0 };
+        this.foreground = 0xFFFF;
+        this.background = 0;
     }
 
     ui.View.prototype.draw = function () {
         if (this.Parent == undefined)
             throw "View must in a view group.";
+        this.startDraw();
+    }
+
+    ui.View.prototype.setForeground = function (color) {
+        this.foreground = color;
+    }
+
+    ui.View.prototype.setBackground = function (color) {
+        this.background = color;
+    }
+
+    ui.View.prototype.setSize = function (w, h) {
+        this.size.width = w;
+        this.size.height = h;
+    }
+
+    ui.View.prototype.setPos = function (x, y) {
+        this.position.x = x;
+        this.position.y = y;
+    }
+
+    ui.View.prototype.startDraw = function () {
+        ui.setPenColor(this.foreground);
     }
 
 
     ui.TextView = function () {
         ui.View.call(this);
         this.text = "";
-        this.Padding = 0;
+        this.padding = 4;
+        this.cornerRadius = 0;
         this.autoLineBreak = false;
         this.LineHeight = 16;
+        this.textScrollX = 0;
+        this.textScrollY = 0;
     }
     ui.TextView.prototype = new ui.View();
+
+    ui.TextView.prototype.setTextScroll = function (posX, posY) {
+        this.textScrollX = posX;
+        this.textScrollY = posY;
+    }
+
+    ui.TextView.prototype.setCornerRadius = function (cornerRadius) {
+        this.cornerRadius = cornerRadius;
+    }
+
+    ui.TextView.prototype.setPadding = function (padding) {
+        this.padding = padding;
+    }
 
     ui.TextView.prototype.draw = function () {
         ui.View.prototype.draw.call(this);
 
-        ui.drawRectangle(
+        ui.setPenColor(this.background);
+        ui.fillRectangle(
             this.position.x,
             this.position.y,
             this.position.x + this.size.width,
-            this.position.y + this.size.height);
+            this.position.y + this.size.height,
+            this.cornerRadius);
 
+        ui.setPenColor(this.foreground);
         if (!this.autoLineBreak) {
             ui.drawText(
                 this.text,
-                this.position.x + this.Padding,
-                this.y + this.Padding);
+                this.position.x + this.padding - this.textScrollX,
+                this.position.y + this.padding - this.textScrollY,
+                this.position.x + this.padding,
+                this.position.y + this.padding,
+                this.position.x + this.size.width - this.padding,
+                this.position.y + this.size.height - this.padding);
         } else {
             var currentX = 0;
             var str = "";
             for (var index = 0; index < this.text.length; index++) {
                 var c = this.text[index];
                 var cWidth = ui.measureTextWidth(c);
-                if (cWidth + currentX > this.size.width) {
+                if (cWidth + currentX > (this.size.width - this.padding)) {
                     currentX = 0;
                     str += '\n';
                 }
@@ -109,30 +162,13 @@ Array.prototype.findIndex = function (f) {
             }
             ui.drawText(
                 str,
-                this.position.x + this.Padding,
-                this.y + this.Padding);
+                this.position.x + this.padding - this.textScrollX,
+                this.position.y + this.padding - this.textScrollY,
+                this.position.x + this.padding,
+                this.position.y + this.padding,
+                this.position.x + this.size.width - this.padding,
+                this.position.y + this.size.height - this.padding);
         }
     }
 }
 )();
-
-var t = 'ESP32 采用 40 nm 工艺制成，\n\
-具有最佳的功耗性能、射频性能、\n\
-稳定性、通用性和可靠性，适用于各种应用场景和不同功耗需求。\n\n\
-乐鑫为用户提供完整的软、硬件资源，\n\
-进行 ESP32 硬件设备的开发。\n\
-其中，乐鑫的软件开发环境 ESP-IDF \n\
-旨在协助用户快速开发物联网 (IoT) 应用，\n\
-可满足用户对 Wi-Fi、蓝牙、\n\
-低功耗等方面的要求。';
-
-function initUi() {
-    var s = new ui.Screen();
-    var tv = new ui.TextView();
-    tv.text = t;
-    tv.autoLineBreak = true;
-    tv.size.width = 50;
-    tv.size.height = 50;
-    s.addView(tv);
-    setInterval(function () { s.draw(); }, 100)
-}

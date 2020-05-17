@@ -19,7 +19,7 @@ function tryEval(code, err) {
                 return undefined;
             }
         }
-        print('Unhandled error: ' + e) ;
+        print('Unhandled error: ' + e);
         return undefined;
     }
 }
@@ -51,8 +51,22 @@ function shellTask() {
                     lineBuf = '';
                 }
             } else {
-                var s = String.fromCharCode(recvByte);
-                lineBuf += s;
+                if ((recvByte & 0x80) == 0) {
+                    var s = String.fromCharCode(recvByte);
+                    lineBuf += s;
+                } else if ((recvByte & 0xE0) == 0xC0) {
+                    var code = ((recvByte & 0x1F) << 6) | (uart.readByte(0) & 0x3F);
+                    var s = String.fromCharCode(code);
+                    lineBuf += s;
+                } else if ((recvByte & 0xF0) == 0xE0) {
+                    var recvByte2 = uart.readByte(0);
+                    var recvByte3 = uart.readByte(0);
+                    var code = ((recvByte & 0x0F) << 12)
+                        | ((recvByte2 & 0x3F) << 6)
+                        | (recvByte3 & 0x3F);
+                    var s = String.fromCharCode(code);
+                    lineBuf += s;
+                }
             }
         }
     }
