@@ -3,12 +3,10 @@
 
 int halCryptoHashBuf(const char *algorithm, JS_BUFFER src, JS_BUFFER dst)
 {
+    CHECK_JSBUF_NOTNULL(src);
     if (strcmp(algorithm, "sha1") == 0)
     {
-        if (20 > dst.size)
-        {
-            return -2;
-        }
+        CHECK_JSBUF_SIZE(dst, 20);
         mbedtls_sha1(src.buf, src.size, dst.buf);
         return 0;
     }

@@ -11,6 +11,10 @@
             "void",
             "u32",
             "u32"
+        ],
+        "writeBuf": [
+            "void",
+            "buf"
         ]
     }
 }

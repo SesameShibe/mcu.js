@@ -36,6 +36,27 @@
             "u8",
             "u8",
             "u8"
+        ],
+        "simpleWrite8":[
+            "u8",
+            "u8",
+            "u8",
+            "u8",
+            "u8"
+        ],
+        "simpleReadBuf":[
+            "u8",
+            "u8",
+            "u8",
+            "u8",
+            "buf"
+        ],
+        "simpleWriteBuf":[
+            "u8",
+            "u8",
+            "u8",
+            "u8",
+            "buf"
         ]
     }
 }
