@@ -1,10 +1,5 @@
 #pragma once
 
-int mcujsHandleAssertFailed(const char* expr, const char* file, int line);
-#define ALWAYS_INLINE inline __attribute__((always_inline))
-#define MCUJS_ASSERT(expression) \
-	(void) ((!!(expression)) || (mcujsHandleAssertFailed((#expression), (__FILE__), (__LINE__)), 0))
-
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -29,3 +24,14 @@ typedef struct _JS_BUFFER {
 	uint8_t* buf;
 	size_t size;
 } JS_BUFFER;
+
+
+int mcujsHandleAssertFailed(const char* expr, const char* file, int line);
+
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+#define MCUJS_ASSERT(expression) \
+	(void) ((!!(expression)) || (mcujsHandleAssertFailed((#expression), (__FILE__), (__LINE__)), 0))
+
+#define CHECK_BUSID(max) MCUJS_ASSERT(busID < (max))
+#define CHECK_JSBUF_NOTNULL(b) MCUJS_ASSERT(b.buf)
+#define CHECK_JSBUF_SIZE(b, l) MCUJS_ASSERT((b.size) >= (l))
