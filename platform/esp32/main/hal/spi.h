@@ -52,13 +52,12 @@ void halSpiWrite32(u32 v) {
 	halSpiWriteBits(v, 32);
 }
 
-void halSpiWriteBuf(JS_BUFFER buf, u32 offset, u32 len) {
-	if ((len <= buf.size) && (offset + len <= buf.size) && (offset < buf.size)) {
-		spi_transaction_t t;
-		memset(&t, 0, sizeof(t)); // Zero out the transaction
-		t.length = 8 * len; // Command is 8 bits
-		t.tx_buffer = buf.buf + offset; // The data is the cmd itself
-		t.user = (void*) 0; // D/C needs to be set to 0
-		spi_device_polling_transmit(spiDev, &t); // Transmit!
-	}
+void halSpiWriteBuf(JS_BUFFER buf) {
+	CHECK_JSBUF_SIZE(buf, 1);
+
+	spi_transaction_t t;
+	memset(&t, 0, sizeof(t)); // Zero out the transaction
+	t.length = 8 * buf.size; // Command is 8 bits
+	t.tx_buffer = buf.buf; // The data is the cmd itself
+	spi_device_polling_transmit(spiDev, &t); // Transmit!
 }
