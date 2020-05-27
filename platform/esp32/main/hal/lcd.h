@@ -247,6 +247,11 @@ JS_BUFFER halLcdGetFB() {
 	return buf;
 }
 
+void halLcdClearScreen(){
+	memset(lcdFB, 0, sizeof(lcdFB));
+	halLcdUpdate();
+}
+
 void swapInt(int32_t* a, int32_t* b) {
 	*a ^= *b;
 	*b ^= *a;
@@ -265,11 +270,11 @@ int32_t max(int32_t a, int32_t b) {
 	return a > b ? a : b;
 }
 
-void halLcdSetpenColor(uint32_t color) {
+void halLcdSetPenColor(uint32_t color) {
 	penColor = color;
 }
 
-uint32_t halLcdGetpenColor() {
+uint32_t halLcdGetPenColor() {
 	return penColor;
 }
 

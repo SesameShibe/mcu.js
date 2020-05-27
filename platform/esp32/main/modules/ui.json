@@ -1,0 +1,112 @@
+{
+    "function" :{
+        "init": [
+            "halLcdInit",
+            "void"
+        ],
+        "update": [
+            "halLcdUpdate",
+            "void"
+        ],
+        "getFB": [
+            "halLcdGetFB",
+            "buf"
+        ],
+        "setPenColor": [
+            "halLcdSetPenColor",
+            "void",
+            "u32"
+        ],
+        "getPenColor": [
+            "halLcdGetPenColor",
+            "u32"
+        ],
+        "drawLine": [
+            "halLcdDrawLine",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "drawRectangle": [
+            "halLcdDrawRectangle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "fillRectangle": [
+            "halLcdFillRectangle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "drawTriangle": [
+            "halLcdDrawTriangle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "fillTriangle": [
+            "halLcdFillTriangle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "drawCircle": [
+            "halLcdDrawCircle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "fillCircle": [
+            "halLcdFillCircle",
+            "void",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "drawText": [
+            "halLcdDrawText",
+            "void",
+            "str",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32",
+            "i32"
+        ],
+        "measureTextWidth":[
+            "halLcdMeasureTextWidth",
+            "i32",
+            "str"
+        ],
+        "measureTextHeight":[
+            "halLcdMeasureTextHeight",
+            "i32",
+            "str"
+        ],
+        "clear": [
+            "halLcdClearScreen",
+            "void"
+        ]
+    }
+}

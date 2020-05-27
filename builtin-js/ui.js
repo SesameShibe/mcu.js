@@ -7,11 +7,48 @@ Array.prototype.findIndex = function (f) {
     return -1;
 };
 
+function isFunction(functionToCheck) {
+    return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
+}
+
 (function () {
     ui.makeColor = function (r, g, b) {
         return (((r >> 3) & 0x1F) << 11)
             | (((g >> 2) & 0x3F) << 5)
             | ((b >> 3) & 0x1F);
+    }
+
+    ui.RenderQueue = new Array();
+    ui.LastTouchedView = null;
+    ui.LastTouchedPoint = null;
+
+    ui.dispatchTouchEvent = function () {
+        if (!touch.isInited) touch.init();
+
+        var touched = touch.isTouched();
+        if (touched) {
+            var point = touch.getPoint(0);
+
+            for (var i = ui.RenderQueue.length - 1; i >= 0; i--) {
+                var v = ui.RenderQueue[i];
+                if (point.x > v.position.x
+                    && (point.x < v.position.x + v.size.width)
+                    && point.y > v.position.y
+                    && point.y < v.position.y + v.size.width) {
+                    v.touchDown(point);
+
+                    ui.LastTouchedView = v;
+                    ui.LastTouchedPoint = point;
+                }
+            }
+        } else {
+            if (ui.LastTouchedPoint != null
+                && ui.LastTouchedView != null) {
+                ui.LastTouchedView.touchUp(ui.LastTouchedPoint);
+                ui.LastTouchedPoint = null;
+                ui.LastTouchedView = null;
+            }
+        }
     }
 
     ui.ViewGroup = function () {
@@ -59,6 +96,7 @@ Array.prototype.findIndex = function (f) {
 
     ui.Screen.prototype.draw = function () {
         ui.clear();
+        ui.RenderQueue = new Array();
         ui.ViewGroup.prototype.draw.call(this);
         ui.update();
     }
@@ -70,37 +108,59 @@ Array.prototype.findIndex = function (f) {
         this.size = { width: 0, height: 0 };
         this.foreground = 0xFFFF;
         this.background = 0;
+        this.updateRequired = false;
     }
 
     ui.View.prototype.draw = function () {
         if (this.Parent == undefined)
-            throw "View must in a view group.";
+            throw "A view must in a view group.";
         this.startDraw();
     }
 
     ui.View.prototype.setForeground = function (color) {
+        this.updateRequired = true;
         this.foreground = color;
     }
 
     ui.View.prototype.setBackground = function (color) {
+        this.updateRequired = true;
         this.background = color;
     }
 
     ui.View.prototype.setSize = function (w, h) {
+        this.updateRequired = true;
         this.size.width = w;
         this.size.height = h;
     }
 
     ui.View.prototype.setPos = function (x, y) {
+        this.updateRequired = true;
         this.position.x = x;
         this.position.y = y;
     }
 
     ui.View.prototype.startDraw = function () {
-        ui.setPenColor(this.foreground);
+    }
+
+    ui.View.prototype.endDraw = function () {
+        this.updateRequired = false;
+        ui.RenderQueue.push(this);
+    }
+
+    ui.View.prototype.touchDown = function (point) {
+        this.updateRequired = true;
+        if (this.onTouchDown != null && isFunction(this.onTouchDown))
+            this.onTouchDown(point)
+    }
+
+    ui.View.prototype.touchUp = function (point) {
+        this.updateRequired = true;
+        if (this.onTouchUp != null && isFunction(this.onTouchUp))
+            this.onTouchUp(point);
     }
 
 
+    // TextView
     ui.TextView = function () {
         ui.View.call(this);
         this.text = "";
@@ -114,15 +174,18 @@ Array.prototype.findIndex = function (f) {
     ui.TextView.prototype = new ui.View();
 
     ui.TextView.prototype.setTextScroll = function (posX, posY) {
+        this.updateRequired = true;
         this.textScrollX = posX;
         this.textScrollY = posY;
     }
 
     ui.TextView.prototype.setCornerRadius = function (cornerRadius) {
+        this.updateRequired = true;
         this.cornerRadius = cornerRadius;
     }
 
     ui.TextView.prototype.setPadding = function (padding) {
+        this.updateRequired = true;
         this.padding = padding;
     }
 
@@ -169,6 +232,31 @@ Array.prototype.findIndex = function (f) {
                 this.position.x + this.size.width - this.padding,
                 this.position.y + this.size.height - this.padding);
         }
+
+        this.endDraw();
+    }
+
+
+    // Button
+    ui.Button = function () {
+        ui.TextView.call(this);
+        this.onTouchDown = null;
+        this.onTouchUp = null;
+        this.onClick = null;
+
+        this.pressedColor = ui.makeColor(255, 255, 255);
+        this.releasedColor = ui.makeColor(0, 0, 0);
+    }
+    ui.Button.prototype = new ui.TextView();
+
+    ui.Button.prototype.touchDown = function (point) {
+        this.setBackground(this.pressedColor);
+        ui.TextView.touchDown.call(this, point);
+    }
+
+    ui.Button.prototype.touchUp = function (point) {
+        this.setBackground(this.releasedColor);
+        ui.TextView.touchUp.call(this, point);
     }
 }
 )();
