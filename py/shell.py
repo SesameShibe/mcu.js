@@ -11,6 +11,23 @@ from prompt_toolkit.history import FileHistory
 COM_PORT = 'COM6'
 ser = ''
 
+def getFileEncoding(path):
+    with open(path, 'rb')as f:
+        magic = f.read(4)
+        # utf-8
+        if(magic[:3] == '\xef\xbb\xbf'):
+            return 'utf-8-sig'
+        elif (magic[:2] == '\xff\xfe'):
+            return 'utf-16le'
+        elif (magic[:2] == '\xfe\xff'):
+            return 'utf-16be'
+        elif (magic == '\x00\x00\xff\xfe'):
+            return 'utf-32le'
+        elif (magic == '\xfe\xff\x00\x00'):
+            return 'utf-32be'
+        else:
+            return 'utf-8'
+
 def recvLoop():
     reader = codecs.getreader('utf-8')(ser)
     while True:
@@ -18,9 +35,10 @@ def recvLoop():
         sys.stdout.write(char)
 
 def runfile(fn):
-    with open(fn, 'rb') as f:
+    with codecs.open(fn, 'rb', getFileEncoding(fn)) as f:
         data = f.read()
-    ser.write(data)
+    writer = codecs.getwriter('utf-8')(ser)
+    writer.write(data)
     ser.write(b'\xF8')
 
 def start():
