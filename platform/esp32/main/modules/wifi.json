@@ -10,8 +10,7 @@
         "staBegin": [
             "bool"
         ],
-        "staDisconnect": [
-            "bool",
+        "staEnd": [
             "bool"
         ],
         "staConfig": [

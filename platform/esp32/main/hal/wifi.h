@@ -244,7 +244,7 @@ int halWifiStaBegin()
     return true;
 }
 
-int halWifiStaDisconnect(bool end){
+int halWifiStaEnd(){
     if(getMode() & WIFI_MODE_STA){
         retry_num = 6; //disable reconnect
         if(esp_wifi_disconnect()){
@@ -252,10 +252,8 @@ int halWifiStaDisconnect(bool end){
             printf("disconnect failed!\n");
             return false;
         }
-        if(end) {
-             return enableSTA(false);
-        }
-        return true;
+
+        return enableSTA(false);
     }
     return false;
 }
