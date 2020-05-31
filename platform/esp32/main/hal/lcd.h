@@ -59,8 +59,8 @@ spi_device_handle_t lcdSpiDev;
 typedef struct hal_font_section_info_t {
 	uint16_t codeStart;
 	uint16_t codeEnd;
-	uint16_t charWidth;
-	uint16_t charHeight;
+	uint8_t charWidth;
+	uint8_t charHeight;
 	uint16_t glyphEntrySize;
 	uint32_t dataOffset;
 } hal_font_section_info_t;
@@ -247,9 +247,8 @@ JS_BUFFER halLcdGetFB() {
 	return buf;
 }
 
-void halLcdClearScreen(){
+void halLcdClearScreen() {
 	memset(lcdFB, 0, sizeof(lcdFB));
-	halLcdUpdate();
 }
 
 void swapInt(int32_t* a, int32_t* b) {
@@ -622,6 +621,10 @@ int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y, int32_t bLeft
 
 void halLcdDrawText(const char* string, int32_t x, int32_t y, int32_t bLeft, int32_t bTop, int32_t bRight,
                     int32_t bBottom) {
+	// printf("%x %x %x %x %x %x %x %x\n", *(uint8_t*) (string + 0), *(uint8_t*) (string + 1), *(uint8_t*) (string + 2),
+	//        *(uint8_t*) (string + 3), *(uint8_t*) (string + 4), *(uint8_t*) (string + 5), *(uint8_t*) (string + 6),
+	//        *(uint8_t*) (string + 7));
+
 	uint16_t unicode = 0;
 	int32_t currPos = 0;
 	int32_t dx = x, dy = y;
