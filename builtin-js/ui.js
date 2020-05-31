@@ -90,7 +90,7 @@ function isFunction(functionToCheck) {
 
 
     ui.Screen = function () {
-        ui.init();
+        
     }
     ui.Screen.prototype = new ui.ViewGroup();
 

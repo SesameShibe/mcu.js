@@ -52,7 +52,3 @@ function updateFrame() {
 function playAnim() {
     setInterval(updateFrame, 1);
 }
-
-
-function initUi() {
-}
