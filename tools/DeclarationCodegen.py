@@ -9,6 +9,7 @@ TYPE_RULES = {
     'void': 'void',
     'i32': 'number',
     'u32': 'number',
+    'u8': 'number',
     'double': 'number',
     'bool': 'boolean',
     'str': 'string',
@@ -45,12 +46,21 @@ def genDC():
         f.write(ret)
 
 
+def generate():
+    for fname in os.listdir(path):
+        if fname[0] == '.' :
+            continue
+        if fname[-5:] != '.json':
+            continue
+        print(fname)
+        with open(path + '/' + fname, 'r') as f:
+            modulesJson[fname[:-5]] = json.loads(f.read())
+    genDC()
+    print('...Done!')
+
+
 if len(sys.argv) >= 2:
     path = sys.argv[1]
 else: 
-    path = '../platform/esp32/main/modules.json'
-
-with open(path, 'r') as f:
-    modulesJson = json.loads(f.read())
-
-genDC()
+    path = '../platform/esp32/main/modules'
+generate()
