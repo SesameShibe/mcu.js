@@ -215,6 +215,22 @@ static bool isConfigEqual(const wifi_config_t *lhs, const wifi_config_t *rhs)
     return true;
 }
 
+int halWifiStaIsConnected(){
+    return hasStatus(WIFI_CONNECTED_BIT);
+}
+
+int halWifiStaBegin()
+{
+    if (!enableSTA(true)){
+        printf("STA enable failed!\n");
+        return false;
+    }
+    retry_num = 0; //reset
+    esp_wifi_connect();
+
+    return true;
+}
+
 void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
@@ -230,18 +246,13 @@ void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
     }
 
     _persistent = persistent;
-}
 
-int halWifiStaBegin()
-{
-    if (!enableSTA(true)){
-        printf("STA enable failed!\n");
-        return false;
+    //reconnect
+    if(halWifiStaIsConnected()){
+        esp_wifi_disconnect();
+    }else{
+        halWifiStaBegin();
     }
-
-    esp_wifi_connect();
-
-    return true;
 }
 
 int halWifiStaEnd(){
@@ -256,10 +267,6 @@ int halWifiStaEnd(){
         return enableSTA(false);
     }
     return false;
-}
-
-int halWifiStaIsConnected(){
-    return hasStatus(WIFI_CONNECTED_BIT);
 }
 
 const char * halWifiStaIp()
@@ -290,13 +297,11 @@ void halWifiApConfig(const char* ssid, const char* pass, uint32_t auth,
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
     strncpy((char*) conf.ap.ssid, ssid, sizeof(conf.ap.ssid));
-    if (strcmp(pass,"undefined"))
+    if (auth)
     {
         strncpy((char*) conf.ap.password, pass, sizeof(conf.ap.password));
-        conf.ap.authmode = auth_mode;
-    }else{
-        conf.ap.authmode = WIFI_AUTH_OPEN;
     }
+    conf.ap.authmode = auth_mode;
     if (max)
     {
         conf.ap.max_connection = max;
