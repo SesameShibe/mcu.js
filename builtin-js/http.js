@@ -65,14 +65,13 @@
         this.conn.send(this.header);
     }
 
-    // find \n
-    function findBoundary(workBuffer, ret) {
-        for (var i = 1; i < ret; i++) {
-            if (workBuffer[i] === 10) {
-                return i;
-            }
+    http.findValueByKey = function (header,key){
+        key = '\r\n'+key+':';
+        var pos = header.indexOf(key)
+        var pos2 = header.indexOf('\r\n', pos + key.length)
+        if ((pos > 0) && (pos2 > 0)) {
+            return header.substring(pos + key.length, pos2).trim()
         }
-        return -1;
     }
 
     // requestListener(req,res)
@@ -156,14 +155,19 @@
                 args: 'a=2'
             },
             'method': 'GET',
+            'version': 'HTTP/1.0',
             'header': {
               'Connection': 'close'
             }
         }; 
     */
     http.parseUrl = function (url) {
-        var reg = /^(http):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*)\??(.*)/;
+        var reg = /^([a-zA-z]+):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*)\??(.*)/;
         var parsed = url.match(reg);
+        if(parsed === null){
+            error('parse fault');
+            return 
+        }
         return {
             'hostname': parsed[2],
             'port': parsed[3] || 80,
@@ -173,19 +177,20 @@
     }
 
     function genRequestHeader(opt) {
-        var str = opt.method + ' ' + opt.url.path + ' HTTP/1.0\r\n';
+        var str = opt.method + ' ' + opt.url.path + ' ' + opt.version +'\r\n';
         return str + generateHeaderFromDict(opt.header) + '\r\n';
     }
 
-    http.sendRequest = function (opt,ondata) {
+    http.sendRequest = function (opt, ondata) {
         opt.method = opt.method || 'GET';
+        opt.version = opt.version || 'HTTP/1.0';
         opt.header = opt.header || { 'Host': opt.url.hostname + ':' + opt.url.port, 'User-Agent': 'mcujs', 'Connection': 'close' };
 
         var conn = net.tcpConnect(socket.getHostByName(opt.url.hostname), opt.url.port);
 
         conn.send(genRequestHeader(opt));
-        conn.onrecv = function(conn, buf){
-            ondata(buf);
+        if(ondata){
+            conn.onrecv = ondata;
         }
         
         return conn;
@@ -193,7 +198,7 @@
 
     http.get = function (url, ondata) {
         var opt = { 'url': http.parseUrl(url) };
-        http.sendRequest(opt, ondata);
+        return http.sendRequest(opt, ondata);
     }
 
     global.http = http
