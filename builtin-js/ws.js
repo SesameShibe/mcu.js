@@ -23,8 +23,16 @@
         return Duktape.enc('base64', hash)
     }
 
-    ws.Conn = function (conn) {
+    function handleMask(buf,len,mask) {
+        for (var i = 0; i < len; i++) {
+            buf[i] ^= mask[i % 4]
+        }
+        return buf
+    }
+
+    ws.Conn = function (conn,type) {
         this.conn = conn
+        this.type = type || 0 //0: Server, 1: Client
 
         this.state = 0 // 0: not upgraded, 1: upgraded, receiving header 2: header received, receiving payload
         this.recvHeaderBuf = new Uint8Array(14)
@@ -150,6 +158,25 @@
                 buf[3] = payloadLen & 0xFF
             }
 
+            //this conn is a client
+            if (wsConn.type === 1) {
+
+                // set MASK bit
+                buf[1] = buf[1] | 0x80
+
+                //gen masking-key
+                var mask = new Uint8Array(4)
+                for (var i = 0; i < 4; i++) {
+                    mask[i] = Math.random() * 1000
+                    buf[headerLen + i] = mask[i]
+                }
+                headerLen += 4
+
+                if (payloadLen > 0) {
+                    payload = handleMask(payload,payloadLen,mask)
+                }
+            }
+
             wsConn.pendingPayload = payload
             wsConn.conn.send(wsConn.sendHeaderBuf.subarray(0, headerLen))
         } else {
@@ -205,6 +232,7 @@
                 if (wsConn.recvPayloadPtr >= wsConn.recvPayloadLen) {
                     // payload received, unmask if needed
                     if (wsConn.recvMaskEnabled) {
+                        
                         for (var i = 0; i < wsConn.recvPayloadLen; i++) {
                             wsConn.recvPayloadBuf[i] ^= wsConn.recvMask[i % 4]
                         }
@@ -225,11 +253,9 @@
             http.waitForHTTPHeader(tcpConn, function (tcpConn, header, additionalDataAfterHeader) {
                 dbgPrint(header)
                 if (header) {
-                    var pos = header.indexOf('\r\nSec-WebSocket-Key:')
-                    var pos2 = header.indexOf('\r\n', pos + 20)
-                    if ((pos > 0) && (pos2 > 0)) {
-                        var key = header.substring(pos + 20, pos2).trim()
-                        dbgPrint('ws upgrade header received, key:' + key)
+                    var key = http.findValueByKey(header,'Sec-WebSocket-Key')
+                    if (key) {
+                        dbgPrint('ws upgrade header received, key: ' + key)
                         var accept = calcSecAccept(key)
                         tcpConn.send('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n')
                         var wsConn = new ws.Conn(tcpConn)
@@ -244,12 +270,53 @@
                         return
                     }
                 }
-                errPrint('ws error: invalid upgrade header: ' + headerStr)
+                errPrint('ws error: invalid upgrade header: ' + header)
                 conn.close()
             })
         })
         wsServer.tcpServer = tcpServer
     }
     
+    ws.connect = function (url,callback) {
+        var opt = {
+            'url': http.parseUrl(url),
+            'version':'HTTP/1.0',
+        };
+        opt.header = {
+            'Host': opt.url.hostname + ':' + opt.url.port,
+            'User-Agent': 'mcujs',
+            'Upgrade': 'websocket',
+            'Connection': 'Upgrade',
+            'Sec-WebSocket-Key': 'dGhlIHNhbXBsZSBub25jZQ==',
+            'Sec-WebSocket-Version': '13'
+        };
+        var tcpConn = http.sendRequest(opt);
+        http.waitForHTTPHeader(tcpConn, function (tcpConn, header, additionalDataAfterHeader) {
+            dbgPrint(header)
+            if (header) {
+                var value = http.findValueByKey(header,'Sec-WebSocket-Accept')
+                if(value === 's3pPLMBiTxaQ9kYGzzhZRbK+xOo='){
+                    dbgPrint('ws Accept!')
+                    var wsConn = new ws.Conn(tcpConn,1)
+                    tcpConn.wsConn = wsConn
+                    tcpConn.onrecv = onTcpConnRecv
+                    tcpConn.onsent = onTcpConnSent
+                    tcpConn.onclose = onTcpConnClose
+                    wsConn.state = 1
+                    wsConn.recvPayloadBuf = new Uint8Array(ws.MAX_DATA_SIZE)
+                    if(callback){
+                        callback(wsConn)
+                    }
+                }else{
+                    errPrint('ws error: invalid Sec-WebSocket-Accept: ' + key)
+                    conn.close()
+                }
+                return
+            }
+            errPrint('ws error: invalid upgrade header: ' + header)
+            conn.close()
+        })
+    }
+
     global.ws = ws
 })();
