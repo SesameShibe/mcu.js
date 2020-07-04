@@ -173,7 +173,7 @@
                 headerLen += 4
 
                 if (payloadLen > 0) {
-                    payload = handleMask(payload,payloadLen,mask)
+                    handleMask(payload,payloadLen,mask)
                 }
             }
 
@@ -232,10 +232,7 @@
                 if (wsConn.recvPayloadPtr >= wsConn.recvPayloadLen) {
                     // payload received, unmask if needed
                     if (wsConn.recvMaskEnabled) {
-                        
-                        for (var i = 0; i < wsConn.recvPayloadLen; i++) {
-                            wsConn.recvPayloadBuf[i] ^= wsConn.recvMask[i % 4]
-                        }
+                        handleMask(wsConn.recvPayloadBuf,wsConn.recvPayloadLen,wsConn.recvMask)
                     }
                     if (wsConn.onframe) {
                         wsConn.onframe(wsConn, wsConn.recvOpCode, wsConn.recvPayloadBuf.subarray(0, wsConn.recvPayloadLen), wsConn.recvFin)
@@ -245,6 +242,18 @@
             }
         }
     }
+
+    function createWsConn(tcpConn,type){
+        var wsConn = new ws.Conn(tcpConn,type)
+        tcpConn.wsConn = wsConn
+        tcpConn.onrecv = onTcpConnRecv
+        tcpConn.onsent = onTcpConnSent
+        tcpConn.onclose = onTcpConnClose
+        wsConn.state = 1
+        wsConn.recvPayloadBuf = new Uint8Array(ws.MAX_DATA_SIZE)
+        return wsConn
+    }
+
 
     ws.createServer = function (port, connListener) {
         var wsServer = new ws.Server()
@@ -258,14 +267,8 @@
                         dbgPrint('ws upgrade header received, key: ' + key)
                         var accept = calcSecAccept(key)
                         tcpConn.send('HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: ' + accept + '\r\n\r\n')
-                        var wsConn = new ws.Conn(tcpConn)
+                        var wsConn = createWsConn(tcpConn,0)
                         wsConn.server = wsServer
-                        tcpConn.wsConn = wsConn
-                        tcpConn.onrecv = onTcpConnRecv
-                        tcpConn.onsent = onTcpConnSent
-                        tcpConn.onclose = onTcpConnClose
-                        wsConn.state = 1
-                        wsConn.recvPayloadBuf = new Uint8Array(ws.MAX_DATA_SIZE)
                         wsConn.server.onconn(wsConn)
                         return
                     }
@@ -277,7 +280,7 @@
         wsServer.tcpServer = tcpServer
     }
     
-    ws.connect = function (url,callback) {
+    ws.connect = function (url,onconn) {
         var opt = {
             'url': http.parseUrl(url),
             'version':'HTTP/1.0',
@@ -297,16 +300,8 @@
                 var value = http.findValueByKey(header,'Sec-WebSocket-Accept')
                 if(value === 's3pPLMBiTxaQ9kYGzzhZRbK+xOo='){
                     dbgPrint('ws Accept!')
-                    var wsConn = new ws.Conn(tcpConn,1)
-                    tcpConn.wsConn = wsConn
-                    tcpConn.onrecv = onTcpConnRecv
-                    tcpConn.onsent = onTcpConnSent
-                    tcpConn.onclose = onTcpConnClose
-                    wsConn.state = 1
-                    wsConn.recvPayloadBuf = new Uint8Array(ws.MAX_DATA_SIZE)
-                    if(callback){
-                        callback(wsConn)
-                    }
+                    var wsConn = createWsConn(tcpConn,1)
+                    onconn(wsConn)
                 }else{
                     errPrint('ws error: invalid Sec-WebSocket-Accept: ' + key)
                     conn.close()
