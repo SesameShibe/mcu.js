@@ -28,13 +28,14 @@ function isFunction(functionToCheck) {
         var touched = touch.isTouched();
         if (touched) {
             var point = touch.getPoint(0);
+            print('x:' + point.x + ', y:' + point.y);
 
             for (var i = ui.RenderQueue.length - 1; i >= 0; i--) {
                 var v = ui.RenderQueue[i];
-                if (point.x > v.position.x
-                    && (point.x < v.position.x + v.size.width)
-                    && point.y > v.position.y
-                    && point.y < v.position.y + v.size.width) {
+                if ((point.x > v.position.x)
+                    && (point.x < (v.position.x + v.size.width))
+                    && (point.y > v.position.y)
+                    && point.y < (v.position.y + v.size.height)) {
                     v.touchDown(point);
 
                     ui.LastTouchedView = v;
@@ -90,7 +91,7 @@ function isFunction(functionToCheck) {
 
 
     ui.Screen = function () {
-        
+
     }
     ui.Screen.prototype = new ui.ViewGroup();
 
@@ -246,17 +247,21 @@ function isFunction(functionToCheck) {
 
         this.pressedColor = ui.makeColor(255, 255, 255);
         this.releasedColor = ui.makeColor(0, 0, 0);
+
+        this.setBackground(this.releasedColor);
     }
     ui.Button.prototype = new ui.TextView();
 
     ui.Button.prototype.touchDown = function (point) {
+        print('Button touch down!');
         this.setBackground(this.pressedColor);
-        ui.TextView.touchDown.call(this, point);
+        ui.TextView.prototype.touchDown.call(this, point);
     }
 
     ui.Button.prototype.touchUp = function (point) {
+        print('Button touch up!');
         this.setBackground(this.releasedColor);
-        ui.TextView.touchUp.call(this, point);
+        ui.TextView.prototype.touchUp.call(this, point);
     }
 }
 )();

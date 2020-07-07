@@ -17,38 +17,47 @@ tv.setSize(240, 240);
 tv.setBackground(0x9090);
 tv.setCornerRadius(10);
 tv.setPadding(10);
-screen.addView(tv);
+//screen.addView(tv);
+
+var btn = new ui.Button();
+btn.text = 'Touch Me!'
+btn.setSize(80,80);
+btn.setPos(60,60);
+btn.releasedColor = ui.makeColor(100,100,100);
+btn.setCornerRadius(10);
+screen.addView(btn);
 
 var r = 255, g = 0, b = 0;
 
 function updateFrame() {
-    tv.setBackground(ui.makeColor(r, g, b));
+    // tv.setBackground(ui.makeColor(r, g, b));
 
-    var l = ((r * 0.299) + (g * 0.587) + (b * 0.144));
-    tv.text = '红(R):' + r + '\n绿(G):' + g + '\n蓝(B):' + b + '\n亮度(L): ' + l;
-    if (l > 140) {
-        tv.setForeground(ui.makeColor(0, 0, 0));
-    } else {
-        tv.setForeground(ui.makeColor(255, 255, 255));
-    }
+    // var l = ((r * 0.299) + (g * 0.587) + (b * 0.144));
+    // tv.text = '红(R):' + r + '\n绿(G):' + g + '\n蓝(B):' + b + '\n亮度(L): ' + l.toFixed(2);
+    // if (l > 140) {
+    //     tv.setForeground(ui.makeColor(0, 0, 0));
+    // } else {
+    //     tv.setForeground(ui.makeColor(255, 255, 255));
+    // }
 
-    if (r == 255 && g < 255 && b == 0) {
-        g++;
-    } else if (r > 0 && g == 255 && b == 0) {
-        r--;
-    } else if (r == 0 && g == 255 && b < 255) {
-        b++;
-    } else if (r == 0 && g > 0 && b == 255) {
-        g--;
-    } else if (r < 255 && g == 0 && b == 255) {
-        r++;
-    } else if (r == 255 && g == 0 && b > 0) {
-        b--;
-    }
+    // if (r == 255 && g < 255 && b == 0) {
+    //     g++;
+    // } else if (r > 0 && g == 255 && b == 0) {
+    //     r--;
+    // } else if (r == 0 && g == 255 && b < 255) {
+    //     b++;
+    // } else if (r == 0 && g > 0 && b == 255) {
+    //     g--;
+    // } else if (r < 255 && g == 0 && b == 255) {
+    //     r++;
+    // } else if (r == 255 && g == 0 && b > 0) {
+    //     b--;
+    // }
 
     screen.draw();
 }
 
 function playAnim() {
-    setInterval(updateFrame, 1);
+    setInterval(updateFrame, 10);
+    setInterval(ui.dispatchTouchEvent, 1);
 }

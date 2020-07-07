@@ -1,3 +1,7 @@
+function mapRange(num, fromMin, fromMax, toMin, toMax) {
+    return (num - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
+}
+
 (function () {
     touch = {};
     touch.BUSID = 1;
@@ -20,7 +24,7 @@
     touch.writeByte = function (reg, b) {
         i2c.simpleWrite8(touch.BUSID, touch.SLAVE_ADDRESS, reg, b);
     }
-    touch.readByte(reg) = function (reg) {
+    touch.readByte = function (reg) {
         return i2c.simpleRead8(touch.BUSID, touch.SLAVE_ADDRESS, reg);
     }
     touch.init = function () {
@@ -43,7 +47,7 @@
     touch.getPoint = function (n) {
         if (!touch.isInited) return { x: 0, y: 0 };
 
-        buf = Buffer.alloc(16);
+        buf = new Buffer(16);
         i2c.simpleReadBuf(touch.BUSID, touch.SLAVE_ADDRESS, touch.DEVIDE_MODE, buf);
         var touches = buf[touch.TD_STATUS];
         if (touches == 0 || touches > 2) return { x: 0, y: 0 };
@@ -51,6 +55,11 @@
         px = ((buf[touch.TOUCH1_XH + (n * 6)] & 0x0F) << 8) | buf[touch.TOUCH1_XL + (n * 6)];
         py = ((buf[touch.TOUCH1_YH + (n * 6)] & 0x0F) << 8) | buf[touch.TOUCH1_YL + (n * 6)];
         id = buf[touch.TOUCH1_YH + (n * 6)] >> 4;
+
+        // Touch pad size is 320*320,
+        // we need to map the point to lcd size 240*240.
+        px = mapRange(px, 0, 320, 0, 240);
+        py = mapRange(py, 0, 320, 0, 240);
         return { x: px, y: py };
     }
     touch.monitor = function () {
