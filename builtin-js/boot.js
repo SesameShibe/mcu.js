@@ -83,6 +83,14 @@ const global = this;
 function boot() {
     fs.mountSpiffs();
     //eval /spi/boot.js
+    if(fs.exists('/spi/boot.js')){
+        var fd = fs.open("/spi/boot.js", fs.O_RDONLY);
+        var size = fs.lseek(fd,0,fs.SEEK_END);
+        fs.lseek(fd,0,fs.SEEK_SET)
+        var buf = new Buffer(size);
+        fs.read(fd,buf,size);
+        global.eval(buf.toString());
+    }
     mainLoop();
     delete global.boot
 }

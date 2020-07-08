@@ -93,7 +93,7 @@ int mainLoop() {
 
 	/* init modules */
 	genJSInit(ctx);
-	// module_file_init(ctx);
+	module_fs_init(ctx);
 
 	/* boot */
 	loadBuiltinJS(ctx, js_underscore, "underscore");
