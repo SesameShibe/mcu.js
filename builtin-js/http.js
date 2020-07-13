@@ -151,8 +151,7 @@
             'url': {
                 hostname: 'mcujs.org',
                 port: 80,
-                path: '/dl',
-                args: 'a=2'
+                path: '/dl?id=1'
             },
             'method': 'GET',
             'version': 'HTTP/1.0',
@@ -162,7 +161,7 @@
         }; 
     */
     http.parseUrl = function (url) {
-        var reg = /^([a-zA-z]+):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*)\??(.*)/;
+        var reg = /^([a-zA-z]+):\/\/([\w\.]+):?([\d]*)([\w\.\-\/]*\??.*)/;
         var parsed = url.match(reg);
         if(parsed === null){
             error('parse fault');
@@ -172,7 +171,6 @@
             'hostname': parsed[2],
             'port': parsed[3] || 80,
             'path': parsed[4] || '/',
-            'args': parsed[5]
         }
     }
 
