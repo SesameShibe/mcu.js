@@ -28,5 +28,5 @@ function updateFrame() {
 
 function playAnim() {
     setInterval(updateFrame, 1);
-    setInterval(ui.dispatchTouchEvent, 1);
+    setInterval(ui.dispatchTouchEvents, 1);
 }
