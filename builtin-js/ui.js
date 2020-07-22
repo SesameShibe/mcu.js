@@ -117,6 +117,8 @@ function isFunction(functionToCheck) {
     ui.ScrollLayout = function () {
         ui.ViewGroup.call(this);
 
+        this.position = { x: 0, y: 0 };
+        this.size = { width: 240, height: 240 };
         this.scrollX = 0;
         this.scrollY = 0;
     }
@@ -146,9 +148,13 @@ function isFunction(functionToCheck) {
             var view = this.Views[index];
 
             if (view.setPos != undefined) {
-                view.setPos(view.position.x + diffX, view.position.y + diffY);
+                view.setPos(view.position.x - diffX, view.position.y - diffY);
             }
         }
+    }
+
+    ui.ScrollLayout.prototype.longTouched = function (point) {
+
     }
 
 
@@ -347,6 +353,10 @@ function isFunction(functionToCheck) {
         if (this.onClick != null && isFunction(this.onClick)) {
             this.onClick();
         }
+    }
+
+    ui.Button.prototype.touchMoved = function (oldPoint, newPoint) {
+        ui.View.prototype.touchMoved.call(this, oldPoint, newPoint);
     }
 
     ui.Button.prototype.setPressedColor = function (color) {

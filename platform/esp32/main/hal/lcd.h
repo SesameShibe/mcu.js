@@ -278,6 +278,7 @@ uint32_t halLcdGetPenColor() {
 }
 
 void IRAM_ATTR halLcdDrawDot(int32_t x, int32_t y, int32_t color) {
+	// Ignore outside screen pixels
 	if (x < 0 || x >= LCD_WIDTH || y < 0 || y >= LCD_HEIGHT)
 		return;
 
@@ -292,17 +293,11 @@ void halLcdDrawHLine(int32_t x0, int32_t x1, int32_t y) {
 	a = min(x0, x1);
 	b = max(x0, x1);
 
-	if (b < 0 || a > LCD_WIDTH || y < 0 || y > LCD_HEIGHT)
-		return;
-
 	if (a < 0)
 		a = 0;
 
-	a += (y * LCD_WIDTH);
-	b += (y * LCD_WIDTH);
-
 	for (; a < b; a++) {
-		lcdFB[a] = (uint16_t) penColor;
+		halLcdDrawDot(a, y, -1);
 	}
 }
 
@@ -311,14 +306,11 @@ void halLcdDrawVLine(int32_t y0, int32_t y1, int32_t x) {
 	a = min(y0, y1);
 	b = max(y0, y1);
 
-	if (b < 0 || a > LCD_HEIGHT || x < 0 || x > LCD_WIDTH)
-		return;
-
 	if (a < 0)
 		a = 0;
 
 	for (; a < b; a++) {
-		lcdFB[a * LCD_WIDTH + x] = (uint16_t) penColor;
+		halLcdDrawDot(x, a, -1);
 	}
 }
 
