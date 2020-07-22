@@ -12,7 +12,7 @@
             print("ws connect success!");
 
             interfacePrint = function(data){
-                conn.send(''+data);
+                conn.send(data+'\n');
             }
 
             conn.onclose = function(){
