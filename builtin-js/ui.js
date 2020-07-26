@@ -41,6 +41,7 @@ function isFunction(functionToCheck) {
 
                         ui.LastTouchedView = v;
                         ui.LastTouchedPoint = point;
+                        break;
                     }
                 }
             } else if (ui.LastTouchedPoint.x == point.x
@@ -127,8 +128,8 @@ function isFunction(functionToCheck) {
     ui.ScrollLayout.prototype = new ui.ViewGroup();
 
     ui.ScrollLayout.prototype.draw = function () {
-        ui.ViewGroup.prototype.draw.call(this);
         ui.RenderQueue.push(this);
+        ui.ViewGroup.prototype.draw.call(this);
     }
 
     ui.ScrollLayout.prototype.touchDown = function (point) {
@@ -390,12 +391,12 @@ function isFunction(functionToCheck) {
     }
     ui.TextBox.prototype = new ui.TextView();
 
-    ui.TextBox.prototype.insertChar = function (c) {
+    ui.TextBox.prototype.insert = function (s) {
         var head = this.text.substring(0, this.cursor);
         var tail = this.text.substring(this.cursor, this.text.length);
 
-        this.setText(head + c + tail);
-        this.setCursor(this.cursor + 1);
+        this.setText(head + s + tail);
+        this.setCursor(this.cursor + s.length);
     }
 
     ui.TextBox.prototype.backspace = function () {
@@ -439,11 +440,11 @@ function isFunction(functionToCheck) {
             }
 
             var cWidth = ui.measureTextWidth(c);
+            bbox.x += cWidth;
             if ((this.autoLineBreak) && (cWidth + bbox.x > (this.size.width - this.padding))) {
                 bbox.x = this.position.x + this.padding - this.textScrollX;
                 bbox.y += 16;
             }
-            bbox.x += cWidth;
         }
 
 
