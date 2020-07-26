@@ -1,6 +1,7 @@
 var screen = new ui.Screen();
 var scrollLayout = new ui.ScrollLayout();
 var tv = new ui.TextView();
+var tb = new ui.TextBox();
 
 tv.text = 'ESP32';
 tv.autoLineBreak = true;
@@ -9,7 +10,16 @@ tv.setSize(40, 40);
 tv.setBackground(0x9090);
 tv.setCornerRadius(10);
 tv.setPadding(10);
-scrollLayout.addView(tv);
+//scrollLayout.addView(tv);
+
+tb.text = 'ESP32';
+tb.autoLineBreak = true;
+tb.setPos(0, 0);
+tb.setSize(100, 100);
+tb.setBackground(0x9090);
+tb.setCornerRadius(10);
+tb.setPadding(10);
+scrollLayout.addView(tb);
 
 var btn = new ui.Button();
 btn.text = 'Touch Me!'

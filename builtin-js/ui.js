@@ -121,6 +121,8 @@ function isFunction(functionToCheck) {
         this.size = { width: 240, height: 240 };
         this.scrollX = 0;
         this.scrollY = 0;
+        this.scrollHorizonal = false;
+        this.scrollVertical = true;
     }
     ui.ScrollLayout.prototype = new ui.ViewGroup();
 
@@ -141,8 +143,15 @@ function isFunction(functionToCheck) {
         if (this.Views == undefined)
             return;
 
-        var diffX = oldPoint.x - newPoint.x;
-        var diffY = oldPoint.y - newPoint.y;
+
+        var diffX = 0;
+        if (this.scrollHorizonal) {
+            diffX = oldPoint.x - newPoint.x;
+        }
+        var diffY = 0;
+        if (this.scrollVertical) {
+            diffY = oldPoint.y - newPoint.y;
+        }
 
         for (var index = 0; index < this.Views.length; index++) {
             var view = this.Views[index];
@@ -243,6 +252,8 @@ function isFunction(functionToCheck) {
         this.LineHeight = 16;
         this.textScrollX = 0;
         this.textScrollY = 0;
+        this.scrollHorizonal = false;
+        this.scrollVertical = true;
     }
     ui.TextView.prototype = new ui.View();
 
@@ -323,8 +334,13 @@ function isFunction(functionToCheck) {
     }
 
     ui.TextView.prototype.touchMoved = function (oldPoint, newPoint) {
-        this.textScrollX += oldPoint.x - newPoint.x;
-        this.textScrollY += oldPoint.y - newPoint.y;
+        if (this.scrollHorizonal) {
+            this.textScrollX += oldPoint.x - newPoint.x;
+        }
+
+        if (this.scrollVertical) {
+            this.textScrollY += oldPoint.y - newPoint.y;
+        }
 
         ui.View.prototype.touchMoved.call(this, oldPoint, newPoint);
     }
@@ -396,6 +412,50 @@ function isFunction(functionToCheck) {
 
     ui.TextBox.prototype.touchDown = function (point) {
         ui.View.prototype.touchDown.call(this, point);
+    }
+
+    ui.TextBox.prototype.getBboxAtIndex = function (i) {
+        var bbox = {
+            x: this.position.x + this.padding - this.textScrollX,
+            y: this.position.y + this.padding - this.textScrollY,
+            width: 0,
+            height: 0
+        };
+
+        if (i > this.text.length)
+            return bbox;
+
+        var c = this.text[i];
+        bbox.width = ui.measureTextWidth(c);
+        bbox.height = 16;
+
+        for (var j = 0; j < i; j++) {
+            var c = this.text[j];
+
+            if (c == '\n') {
+                bbox.x = this.position.x + this.padding - this.textScrollX;
+                bbox.y += 16;
+                continue;
+            }
+
+            var cWidth = ui.measureTextWidth(c);
+            if ((this.autoLineBreak) && (cWidth + bbox.x > (this.size.width - this.padding))) {
+                bbox.x = this.position.x + this.padding - this.textScrollX;
+                bbox.y += 16;
+            }
+            bbox.x += cWidth;
+        }
+
+
+        return bbox;
+    }
+
+    ui.TextBox.prototype.draw = function () {
+        ui.TextView.prototype.draw.call(this);
+
+        var bbox = this.getBboxAtIndex(this.cursor);
+        ui.drawLine(bbox.x, bbox.y,
+            bbox.x, bbox.y + bbox.height);
     }
 }
 )();
