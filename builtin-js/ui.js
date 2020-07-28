@@ -186,6 +186,12 @@ function isFunction(functionToCheck) {
         if (this.parent == undefined)
             throw "A view must in a view group.";
         this.startDraw();
+        this.drawImpl();
+        this.endDraw();
+    }
+
+    // Implementing draw function by overriding this method.
+    ui.View.prototype.drawImpl = function () {
     }
 
     ui.View.prototype.setForeground = function (color) {
@@ -283,9 +289,7 @@ function isFunction(functionToCheck) {
         this.padding = padding;
     }
 
-    ui.TextView.prototype.draw = function () {
-        ui.View.prototype.draw.call(this);
-
+    ui.TextView.prototype.drawImpl = function () {
         ui.setPenColor(this.background);
         ui.fillRectangle(
             this.position.x,
@@ -323,8 +327,6 @@ function isFunction(functionToCheck) {
                 this.position.x + this.padding - this.textScrollX,
                 this.position.y + this.padding - this.textScrollY);
         }
-
-        this.endDraw();
     }
 
     ui.TextView.prototype.touchDown = function (point) {
@@ -452,8 +454,8 @@ function isFunction(functionToCheck) {
         return bbox;
     }
 
-    ui.TextBox.prototype.draw = function () {
-        ui.TextView.prototype.draw.call(this);
+    ui.TextBox.prototype.drawImpl = function () {
+        ui.TextView.prototype.drawImpl.call(this);
 
         var bbox = this.getBboxAtIndex(this.cursor);
         ui.setRenderBounding(
@@ -463,8 +465,6 @@ function isFunction(functionToCheck) {
             this.position.y + this.size.height - this.padding);
         ui.drawLine(bbox.x, bbox.y,
             bbox.x, bbox.y + bbox.height);
-
-        this.endDraw();
     }
 }
 )();
