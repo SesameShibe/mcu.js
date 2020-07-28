@@ -66,20 +66,22 @@ function isFunction(functionToCheck) {
 
     ui.ViewGroup = function () {
         this.Views = new Array();
+        this.position = { x: 0, y: 0 };
+        this.size = { width: 240, height: 240 };
     }
 
     ui.ViewGroup.prototype.addView = function (view) {
-        if (view.Parent != undefined)
-            throw "View already has a parent.";
+        if (view.parent != undefined)
+            throw "View already has a Parent.";
 
-        var p = this.Parent;
+        var p = this.parent;
         while (p != undefined) {
             if (p === view)
-                throw "The view to be added is a parent of current view group.";
-            p = p.Parent;
+                throw "The view to be added is a Parent of current view group.";
+            p = p.parent;
         }
 
-        view.Parent = this;
+        view.parent = this;
         this.Views.push(view);
     }
 
@@ -88,7 +90,7 @@ function isFunction(functionToCheck) {
         if (index == -1)
             throw "Cannot found view in view group.";
         this.Views.splice(index, 1);
-        delete view.Parent;
+        delete view.parent;
     }
 
     ui.ViewGroup.prototype.draw = function () {
@@ -118,8 +120,6 @@ function isFunction(functionToCheck) {
     ui.ScrollLayout = function () {
         ui.ViewGroup.call(this);
 
-        this.position = { x: 0, y: 0 };
-        this.size = { width: 240, height: 240 };
         this.scrollX = 0;
         this.scrollY = 0;
         this.scrollHorizonal = false;
@@ -183,7 +183,7 @@ function isFunction(functionToCheck) {
     }
 
     ui.View.prototype.draw = function () {
-        if (this.Parent == undefined)
+        if (this.parent == undefined)
             throw "A view must in a view group.";
         this.startDraw();
     }
@@ -216,6 +216,10 @@ function isFunction(functionToCheck) {
     ui.View.prototype.endDraw = function () {
         this.updateRequired = false;
         ui.RenderQueue.push(this);
+        ui.setRenderBounding(this.parent.position.x,
+            this.parent.position.y,
+            this.parent.position.x + this.parent.size.width,
+            this.parent.position.x + this.parent.size.height)
     }
 
     ui.View.prototype.touchDown = function (point) {
@@ -291,15 +295,16 @@ function isFunction(functionToCheck) {
             this.cornerRadius);
 
         ui.setPenColor(this.foreground);
+        ui.setRenderBounding(
+            this.position.x + this.padding,
+            this.position.y + this.padding,
+            this.position.x + this.size.width - this.padding,
+            this.position.y + this.size.height - this.padding);
         if (!this.autoLineBreak) {
             ui.drawText(
                 this.text,
                 this.position.x + this.padding - this.textScrollX,
-                this.position.y + this.padding - this.textScrollY,
-                this.position.x + this.padding,
-                this.position.y + this.padding,
-                this.position.x + this.size.width - this.padding,
-                this.position.y + this.size.height - this.padding);
+                this.position.y + this.padding - this.textScrollY);
         } else {
             var currentX = 0;
             var str = "";
@@ -316,11 +321,7 @@ function isFunction(functionToCheck) {
             ui.drawText(
                 str,
                 this.position.x + this.padding - this.textScrollX,
-                this.position.y + this.padding - this.textScrollY,
-                this.position.x + this.padding,
-                this.position.y + this.padding,
-                this.position.x + this.size.width - this.padding,
-                this.position.y + this.size.height - this.padding);
+                this.position.y + this.padding - this.textScrollY);
         }
 
         this.endDraw();
@@ -455,8 +456,15 @@ function isFunction(functionToCheck) {
         ui.TextView.prototype.draw.call(this);
 
         var bbox = this.getBboxAtIndex(this.cursor);
+        ui.setRenderBounding(
+            this.position.x + this.padding,
+            this.position.y + this.padding,
+            this.position.x + this.size.width - this.padding,
+            this.position.y + this.size.height - this.padding);
         ui.drawLine(bbox.x, bbox.y,
             bbox.x, bbox.y + bbox.height);
+
+        this.endDraw();
     }
 }
 )();

@@ -71,12 +71,21 @@ typedef struct hal_font_t {
 	uint16_t version;
 } hal_font_t;
 
+typedef struct hal_rect_t {
+	int16_t left;
+	int16_t top;
+	int16_t right;
+	int16_t bottom;
+} hal_rect_t;
+
 static hal_font_t* font;
 static hal_font_section_info_t* sections;
 
 static uint16_t lcdFB[LCD_WIDTH * LCD_HEIGHT];
 uint16_t lcdRowOffset, lcdColOffset;
+
 static uint32_t penColor = 0;
+static hal_rect_t renderBounding = { 0, 0, 0, 0 };
 
 static ALWAYS_INLINE void halLcdSpiWrite(u32 dat, u8 bitlen) {
 	LCD_SPI_HW.mosi_dlen.val = bitlen - 1;
@@ -277,9 +286,18 @@ uint32_t halLcdGetPenColor() {
 	return penColor;
 }
 
+void halLcdSetRenderBounding(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+	renderBounding.left = (int16_t)left;
+	renderBounding.top = (int16_t)top;
+	renderBounding.right = (int16_t)right;
+	renderBounding.bottom = (int16_t)bottom;
+
+	//printf("l:%d t:%d r:%d b:%d\n",renderBounding.left,renderBounding.top,renderBounding.right,renderBounding.bottom);
+}
+
 void IRAM_ATTR halLcdDrawDot(int32_t x, int32_t y, int32_t color) {
 	// Ignore outside screen pixels
-	if (x < 0 || x >= LCD_WIDTH || y < 0 || y >= LCD_HEIGHT)
+	if (x < renderBounding.left || x >= renderBounding.right || y < renderBounding.top || y >= renderBounding.bottom)
 		return;
 
 	if (color == -1)
@@ -570,18 +588,12 @@ int32_t halLcdMeasureTextHeight(const char* string) {
 	return 16;
 }
 
-void IRAM_ATTR drawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int32_t x, int32_t y, int32_t bLeft,
-                         int32_t bTop, int32_t bRight, int32_t bBottom) {
+void IRAM_ATTR drawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int32_t x, int32_t y) {
 	uint16_t mask = 1;
 	uint32_t bitsIndex = 0;
 
 	for (int32_t yi = 0; yi < height; yi++) {
 		for (int32_t xi = 0; xi < width; xi++) {
-			// Don't draw outside bbox
-			if ((x + xi < bLeft) || (x + xi > bRight) || (y + yi < bTop) || (y + yi > bBottom)) {
-				continue;
-			}
-
 			uint8_t bit = readBit(glyphData, yi * width + xi);
 
 			if (bit != 0)
@@ -596,8 +608,7 @@ void IRAM_ATTR drawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t heig
 	}
 }
 
-int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y, int32_t bLeft, int32_t bTop, int32_t bRight,
-                                 int32_t bBottom) {
+int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y) {
 	const uint8_t* glyphData = NULL;
 	hal_font_section_info_t* section = halGetFontSection(c);
 
@@ -606,17 +617,11 @@ int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y, int32_t bLeft
 
 	glyphData = (const uint8_t*) (&((uint8_t*) font)[0] +
 	                              (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
-	drawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight), bLeft, bTop,
-	          bRight, bBottom);
+	drawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight));
 	return section->charWidth;
 }
 
-void halLcdDrawText(const char* string, int32_t x, int32_t y, int32_t bLeft, int32_t bTop, int32_t bRight,
-                    int32_t bBottom) {
-	// printf("%x %x %x %x %x %x %x %x\n", *(uint8_t*) (string + 0), *(uint8_t*) (string + 1), *(uint8_t*) (string + 2),
-	//        *(uint8_t*) (string + 3), *(uint8_t*) (string + 4), *(uint8_t*) (string + 5), *(uint8_t*) (string + 6),
-	//        *(uint8_t*) (string + 7));
-
+void halLcdDrawText(const char* string, int32_t x, int32_t y) {
 	uint16_t unicode = 0;
 	int32_t currPos = 0;
 	int32_t dx = x, dy = y;
@@ -627,7 +632,7 @@ void halLcdDrawText(const char* string, int32_t x, int32_t y, int32_t bLeft, int
 			dx = x;
 			dy += TEXT_LINE_HEIGHT;
 		} else {
-			dx += halLcdDrawChar(unicode, dx, dy, bLeft, bTop, bRight, bBottom);
+			dx += halLcdDrawChar(unicode, dx, dy);
 		}
 
 		readUtf8Char(&unicode, &currPos, string);

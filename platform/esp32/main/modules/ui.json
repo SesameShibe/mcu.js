@@ -21,6 +21,14 @@
             "halLcdGetPenColor",
             "u32"
         ],
+        "setRenderBounding":[
+            "halLcdSetRenderBounding",
+            "void",
+            "u16",
+            "u16",
+            "u16",
+            "u16"
+        ],
         "drawLine": [
             "halLcdDrawLine",
             "void",
@@ -87,10 +95,6 @@
             "halLcdDrawText",
             "void",
             "str",
-            "i32",
-            "i32",
-            "i32",
-            "i32",
             "i32",
             "i32"
         ],
