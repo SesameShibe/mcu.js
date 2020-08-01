@@ -11,6 +11,14 @@ function isFunction(functionToCheck) {
     return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
 
+function min(a, b) {
+    return a > b ? b : a;
+}
+
+function max(a, b) {
+    return a > b ? a : b;
+}
+
 (function () {
     ui.makeColor = function (r, g, b) {
         return (((r >> 3) & 0x1F) << 11)
@@ -67,7 +75,7 @@ function isFunction(functionToCheck) {
     ui.ViewGroup = function () {
         this.Views = new Array();
         this.position = { x: 0, y: 0 };
-        this.size = { width: 240, height: 240 };
+        this.size = { width: 0, height: 0 };
     }
 
     ui.ViewGroup.prototype.addView = function (view) {
@@ -216,6 +224,18 @@ function isFunction(functionToCheck) {
         this.position.y = y;
     }
 
+    ui.View.prototype.getRenderBounding = function () {
+        if (this.parent == undefined)
+            return { left: 0, top: 0, right: 0, bottom: 0 };
+
+        var l = max(this.parent.position.x, this.position.x);
+        var t = max(this.parent.position.y, this.position.y);
+        var r = min(this.parent.position.x + this.parent.size.width, this.position.x + this.size.width);
+        var b = min(this.parent.position.y + this.parent.size.height, this.position.y + this.size.height);
+
+        return { left: l, top: t, right: r, bottom: b };
+    }
+
     ui.View.prototype.startDraw = function () {
     }
 
@@ -298,12 +318,13 @@ function isFunction(functionToCheck) {
             this.position.y + this.size.height,
             this.cornerRadius);
 
+        var bounding = this.getRenderBounding();
         ui.setPenColor(this.foreground);
         ui.setRenderBounding(
-            this.position.x + this.padding,
-            this.position.y + this.padding,
-            this.position.x + this.size.width - this.padding,
-            this.position.y + this.size.height - this.padding);
+            bounding.left,
+            bounding.top,
+            bounding.right,
+            bounding.bottom);
         if (!this.autoLineBreak) {
             ui.drawText(
                 this.text,
@@ -458,11 +479,6 @@ function isFunction(functionToCheck) {
         ui.TextView.prototype.drawImpl.call(this);
 
         var bbox = this.getBboxAtIndex(this.cursor);
-        ui.setRenderBounding(
-            this.position.x + this.padding,
-            this.position.y + this.padding,
-            this.position.x + this.size.width - this.padding,
-            this.position.y + this.size.height - this.padding);
         ui.drawLine(bbox.x, bbox.y,
             bbox.x, bbox.y + bbox.height);
     }

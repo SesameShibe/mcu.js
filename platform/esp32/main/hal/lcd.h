@@ -287,10 +287,10 @@ uint16_t halLcdGetPenColor() {
 }
 
 void halLcdSetRenderBounding(int16_t left, int16_t top, int16_t right, int16_t bottom) {
-	renderBounding.left = (int16_t)left;
-	renderBounding.top = (int16_t)top;
-	renderBounding.right = (int16_t)right;
-	renderBounding.bottom = (int16_t)bottom;
+	renderBounding.left = left < 0 ? 0 : left;
+	renderBounding.top = top < 0 ? 0 : top;
+	renderBounding.right = right > LCD_WIDTH ? LCD_WIDTH : right;
+	renderBounding.bottom = bottom > LCD_HEIGHT ? LCD_HEIGHT : bottom;
 }
 
 void IRAM_ATTR halLcdDrawDot(int16_t x, int16_t y) {
