@@ -71,12 +71,120 @@ function max(a, b) {
             }
         }
     }
+    // View base class
+    ui.View = function () {
+        this.position = { x: 0, y: 0 };
+        this.size = { width: 0, height: 0 };
+        this.foreground = 0xFFFF;
+        this.background = 0;
+        this.updateRequired = false;
+
+        this.onTouchDown = null;
+        this.onTouchUp = null;
+        this.onClick = null;
+        this.onLongTouched = null;
+    }
+
+    ui.View.prototype.draw = function () {
+        if (this.parent == undefined)
+            throw "A view must in a view group.";
+        this.startDraw();
+        this.drawImpl();
+        this.endDraw();
+    }
+
+
+    // Implementing draw function by overriding this method.
+    ui.View.prototype.drawImpl = function () {
+        ui.setPenColor(this.background);
+        ui.fillRectangle(
+            this.position.x,
+            this.position.y,
+            this.position.x + this.size.width,
+            this.position.y + this.size.height,
+            0);
+    }
+
+    ui.View.prototype.setForeground = function (color) {
+        this.updateRequired = true;
+        this.foreground = color;
+    }
+
+    ui.View.prototype.setBackground = function (color) {
+        this.updateRequired = true;
+        this.background = color;
+    }
+
+    ui.View.prototype.setSize = function (w, h) {
+        this.updateRequired = true;
+        this.size.width = w;
+        this.size.height = h;
+    }
+
+    ui.View.prototype.setPos = function (x, y) {
+        this.updateRequired = true;
+        this.position.x = x;
+        this.position.y = y;
+    }
+
+    ui.View.prototype.getRenderBounding = function () {
+        if (this.parent == undefined)
+            return { left: 0, top: 0, right: 0, bottom: 0 };
+
+        var l = max(this.parent.position.x, this.position.x);
+        var t = max(this.parent.position.y, this.position.y);
+        var r = min(this.parent.position.x + this.parent.size.width, this.position.x + this.size.width);
+        var b = min(this.parent.position.y + this.parent.size.height, this.position.y + this.size.height);
+
+        return { left: l, top: t, right: r, bottom: b };
+    }
+
+    ui.View.prototype.startDraw = function () {
+    }
+
+    ui.View.prototype.endDraw = function () {
+        this.updateRequired = false;
+        ui.RenderQueue.push(this);
+
+        if (this.parent != undefined)
+            ui.setRenderBounding(this.parent.position.x,
+                this.parent.position.y,
+                this.parent.position.x + this.parent.size.width,
+                this.parent.position.x + this.parent.size.height)
+    }
+
+    ui.View.prototype.touchDown = function (point) {
+        this.updateRequired = true;
+        if (this.onTouchDown != null && isFunction(this.onTouchDown))
+            this.onTouchDown(point)
+    }
+
+    ui.View.prototype.touchUp = function (point) {
+        this.updateRequired = true;
+        if (this.onTouchUp != null && isFunction(this.onTouchUp))
+            this.onTouchUp(point);
+    }
+
+    ui.View.prototype.touchMoved = function (oldPoint, newPoint) {
+        this.updateRequired = true;
+        if (this.onTouchMoved != null && isFunction(this.onTouchMoved))
+            this.onTouchMoved(oldPoint, newPoint);
+    }
+
+    ui.View.prototype.longTouched = function (point) {
+        this.updateRequired = true;
+        if (this.onLongTouched != null && isFunction(this.onLongTouched))
+            this.onLongTouched(point);
+    }
+
 
     ui.ViewGroup = function () {
+        ui.View.call(this);
         this.Views = new Array();
         this.position = { x: 0, y: 0 };
         this.size = { width: 0, height: 0 };
     }
+    ui.ViewGroup.prototype = new ui.View();
 
     ui.ViewGroup.prototype.addView = function (view) {
         if (view.parent != undefined)
@@ -173,103 +281,6 @@ function max(a, b) {
 
     ui.ScrollLayout.prototype.longTouched = function (point) {
 
-    }
-
-
-    // View base class
-    ui.View = function () {
-        this.position = { x: 0, y: 0 };
-        this.size = { width: 0, height: 0 };
-        this.foreground = 0xFFFF;
-        this.background = 0;
-        this.updateRequired = false;
-
-        this.onTouchDown = null;
-        this.onTouchUp = null;
-        this.onClick = null;
-        this.onLongTouched = null;
-    }
-
-    ui.View.prototype.draw = function () {
-        if (this.parent == undefined)
-            throw "A view must in a view group.";
-        this.startDraw();
-        this.drawImpl();
-        this.endDraw();
-    }
-
-    // Implementing draw function by overriding this method.
-    ui.View.prototype.drawImpl = function () {
-    }
-
-    ui.View.prototype.setForeground = function (color) {
-        this.updateRequired = true;
-        this.foreground = color;
-    }
-
-    ui.View.prototype.setBackground = function (color) {
-        this.updateRequired = true;
-        this.background = color;
-    }
-
-    ui.View.prototype.setSize = function (w, h) {
-        this.updateRequired = true;
-        this.size.width = w;
-        this.size.height = h;
-    }
-
-    ui.View.prototype.setPos = function (x, y) {
-        this.updateRequired = true;
-        this.position.x = x;
-        this.position.y = y;
-    }
-
-    ui.View.prototype.getRenderBounding = function () {
-        if (this.parent == undefined)
-            return { left: 0, top: 0, right: 0, bottom: 0 };
-
-        var l = max(this.parent.position.x, this.position.x);
-        var t = max(this.parent.position.y, this.position.y);
-        var r = min(this.parent.position.x + this.parent.size.width, this.position.x + this.size.width);
-        var b = min(this.parent.position.y + this.parent.size.height, this.position.y + this.size.height);
-
-        return { left: l, top: t, right: r, bottom: b };
-    }
-
-    ui.View.prototype.startDraw = function () {
-    }
-
-    ui.View.prototype.endDraw = function () {
-        this.updateRequired = false;
-        ui.RenderQueue.push(this);
-        ui.setRenderBounding(this.parent.position.x,
-            this.parent.position.y,
-            this.parent.position.x + this.parent.size.width,
-            this.parent.position.x + this.parent.size.height)
-    }
-
-    ui.View.prototype.touchDown = function (point) {
-        this.updateRequired = true;
-        if (this.onTouchDown != null && isFunction(this.onTouchDown))
-            this.onTouchDown(point)
-    }
-
-    ui.View.prototype.touchUp = function (point) {
-        this.updateRequired = true;
-        if (this.onTouchUp != null && isFunction(this.onTouchUp))
-            this.onTouchUp(point);
-    }
-
-    ui.View.prototype.touchMoved = function (oldPoint, newPoint) {
-        this.updateRequired = true;
-        if (this.onTouchMoved != null && isFunction(this.onTouchMoved))
-            this.onTouchMoved(oldPoint, newPoint);
-    }
-
-    ui.View.prototype.longTouched = function (point) {
-        this.updateRequired = true;
-        if (this.onLongTouched != null && isFunction(this.onLongTouched))
-            this.onLongTouched(point);
     }
 
 
