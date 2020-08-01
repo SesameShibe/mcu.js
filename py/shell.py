@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import binascii
 import codecs
 import serial
 import sys
@@ -10,6 +11,7 @@ from prompt_toolkit.history import FileHistory
 
 COM_PORT = 'COM6'
 ser = ''
+
 
 def getFileEncoding(path):
     with open(path, 'rb')as f:
@@ -28,11 +30,16 @@ def getFileEncoding(path):
         else:
             return 'utf-8'
 
+
 def recvLoop():
     reader = codecs.getreader('utf-8')(ser)
     while True:
-        char = reader.read(1)
-        sys.stdout.write(char)
+        try:
+            char = reader.read(1)
+            sys.stdout.write(char)
+        except UnicodeDecodeError, err:
+            sys.stderr.write('['+binascii.b2a_hex(err.object[err.start:err.end])+']')
+
 
 def runfile(fn):
     with codecs.open(fn, 'rb', getFileEncoding(fn)) as f:
@@ -41,11 +48,12 @@ def runfile(fn):
     writer.write(data)
     ser.write(b'\xF8')
 
+
 def start():
     global ser
     ser = serial.Serial(COM_PORT, 115200)
 
-    recvThread = threading.Thread(target = recvLoop)
+    recvThread = threading.Thread(target=recvLoop)
     recvThread.daemon = True
     recvThread.start()
 
