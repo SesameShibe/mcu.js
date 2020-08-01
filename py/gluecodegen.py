@@ -11,6 +11,7 @@ TYPE_RULES = {
     'u32': ('uint32_t ', 'duk_to_uint32', 'duk_push_uint'),
     'u8': ('uint8_t ', 'duk_to_uint32', 'duk_push_uint'),
     'u16': ('uint16_t ', 'duk_to_uint16', 'duk_push_uint'),
+    'i16': ('int16_t ', 'duk_to_uint16', 'duk_push_uint'),
     'double': ('double ', 'duk_to_number', 'duk_push_number'),
     'bool': ('int ', 'duk_to_boolean', 'duk_push_boolean'),
     'str': ('const char *', 'duk_to_string', 'duk_push_string'),
@@ -85,6 +86,11 @@ def getVar(varType, num):
         return '''
     %s.buf = (u8*) %s(ctx, %d, &%s.size);
 ''' % (localVarName(num), TYPE_RULES[varType][1], num, localVarName(num))
+    elif varType == 'i16':
+        # if varType in ('i32','u32','f64','bool','str','ptr'):
+        return '''
+    %s = (int16_t) %s(ctx, %d);
+''' % (localVarName(num), TYPE_RULES[varType][1], num)
     else:
         # if varType in ('i32','u32','f64','bool','str','ptr'):
         return '''
