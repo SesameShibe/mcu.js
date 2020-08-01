@@ -260,54 +260,49 @@ void halLcdClearScreen() {
 	memset(lcdFB, 0, sizeof(lcdFB));
 }
 
-void swapInt(int32_t* a, int32_t* b) {
+void swapInt(int16_t* a, int16_t* b) {
 	*a ^= *b;
 	*b ^= *a;
 	*a ^= *b;
 }
 
-float_t triangleArea(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+float_t triangleArea(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2) {
 	return (x1 - x0) * (y2 - y0) - (y1 - y0) * (x2 - x0);
 }
 
-int32_t min(int32_t a, int32_t b) {
+int16_t min(int16_t a, int16_t b) {
 	return a > b ? b : a;
 }
 
-int32_t max(int32_t a, int32_t b) {
+int16_t max(int16_t a, int16_t b) {
 	return a > b ? a : b;
 }
 
-void halLcdSetPenColor(uint32_t color) {
+void halLcdSetPenColor(uint16_t color) {
 	penColor = color;
 }
 
-uint32_t halLcdGetPenColor() {
+uint16_t halLcdGetPenColor() {
 	return penColor;
 }
 
-void halLcdSetRenderBounding(uint16_t left, uint16_t top, uint16_t right, uint16_t bottom) {
+void halLcdSetRenderBounding(int16_t left, int16_t top, int16_t right, int16_t bottom) {
 	renderBounding.left = (int16_t)left;
 	renderBounding.top = (int16_t)top;
 	renderBounding.right = (int16_t)right;
 	renderBounding.bottom = (int16_t)bottom;
-
-	//printf("l:%d t:%d r:%d b:%d\n",renderBounding.left,renderBounding.top,renderBounding.right,renderBounding.bottom);
 }
 
-void IRAM_ATTR halLcdDrawDot(int32_t x, int32_t y, int32_t color) {
+void IRAM_ATTR halLcdDrawDot(int16_t x, int16_t y) {
 	// Ignore outside screen pixels
 	if (x < renderBounding.left || x >= renderBounding.right || y < renderBounding.top || y >= renderBounding.bottom)
 		return;
 
-	if (color == -1)
-		color = penColor;
-
-	lcdFB[(y * LCD_WIDTH) + x] = (uint16_t) color;
+	lcdFB[(y * LCD_WIDTH) + x] = (uint16_t) penColor;
 }
 
-void halLcdDrawHLine(int32_t x0, int32_t x1, int32_t y) {
-	int32_t a, b;
+void halLcdDrawHLine(int16_t x0, int16_t x1, int16_t y) {
+	int16_t a, b;
 	a = min(x0, x1);
 	b = max(x0, x1);
 
@@ -315,12 +310,12 @@ void halLcdDrawHLine(int32_t x0, int32_t x1, int32_t y) {
 		a = 0;
 
 	for (; a < b; a++) {
-		halLcdDrawDot(a, y, -1);
+		halLcdDrawDot(a, y);
 	}
 }
 
-void halLcdDrawVLine(int32_t y0, int32_t y1, int32_t x) {
-	int32_t a, b;
+void halLcdDrawVLine(int16_t y0, int16_t y1, int16_t x) {
+	int16_t a, b;
 	a = min(y0, y1);
 	b = max(y0, y1);
 
@@ -328,11 +323,11 @@ void halLcdDrawVLine(int32_t y0, int32_t y1, int32_t x) {
 		a = 0;
 
 	for (; a < b; a++) {
-		halLcdDrawDot(x, a, -1);
+		halLcdDrawDot(x, a);
 	}
 }
 
-void halLcdDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
+void halLcdDrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1) {
 	if (y0 == y1) {
 		halLcdDrawHLine(x0, x1, y0);
 		return;
@@ -340,7 +335,7 @@ void halLcdDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
 		halLcdDrawVLine(y0, y1, x0);
 		return;
 	} else {
-		int32_t dx = abs(x1 - x0), dy = abs(y1 - y0);
+		int16_t dx = abs(x1 - x0), dy = abs(y1 - y0);
 		bool steep = dx < dy;
 
 		if (steep) {
@@ -349,7 +344,7 @@ void halLcdDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
 			swapInt(&dx, &dy);
 		}
 
-		int32_t stepX = (x1 - x0) > 0 ? 1 : -1, stepY = (y1 - y0) > 0 ? 1 : -1, curX = x0, curY = y0, n2dy = dy << 1,
+		int16_t stepX = (x1 - x0) > 0 ? 1 : -1, stepY = (y1 - y0) > 0 ? 1 : -1, curX = x0, curY = y0, n2dy = dy << 1,
 		        n2dydx = (dy - dx) << 1, d = (dy << 1) - dx;
 
 		if (steep) {
@@ -360,7 +355,7 @@ void halLcdDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
 					curY += stepY;
 					d += n2dydx;
 				}
-				halLcdDrawDot(curY, curX, -1);
+				halLcdDrawDot(curY, curX);
 				curX += stepX;
 			}
 		} else {
@@ -371,36 +366,36 @@ void halLcdDrawLine(int32_t x0, int32_t y0, int32_t x1, int32_t y1) {
 					curY += stepY;
 					d += n2dydx;
 				}
-				halLcdDrawDot(curX, curY, -1);
+				halLcdDrawDot(curX, curY);
 				curX += stepX;
 			}
 		}
 	}
 }
 
-void halLcdDrawCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask) {
-	int32_t x = 0, y = r, d = 1 - r;
+void halLcdDrawCircle(int16_t px, int16_t py, int16_t r, int32_t cornerMask) {
+	int16_t x = 0, y = r, d = 1 - r;
 
 	while (y >= x) {
 		// Bottom right
 		if ((cornerMask & CIRCLE_CORNER_BR) == CIRCLE_CORNER_BR) {
-			halLcdDrawDot(x + px, y + py, -1);
-			halLcdDrawDot(y + px, x + py, -1);
+			halLcdDrawDot(x + px, y + py);
+			halLcdDrawDot(y + px, x + py);
 		}
 		// Bottom left
 		if ((cornerMask & CIRCLE_CORNER_BL) == CIRCLE_CORNER_BL) {
-			halLcdDrawDot(-x + px, y + py, -1);
-			halLcdDrawDot(-y + px, x + py, -1);
+			halLcdDrawDot(-x + px, y + py);
+			halLcdDrawDot(-y + px, x + py);
 		}
 		// Top left
 		if ((cornerMask & CIRCLE_CORNER_TL) == CIRCLE_CORNER_TL) {
-			halLcdDrawDot(-x + px, -y + py, -1);
-			halLcdDrawDot(-y + px, -x + py, -1);
+			halLcdDrawDot(-x + px, -y + py);
+			halLcdDrawDot(-y + px, -x + py);
 		}
 		// Top right
 		if ((cornerMask & CIRCLE_CORNER_TR) == CIRCLE_CORNER_TR) {
-			halLcdDrawDot(x + px, -y + py, -1);
-			halLcdDrawDot(y + px, -x + py, -1);
+			halLcdDrawDot(x + px, -y + py);
+			halLcdDrawDot(y + px, -x + py);
 		}
 
 		if (d <= 0) {
@@ -413,8 +408,8 @@ void halLcdDrawCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask) {
 	}
 }
 
-void halLcdFillCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask) {
-	int32_t x = 0, y = r, d = 1 - r;
+void halLcdFillCircle(int16_t px, int16_t py, int16_t r, int32_t cornerMask) {
+	int16_t x = 0, y = r, d = 1 - r;
 
 	while (y >= x) {
 		// Bottom right
@@ -448,7 +443,7 @@ void halLcdFillCircle(int32_t px, int32_t py, int32_t r, int32_t cornerMask) {
 	}
 }
 
-void halLcdDrawRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t cornerRadius) {
+void halLcdDrawRectangle(int16_t left, int16_t top, int16_t right, int16_t bottom, int16_t cornerRadius) {
 	halLcdDrawLine(left + cornerRadius, top, right - cornerRadius, top);
 	halLcdDrawLine(right, top + cornerRadius, right, bottom - cornerRadius);
 	halLcdDrawLine(left, top + cornerRadius, left, bottom - cornerRadius);
@@ -460,8 +455,8 @@ void halLcdDrawRectangle(int32_t left, int32_t top, int32_t right, int32_t botto
 	halLcdDrawCircle(right - cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BR);
 }
 
-void halLcdFillRectangle(int32_t left, int32_t top, int32_t right, int32_t bottom, int32_t cornerRadius) {
-	int32_t y = 0;
+void halLcdFillRectangle(int16_t left, int16_t top, int16_t right, int16_t bottom, int16_t cornerRadius) {
+	int16_t y = 0;
 
 	y = top + cornerRadius;
 	while (y <= bottom - cornerRadius) {
@@ -487,7 +482,7 @@ void halLcdFillRectangle(int32_t left, int32_t top, int32_t right, int32_t botto
 	halLcdFillCircle(right - cornerRadius, bottom - cornerRadius, cornerRadius, CIRCLE_CORNER_BR);
 }
 
-void halLcdDrawTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+void halLcdDrawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
 	if (triangleArea(x0, y0, x1, y1, x2, y2) == 0)
 		return;
 
@@ -496,12 +491,12 @@ void halLcdDrawTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t 
 	halLcdDrawLine(x1, y1, x2, y2);
 }
 
-void halLcdFillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t x2, int32_t y2) {
+void halLcdFillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
 	float_t area = triangleArea(x0, y0, x1, y1, x2, y2);
 	if (area == 0)
 		return;
 
-	int32_t minX, minY, maxX, maxY;
+	int16_t minX, minY, maxX, maxY;
 	minX = max(min(min(x0, x1), x2), 0);
 	minY = max(min(min(y0, y1), y2), 0);
 	maxX = min(max(max(x0, x1), x2), LCD_WIDTH - 1);
@@ -510,20 +505,20 @@ void halLcdFillTriangle(int32_t x0, int32_t y0, int32_t x1, int32_t y1, int32_t 
 	if (minX > maxX || minY > maxY)
 		return;
 
-	for (int32_t y = minY; y < maxY; y++) {
-		for (int32_t x = minX; x < maxX; x++) {
+	for (int16_t y = minY; y < maxY; y++) {
+		for (int16_t x = minX; x < maxX; x++) {
 			float_t e0 = triangleArea(x1, y1, x2, y2, x, y) / area;
 			float_t e1 = triangleArea(x2, y2, x0, y0, x, y) / area;
 			float_t e2 = triangleArea(x0, y0, x1, y1, x, y) / area;
 
 			if (e0 >= 0 && e1 >= 0 && e2 >= 0) {
-				halLcdDrawDot(x, y, -1);
+				halLcdDrawDot(x, y);
 			}
 		}
 	}
 }
 
-size_t IRAM_ATTR readUtf8Char(uint16_t* readChar, int32_t* ppos, const char* string) {
+size_t IRAM_ATTR halLcdReadUtf8Char(uint16_t* readChar, int32_t* ppos, const char* string) {
 	size_t byteCount = 0;
 	uint16_t unicode = 0;
 	uint32_t pos = *ppos;
@@ -566,14 +561,15 @@ static inline hal_font_section_info_t* halGetFontSection(uint16_t c) {
 	return NULL;
 }
 
-int32_t halLcdMeasureTextWidth(const char* string) {
+int16_t halLcdMeasureTextWidth(const char* string) {
 	uint16_t unicode = 0;
-	int32_t currPos = 0, width = 0;
-	readUtf8Char(&unicode, &currPos, string);
+	int16_t width = 0;
+	int32_t currPos = 0;
+	halLcdReadUtf8Char(&unicode, &currPos, string);
 
 	while (unicode) {
 		hal_font_section_info_t* section = halGetFontSection(unicode);
-		readUtf8Char(&unicode, &currPos, string);
+		halLcdReadUtf8Char(&unicode, &currPos, string);
 
 		if (section == NULL)
 			continue;
@@ -584,31 +580,22 @@ int32_t halLcdMeasureTextWidth(const char* string) {
 	return width;
 }
 
-int32_t halLcdMeasureTextHeight(const char* string) {
+int16_t halLcdMeasureTextHeight(const char* string) {
 	return 16;
 }
 
-void IRAM_ATTR drawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int32_t x, int32_t y) {
-	uint16_t mask = 1;
-	uint32_t bitsIndex = 0;
-
-	for (int32_t yi = 0; yi < height; yi++) {
-		for (int32_t xi = 0; xi < width; xi++) {
+void IRAM_ATTR halLcdDrawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int16_t x, int16_t y) {
+	for (int16_t yi = 0; yi < height; yi++) {
+		for (int16_t xi = 0; xi < width; xi++) {
 			uint8_t bit = readBit(glyphData, yi * width + xi);
 
 			if (bit != 0)
-				halLcdDrawDot(x + xi, y + yi, -1);
-
-			mask = mask << 1;
-			if (mask == 256) {
-				mask = 1;
-				bitsIndex++;
-			}
+				halLcdDrawDot(x + xi, y + yi);
 		}
 	}
 }
 
-int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y) {
+uint16_t IRAM_ATTR halLcdDrawChar(uint16_t c, int16_t x, int16_t y) {
 	const uint8_t* glyphData = NULL;
 	hal_font_section_info_t* section = halGetFontSection(c);
 
@@ -617,15 +604,15 @@ int32_t IRAM_ATTR halLcdDrawChar(uint16_t c, int32_t x, int32_t y) {
 
 	glyphData = (const uint8_t*) (&((uint8_t*) font)[0] +
 	                              (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
-	drawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight));
+	halLcdDrawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight));
 	return section->charWidth;
 }
 
-void halLcdDrawText(const char* string, int32_t x, int32_t y) {
+void halLcdDrawText(const char* string, int16_t x, int16_t y) {
 	uint16_t unicode = 0;
 	int32_t currPos = 0;
-	int32_t dx = x, dy = y;
-	readUtf8Char(&unicode, &currPos, string);
+	int16_t dx = x, dy = y;
+	halLcdReadUtf8Char(&unicode, &currPos, string);
 
 	while (unicode) {
 		if (unicode == 0xd || unicode == 0xa) {
@@ -635,6 +622,6 @@ void halLcdDrawText(const char* string, int32_t x, int32_t y) {
 			dx += halLcdDrawChar(unicode, dx, dy);
 		}
 
-		readUtf8Char(&unicode, &currPos, string);
+		halLcdReadUtf8Char(&unicode, &currPos, string);
 	}
 }
