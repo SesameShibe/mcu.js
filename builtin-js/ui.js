@@ -71,7 +71,10 @@ function max(a, b) {
             }
         }
     }
+
+
     // View base class
+    // --------------------------------------------------------------------------------
     ui.View = function () {
         this.position = { x: 0, y: 0 };
         this.size = { width: 0, height: 0 };
@@ -176,8 +179,10 @@ function max(a, b) {
         if (this.onLongTouched != null && isFunction(this.onLongTouched))
             this.onLongTouched(point);
     }
+    // --------------------------------------------------------------------------------
 
 
+    // --------------------------------------------------------------------------------
     ui.ViewGroup = function () {
         ui.View.call(this);
         this.Views = new Array();
@@ -210,6 +215,8 @@ function max(a, b) {
     }
 
     ui.ViewGroup.prototype.draw = function () {
+        ui.View.prototype.drawImpl.call(this);
+
         if (this.Views == undefined)
             return;
 
@@ -218,8 +225,10 @@ function max(a, b) {
             view.draw();
         }
     }
+    // --------------------------------------------------------------------------------
 
 
+    // --------------------------------------------------------------------------------
     ui.Screen = function () {
 
     }
@@ -231,8 +240,10 @@ function max(a, b) {
         ui.ViewGroup.prototype.draw.call(this);
         ui.update();
     }
+    // --------------------------------------------------------------------------------
 
 
+    // --------------------------------------------------------------------------------
     ui.ScrollLayout = function () {
         ui.ViewGroup.call(this);
 
@@ -282,9 +293,11 @@ function max(a, b) {
     ui.ScrollLayout.prototype.longTouched = function (point) {
 
     }
+    // --------------------------------------------------------------------------------
 
 
     // TextView
+    // --------------------------------------------------------------------------------
     ui.TextView = function () {
         ui.View.call(this);
         this.text = "";
@@ -380,9 +393,11 @@ function max(a, b) {
 
         ui.View.prototype.touchMoved.call(this, oldPoint, newPoint);
     }
+    // --------------------------------------------------------------------------------
 
 
     // Button
+    // --------------------------------------------------------------------------------
     ui.Button = function () {
         ui.TextView.call(this);
 
@@ -418,7 +433,10 @@ function max(a, b) {
     ui.Button.prototype.setReleasedColor = function (color) {
         this.releasedColor = color;
     }
+    // --------------------------------------------------------------------------------
 
+
+    // --------------------------------------------------------------------------------
     ui.TextBox = function () {
         ui.TextView.call(this);
 
@@ -447,6 +465,17 @@ function max(a, b) {
     }
 
     ui.TextBox.prototype.touchDown = function (point) {
+        for (var i = 0; i < this.text.length; i++) {
+            var bbox = this.getBboxAtIndex(i);
+            if (point.x >= bbox.x
+                && point.x <= bbox.x + bbox.width
+                && point.y >= bbox.y
+                && point.y <= bbox.y + bbox.height) {
+                this.setCursor(i);
+                break;
+            }
+        }
+
         ui.View.prototype.touchDown.call(this, point);
     }
 
@@ -476,7 +505,7 @@ function max(a, b) {
 
             var cWidth = ui.measureTextWidth(c);
             bbox.x += cWidth;
-            if ((this.autoLineBreak) && (cWidth + bbox.x > (this.size.width - this.padding))) {
+            if ((this.autoLineBreak) && (bbox.x > (this.size.width - this.padding))) {
                 bbox.x = this.position.x + this.padding - this.textScrollX;
                 bbox.y += 16;
             }
@@ -490,8 +519,10 @@ function max(a, b) {
         ui.TextView.prototype.drawImpl.call(this);
 
         var bbox = this.getBboxAtIndex(this.cursor);
+        ui.setPenColor(0xFFFF);
         ui.drawLine(bbox.x, bbox.y,
             bbox.x, bbox.y + bbox.height);
     }
+    // --------------------------------------------------------------------------------
 }
 )();

@@ -1,5 +1,7 @@
 var screen = new ui.Screen();
+screen.size = { width: 240, height: 240 }
 var scrollLayout = new ui.ScrollLayout();
+scrollLayout.size = { width: 240, height: 240 }
 var tv = new ui.TextView();
 var tb = new ui.TextBox();
 
@@ -36,7 +38,7 @@ function updateFrame() {
     screen.draw();
 }
 
-function playAnim() {
-    setInterval(updateFrame, 1);
-    setInterval(ui.dispatchTouchEvents, 1);
-}
+//function playAnim() {
+setInterval(updateFrame, 1);
+setInterval(ui.dispatchTouchEvents, 1);
+//}
