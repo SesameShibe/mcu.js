@@ -465,16 +465,16 @@ function max(a, b) {
     }
 
     ui.TextBox.prototype.touchDown = function (point) {
-        for (var i = 0; i < this.text.length; i++) {
-            var bbox = this.getBboxAtIndex(i);
-            if (point.x >= bbox.x
-                && point.x <= bbox.x + bbox.width
-                && point.y >= bbox.y
-                && point.y <= bbox.y + bbox.height) {
-                this.setCursor(i);
-                break;
-            }
-        }
+        // for (var i = 0; i < this.text.length; i++) {
+        //     var bbox = this.getBboxAtIndex(i);
+        //     if (point.x >= bbox.x
+        //         && point.x <= bbox.x + bbox.width
+        //         && point.y >= bbox.y
+        //         && point.y <= bbox.y + bbox.height) {
+        //         this.setCursor(i);
+        //         break;
+        //     }
+        // }
 
         ui.View.prototype.touchDown.call(this, point);
     }
