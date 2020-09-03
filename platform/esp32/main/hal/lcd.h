@@ -585,12 +585,20 @@ int16_t halLcdMeasureTextHeight(const char* string) {
 }
 
 void IRAM_ATTR halLcdDrawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int16_t x, int16_t y) {
+	uint8_t b = 0;
+	uint16_t mask = 0x100;
 	for (int16_t yi = 0; yi < height; yi++) {
 		for (int16_t xi = 0; xi < width; xi++) {
-			uint8_t bit = readBit(glyphData, yi * width + xi);
-
-			if (bit != 0)
+			if (mask == 0x100) {
+				b = *glyphData;
+				glyphData++;
+				mask = 1;
+			}
+			
+			if ((b & mask) == mask) {
 				halLcdDrawDot(x + xi, y + yi);
+			}
+			mask <<= 1;
 		}
 	}
 }
