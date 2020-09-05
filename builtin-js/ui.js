@@ -84,6 +84,7 @@ function max(a, b) {
         this.cornerRadius = 0;
 
         this.updateRequired = false;
+        this.visible = true;
 
         this.onTouchDown = null;
         this.onTouchUp = null;
@@ -121,8 +122,8 @@ function max(a, b) {
         ui.drawRectangle(
             this.position.x,
             this.position.y,
-            this.position.x + this.size.width,
-            this.position.y + this.size.height,
+            this.position.x + this.size.width - 1,
+            this.position.y + this.size.height - 1,
             this.cornerRadius);
     }
 
@@ -156,6 +157,11 @@ function max(a, b) {
     ui.View.prototype.setCornerRadius = function (cornerRadius) {
         this.updateRequired = true;
         this.cornerRadius = cornerRadius;
+    }
+
+    ui.View.prototype.setVisible = function (visible) {
+        this.visible = visible;
+        this.updateRequired = true;
     }
 
     ui.View.prototype.getRenderBounding = function () {
@@ -250,7 +256,9 @@ function max(a, b) {
 
         for (var index = 0; index < this.Views.length; index++) {
             var view = this.Views[index];
-            view.draw();
+            if (view.visible) {
+                view.draw();
+            }
         }
     }
     // --------------------------------------------------------------------------------
@@ -357,13 +365,7 @@ function max(a, b) {
     }
 
     ui.TextView.prototype.drawImpl = function () {
-        ui.setPenColor(this.background);
-        ui.fillRectangle(
-            this.position.x,
-            this.position.y,
-            this.position.x + this.size.width,
-            this.position.y + this.size.height,
-            this.cornerRadius);
+        this.drawBackground();
 
         var bounding = this.getRenderBounding();
         ui.setPenColor(this.foreground);
@@ -395,6 +397,8 @@ function max(a, b) {
                 this.position.x + this.padding - this.textScrollX,
                 this.position.y + this.padding - this.textScrollY);
         }
+
+        this.drawBorder();
     }
 
     ui.TextView.prototype.touchDown = function (point) {
@@ -611,7 +615,7 @@ function max(a, b) {
             this.position.x,
             this.position.y,
             this.position.x + (this.size.width * this.getPercentage()),
-            this.position.y + this.size.height,
+            this.position.y + this.size.height - 1,
             this.cornerRadius
         )
     }
