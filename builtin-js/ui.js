@@ -21,9 +21,9 @@ function max(a, b) {
 
 (function () {
     ui.makeColor = function (r, g, b) {
-        return (((r >> 3) & 0x1F) << 11)
+        return (((b >> 3) & 0x1F) << 11)
             | (((g >> 2) & 0x3F) << 5)
-            | ((b >> 3) & 0x1F);
+            | ((r >> 3) & 0x1F);
     }
 
     ui.RenderQueue = new Array();
@@ -579,7 +579,7 @@ function max(a, b) {
         this.min = 0;
         this.max = 100;
         this.value = 0;
-        this.progressColor = ui.makeColor(255, 178, 51);
+        this.progressColor = ui.makeColor(51, 178, 255);
     }
     ui.ProgressBar.prototype = new ui.View();
 
