@@ -431,6 +431,13 @@ function max(a, b) {
     }
     ui.Button.prototype = new ui.TextView();
 
+    ui.Button.prototype.drawImpl = function () {
+        var centerX = 0 - ((this.size.width - ui.measureTextWidth(this.text)) / 2);
+        var centerY = 0 - ((this.size.height - 16) / 2);
+        this.setTextScroll(centerX, centerY);
+        ui.TextView.prototype.drawImpl.call(this);
+    }
+
     ui.Button.prototype.touchDown = function (point) {
         this.setBackground(this.pressedColor);
         ui.TextView.prototype.touchDown.call(this, point);
@@ -593,9 +600,9 @@ function max(a, b) {
     }
 
     ui.ProgressBar.prototype.drawImpl = function () {
-        ui.View.prototype.drawBackground.call(this);
+        this.drawBackground();
         this.drawProgress();
-        ui.View.prototype.drawBorder.call(this);
+        this.drawBorder();
     }
 
     ui.ProgressBar.prototype.drawProgress = function () {
