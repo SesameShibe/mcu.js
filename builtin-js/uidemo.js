@@ -32,9 +32,19 @@ btn.setReleasedColor(ui.makeColor(100, 100, 100));
 btn.setCornerRadius(10);
 scrollLayout.addView(btn);
 
+var pb = new ui.ProgressBar();
+pb.setCornerRadius(5);
+pb.setSize(100, 20);
+pb.setPos(30, 30);
+scrollLayout.addView(pb);
+
 screen.addView(scrollLayout)
 
 function updateFrame() {
+    if (pb.value < 100)
+        pb.value += 5;
+    else
+        pb.setValue(0);
     screen.draw();
 }
 

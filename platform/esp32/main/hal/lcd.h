@@ -444,6 +444,11 @@ void halLcdFillCircle(int16_t px, int16_t py, int16_t r, int32_t cornerMask) {
 }
 
 void halLcdDrawRectangle(int16_t left, int16_t top, int16_t right, int16_t bottom, int16_t cornerRadius) {
+	if ((left == right) || (top == bottom)) {
+		// Draw nothing.
+		return;
+	}
+
 	halLcdDrawLine(left + cornerRadius, top, right - cornerRadius, top);
 	halLcdDrawLine(right, top + cornerRadius, right, bottom - cornerRadius);
 	halLcdDrawLine(left, top + cornerRadius, left, bottom - cornerRadius);
@@ -456,6 +461,11 @@ void halLcdDrawRectangle(int16_t left, int16_t top, int16_t right, int16_t botto
 }
 
 void halLcdFillRectangle(int16_t left, int16_t top, int16_t right, int16_t bottom, int16_t cornerRadius) {
+	if ((left >= right) || (top >= bottom)) {
+		// Draw nothing.
+		return;
+	}
+
 	int16_t y = 0;
 
 	y = top + cornerRadius;
@@ -594,7 +604,7 @@ void IRAM_ATTR halLcdDrawGlyph(const uint8_t* glyphData, uint16_t width, uint16_
 				glyphData++;
 				mask = 1;
 			}
-			
+
 			if ((b & mask) == mask) {
 				halLcdDrawDot(x + xi, y + yi);
 			}

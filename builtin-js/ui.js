@@ -80,6 +80,9 @@ function max(a, b) {
         this.size = { width: 0, height: 0 };
         this.foreground = 0xFFFF;
         this.background = 0;
+        this.border = 0xFFFF;
+        this.cornerRadius = 0;
+
         this.updateRequired = false;
 
         this.onTouchDown = null;
@@ -99,13 +102,28 @@ function max(a, b) {
 
     // Implementing draw function by overriding this method.
     ui.View.prototype.drawImpl = function () {
+        this.drawBackground();
+        this.drawBorder();
+    }
+
+    ui.View.prototype.drawBackground = function () {
         ui.setPenColor(this.background);
         ui.fillRectangle(
             this.position.x,
             this.position.y,
             this.position.x + this.size.width,
             this.position.y + this.size.height,
-            0);
+            this.cornerRadius);
+    }
+
+    ui.View.prototype.drawBorder = function () {
+        ui.setPenColor(this.border);
+        ui.drawRectangle(
+            this.position.x,
+            this.position.y,
+            this.position.x + this.size.width,
+            this.position.y + this.size.height,
+            this.cornerRadius);
     }
 
     ui.View.prototype.setForeground = function (color) {
@@ -118,6 +136,11 @@ function max(a, b) {
         this.background = color;
     }
 
+    ui.View.prototype.setBorder = function (color) {
+        this.updateRequired = true;
+        this.border = color;
+    }
+
     ui.View.prototype.setSize = function (w, h) {
         this.updateRequired = true;
         this.size.width = w;
@@ -128,6 +151,11 @@ function max(a, b) {
         this.updateRequired = true;
         this.position.x = x;
         this.position.y = y;
+    }
+
+    ui.View.prototype.setCornerRadius = function (cornerRadius) {
+        this.updateRequired = true;
+        this.cornerRadius = cornerRadius;
     }
 
     ui.View.prototype.getRenderBounding = function () {
@@ -321,11 +349,6 @@ function max(a, b) {
         this.updateRequired = true;
         this.textScrollX = posX;
         this.textScrollY = posY;
-    }
-
-    ui.TextView.prototype.setCornerRadius = function (cornerRadius) {
-        this.updateRequired = true;
-        this.cornerRadius = cornerRadius;
     }
 
     ui.TextView.prototype.setPadding = function (padding) {
@@ -524,5 +547,55 @@ function max(a, b) {
             bbox.x, bbox.y + bbox.height);
     }
     // --------------------------------------------------------------------------------
+
+
+
+    // --------------------------------------------------------------------------------
+    ui.ProgressBar = function () {
+        ui.View.call(this);
+
+        this.min = 0;
+        this.max = 100;
+        this.value = 0;
+        this.progressColor = ui.makeColor(255, 178, 51);
+    }
+    ui.ProgressBar.prototype = new ui.View();
+
+    ui.ProgressBar.prototype.setMin = function (min) {
+        this.min = min;
+    }
+
+    ui.ProgressBar.prototype.setMax = function (max) {
+        this.max = max;
+    }
+
+    ui.ProgressBar.prototype.setValue = function (value) {
+        this.value = value;
+    }
+
+    ui.ProgressBar.prototype.setProgressColor = function (color) {
+        this.progressColor = color;
+    }
+
+    ui.ProgressBar.prototype.getPercentage = function () {
+        return this.value / (this.max - this.min);
+    }
+
+    ui.ProgressBar.prototype.drawImpl = function () {
+        ui.View.prototype.drawBackground.call(this);
+        this.drawProgress();
+        ui.View.prototype.drawBorder.call(this);
+    }
+
+    ui.ProgressBar.prototype.drawProgress = function(){
+        ui.setPenColor(this.progressColor);
+        ui.fillRectangle(
+            this.position.x,
+            this.position.y,
+            this.position.x + (this.size.width * this.getPercentage()),
+            this.position.y + this.size.height,
+            this.cornerRadius
+        )
+    }
 }
 )();
