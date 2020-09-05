@@ -468,11 +468,12 @@ function max(a, b) {
     ui.TextBox.prototype = new ui.TextView();
 
     ui.TextBox.prototype.insert = function (s) {
+        this.updateRequired = true;
         var head = this.text.substring(0, this.cursor);
         var tail = this.text.substring(this.cursor, this.text.length);
 
-        this.setText(head + s + tail);
-        this.setCursor(this.cursor + s.length);
+        this.text = head + s + tail;
+        this.cursor = this.cursor + s.length;
     }
 
     ui.TextBox.prototype.backspace = function () {
@@ -481,6 +482,16 @@ function max(a, b) {
 
         this.setText(head.substring(0, head.length - 1) + tail);
         this.setCursor(this.cursor - 1);
+    }
+
+    ui.TextBox.prototype.clear = function () {
+        this.text = "";
+        this.cursor = 0;
+    }
+
+    ui.TextBox.prototype.setText = function (text) {
+        this.updateRequired = true;
+        this.insert(text)
     }
 
     ui.TextBox.prototype.setCursor = function (index) {
@@ -587,7 +598,7 @@ function max(a, b) {
         ui.View.prototype.drawBorder.call(this);
     }
 
-    ui.ProgressBar.prototype.drawProgress = function(){
+    ui.ProgressBar.prototype.drawProgress = function () {
         ui.setPenColor(this.progressColor);
         ui.fillRectangle(
             this.position.x,
