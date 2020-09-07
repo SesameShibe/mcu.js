@@ -45,7 +45,7 @@ function max(a, b) {
                         && (point.x < (v.position.x + v.size.width))
                         && (point.y > v.position.y)
                         && point.y < (v.position.y + v.size.height)
-                        && (!v.clickTransparent)) {
+                        && (!v.touchTransparent)) {
                         v.touchDown(point);
 
                         ui.LastTouchedView = v;
@@ -86,7 +86,7 @@ function max(a, b) {
 
         this.updateRequired = false;
         this.visible = true;
-        this.clickTransparent = false;
+        this.touchTransparent = false;
 
         this.onTouchDown = null;
         this.onTouchUp = null;
