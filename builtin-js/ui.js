@@ -44,7 +44,8 @@ function max(a, b) {
                     if ((point.x > v.position.x)
                         && (point.x < (v.position.x + v.size.width))
                         && (point.y > v.position.y)
-                        && point.y < (v.position.y + v.size.height)) {
+                        && point.y < (v.position.y + v.size.height)
+                        && (!v.clickTransparent)) {
                         v.touchDown(point);
 
                         ui.LastTouchedView = v;
@@ -85,6 +86,7 @@ function max(a, b) {
 
         this.updateRequired = false;
         this.visible = true;
+        this.clickTransparent = false;
 
         this.onTouchDown = null;
         this.onTouchUp = null;
@@ -166,6 +168,12 @@ function max(a, b) {
 
     ui.View.prototype.setParent = function (viewGroup) {
         this.parent = viewGroup;
+        if (this.size.width == -1) {
+            this.size.width = this.parent.width;
+        }
+        if (this.size.height == -1) {
+            this.size.height = this.parent.height;
+        }
     }
 
     ui.View.prototype.getRenderBounding = function () {
@@ -261,7 +269,7 @@ function max(a, b) {
     ui.ViewGroup.prototype.setPos = function (x, y) {
         var diffX = x - this.position.x;
         var diffY = y - this.position.y;
-        ui.View.prototype.setPos.call(this);
+        ui.View.prototype.setPos.call(this, x, y);
 
         if (this.Views == undefined)
             return;
@@ -368,7 +376,7 @@ function max(a, b) {
         this.textScrollX = 0;
         this.textScrollY = 0;
         this.scrollHorizonal = false;
-        this.scrollVertical = true;
+        this.scrollVertical = false;
     }
     ui.TextView.prototype = new ui.View();
 
@@ -652,6 +660,7 @@ function max(a, b) {
         ui.ScrollLayout.call(this);
 
         this.itemHeight = 32;
+        this.itemSpacing = 1;
 
         this.itemSource = null;
         this.buildItem = null;
@@ -666,23 +675,27 @@ function max(a, b) {
         for (var i = 0; i < this.itemSource.length; i++) {
             var item = this.buildItemInternal(this.itemSource[i]);
 
-            item.position.x = itemX;
-            item.position.y = itemY;
+            item.setPos(itemX, itemY);
 
             this.addView(item);
-            itemY += this.itemHeight;
+            itemY += this.itemHeight + this.itemSpacing;
         }
+    }
+
+    ui.ListView.prototype.addView = function (view) {
+        view.index = this.Views.length;
+        ui.ScrollLayout.prototype.addView.call(this, view);
     }
 
     ui.ListView.prototype.buildItemInternal = function (data) {
         var item = this.buildItem(data);
-        if (typeof item == 'ListViewItem') {
-            item.size.width = this.size.width;
-            item.size.height = this.itemHeight;
-            return item;
+        if (item instanceof ui.ListViewItem) {
+            item.data = data;
+            item.setSize(this.size.width, this.itemHeight);
         } else {
             throw 'The buildItem callback must returns a ListViewItem object.';
         }
+        return item;
     }
 
     ui.ListView.prototype.setItemSource = function (dataCollection) {
@@ -694,9 +707,15 @@ function max(a, b) {
         this.itemHeight = height;
     }
 
+    ui.ListView.prototype.setItemSpacing = function (spacing) {
+        this.itemSpacing = spacing;
+    }
 
     ui.ListViewItem = function () {
         ui.ViewGroup.call(this);
+
+        this.data = null;
+        this.index = 0;
 
         this.pressedColor = ui.makeColor(255, 255, 255);
         this.releasedColor = ui.makeColor(0, 0, 0);
@@ -705,17 +724,22 @@ function max(a, b) {
     }
     ui.ListViewItem.prototype = new ui.ViewGroup();
 
+    ui.ListViewItem.prototype.draw = function () {
+        ui.RenderQueue.push(this);
+        ui.ViewGroup.prototype.draw.call(this);
+    }
+
     ui.ListViewItem.prototype.touchDown = function (point) {
-        ui.ViewGroup.prototype.touchDown.call(this, point);
         this.setBackground(this.pressedColor);
+        ui.ViewGroup.prototype.touchDown.call(this, point);
     }
 
     ui.ListViewItem.prototype.touchUp = function (point) {
-        ui.ViewGroup.prototype.touchUp.call(this, point);
         this.setBackground(this.releasedColor);
+        ui.ViewGroup.prototype.touchUp.call(this, point);
 
         if (this.parent.onItemClicked != null && isFunction(this.parent.onItemClicked)) {
-            this.parent.onItemClicked(this, point);
+            this.parent.onItemClicked(this.data, { position: point, index: this.index });
         }
     }
 
@@ -728,7 +752,7 @@ function max(a, b) {
     }
 
     ui.ListViewItem.prototype.setParent = function (viewGroup) {
-        if (typeof viewGroup == 'ListView') {
+        if (viewGroup instanceof ui.ListView) {
             ui.View.prototype.setParent.call(this, viewGroup);
         } else {
             throw 'A ListViewItem object can only being added to a ListView object.'

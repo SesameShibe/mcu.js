@@ -1,50 +1,39 @@
 var screen = new ui.Screen();
 screen.size = { width: 240, height: 240 }
-var scrollLayout = new ui.ScrollLayout();
-scrollLayout.size = { width: 240, height: 240 }
+
 var tv = new ui.TextView();
-var tb = new ui.TextBox();
+tv.setSize(100, 240)
+tv.setPos(140, 0)
+screen.addView(tv);
 
-tv.text = 'ESP32';
-tv.autoLineBreak = true;
-tv.setPos(0, 0);
-tv.setSize(40, 40);
-tv.setBackground(0x9090);
-tv.setCornerRadius(10);
-tv.setPadding(10);
-//scrollLayout.addView(tv);
+var lv = new ui.ListView();
+lv.setSize(140, 240);
+lv.setPos(0, 0);
+lv.buildItem = function (data) {
+    var item = new ui.ListViewItem();
 
-tb.text = 'ESP32';
-tb.autoLineBreak = true;
-tb.setPos(0, 0);
-tb.setSize(100, 100);
-tb.setBackground(0x9090);
-tb.setCornerRadius(10);
-tb.setPadding(10);
-scrollLayout.addView(tb);
+    var a = new ui.TextView();
+    a.setText(data.title);
+    a.setSize(-1, -1)
+    a.autoLineBreak = true;
+    a.clickTransparent = true;
+    item.addViewRelativly(a);
 
-var btn = new ui.Button();
-btn.text = 'Touch Me!'
-btn.setSize(80, 80);
-btn.setPos(60, 60);
-btn.setBackground(ui.makeColor(100, 100, 100));
-btn.setReleasedColor(ui.makeColor(100, 100, 100));
-btn.setCornerRadius(10);
-scrollLayout.addView(btn);
-
-var pb = new ui.ProgressBar();
-pb.setCornerRadius(5);
-pb.setSize(100, 20);
-pb.setPos(30, 30);
-scrollLayout.addView(pb);
-
-screen.addView(scrollLayout)
+    return item;
+}
+lv.onItemClicked = function (data, args) {
+    print('Item clicked: ' + data.title);
+    tv.setText('Item clicked:\n' + data.title);
+}
+lv.setItemSource([
+    { title: 'Item 1' },
+    { title: 'Item 2' },
+    { title: 'Item 3' },
+    { title: 'Item 4' },
+])
+screen.addView(lv);
 
 function updateFrame() {
-    if (pb.value < 100)
-        pb.value += 5;
-    else
-        pb.setValue(0);
     screen.draw();
 }
 
