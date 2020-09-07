@@ -675,7 +675,7 @@ function max(a, b) {
     }
 
     ui.ListView.prototype.buildItemInternal = function (data) {
-        var item = this.buildItem(this.itemSource[i]);
+        var item = this.buildItem(data);
         if (typeof item == 'ListViewItem') {
             item.size.width = this.size.width;
             item.size.height = this.itemHeight;
