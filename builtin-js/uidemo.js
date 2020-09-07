@@ -16,7 +16,7 @@ lv.buildItem = function (data) {
     a.setText(data.title);
     a.setSize(-1, -1)
     a.autoLineBreak = true;
-    a.clickTransparent = true;
+    a.touchTransparent = true;
     item.addViewRelativly(a);
 
     return item;

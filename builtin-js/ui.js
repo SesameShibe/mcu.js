@@ -109,6 +109,20 @@ function max(a, b) {
         this.drawBorder();
     }
 
+    ui.View.prototype.startDraw = function () {
+    }
+
+    ui.View.prototype.endDraw = function () {
+        this.updateRequired = false;
+        ui.RenderQueue.push(this);
+
+        if (this.parent != undefined)
+            ui.setRenderBounding(this.parent.position.x,
+                this.parent.position.y,
+                this.parent.position.x + this.parent.size.width,
+                this.parent.position.x + this.parent.size.height)
+    }
+
     ui.View.prototype.drawBackground = function () {
         ui.setPenColor(this.background);
         ui.fillRectangle(
@@ -186,20 +200,6 @@ function max(a, b) {
         var b = min(this.parent.position.y + this.parent.size.height, this.position.y + this.size.height);
 
         return { left: l, top: t, right: r, bottom: b };
-    }
-
-    ui.View.prototype.startDraw = function () {
-    }
-
-    ui.View.prototype.endDraw = function () {
-        this.updateRequired = false;
-        ui.RenderQueue.push(this);
-
-        if (this.parent != undefined)
-            ui.setRenderBounding(this.parent.position.x,
-                this.parent.position.y,
-                this.parent.position.x + this.parent.size.width,
-                this.parent.position.x + this.parent.size.height)
     }
 
     ui.View.prototype.touchDown = function (point) {
@@ -281,7 +281,9 @@ function max(a, b) {
     }
 
     ui.ViewGroup.prototype.draw = function () {
-        ui.View.prototype.drawImpl.call(this);
+        this.startDraw();
+        this.drawImpl();
+        ui.RenderQueue.push(this);
 
         if (this.Views == undefined)
             return;
@@ -292,6 +294,12 @@ function max(a, b) {
                 view.draw();
             }
         }
+
+        if (this.parent != undefined)
+            ui.setRenderBounding(this.parent.position.x,
+                this.parent.position.y,
+                this.parent.position.x + this.parent.size.width,
+                this.parent.position.x + this.parent.size.height)
     }
     // --------------------------------------------------------------------------------
 
@@ -321,11 +329,6 @@ function max(a, b) {
         this.scrollVertical = true;
     }
     ui.ScrollLayout.prototype = new ui.ViewGroup();
-
-    ui.ScrollLayout.prototype.draw = function () {
-        ui.RenderQueue.push(this);
-        ui.ViewGroup.prototype.draw.call(this);
-    }
 
     ui.ScrollLayout.prototype.touchDown = function (point) {
 
@@ -725,11 +728,6 @@ function max(a, b) {
         this.setBackground(this.releasedColor);
     }
     ui.ListViewItem.prototype = new ui.ViewGroup();
-
-    ui.ListViewItem.prototype.draw = function () {
-        ui.RenderQueue.push(this);
-        ui.ViewGroup.prototype.draw.call(this);
-    }
 
     ui.ListViewItem.prototype.touchDown = function (point) {
         this.setBackground(this.pressedColor);
