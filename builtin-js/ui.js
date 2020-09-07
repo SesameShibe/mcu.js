@@ -26,6 +26,15 @@ function max(a, b) {
             | ((r >> 3) & 0x1F);
     }
 
+    ui.Colors = {
+        white: 0xFFFF,
+        black: 0,
+        red: 0x1F,
+        greed: 0x7E0,
+        blue: 0xF7D8,
+        lightBlue: 0xFD86
+    }
+
     ui.RenderQueue = new Array();
     ui.LastTouchedView = null;
     ui.LastTouchedPoint = null;
@@ -79,9 +88,9 @@ function max(a, b) {
     ui.View = function () {
         this.position = { x: 0, y: 0 };
         this.size = { width: 0, height: 0 };
-        this.foreground = 0xFFFF;
+        this.foreground = ui.Colors.white;
         this.background = 0;
-        this.border = 0xFFFF;
+        this.border = ui.Colors.white;
         this.cornerRadius = 0;
 
         this.updateRequired = false;
@@ -463,8 +472,8 @@ function max(a, b) {
     ui.Button = function () {
         ui.TextView.call(this);
 
-        this.pressedColor = ui.makeColor(255, 255, 255);
-        this.releasedColor = ui.makeColor(0, 0, 0);
+        this.pressedColor = ui.Colors.white;
+        this.releasedColor = ui.Colors.black;
 
         this.setBackground(this.releasedColor);
     }
@@ -599,7 +608,7 @@ function max(a, b) {
         ui.TextView.prototype.drawImpl.call(this);
 
         var bbox = this.getBboxAtIndex(this.cursor);
-        ui.setPenColor(0xFFFF);
+        ui.setPenColor(ui.Colors.white);
         ui.drawLine(bbox.x, bbox.y,
             bbox.x, bbox.y + bbox.height);
     }
@@ -614,7 +623,7 @@ function max(a, b) {
         this.min = 0;
         this.max = 100;
         this.value = 0;
-        this.progressColor = ui.makeColor(51, 178, 255);
+        this.progressColor = ui.Colors.lightBlue;
     }
     ui.ProgressBar.prototype = new ui.View();
 

@@ -2,9 +2,15 @@ var screen = new ui.Screen();
 screen.size = { width: 240, height: 240 }
 
 var tv = new ui.TextView();
-tv.setSize(100, 240)
+tv.setSize(100, 200)
 tv.setPos(140, 0)
 screen.addView(tv);
+
+var pb = new ui.ProgressBar();
+pb.setCornerRadius(5);
+pb.setSize(100, 40);
+pb.setPos(140, 200);
+screen.addView(pb);
 
 var lv = new ui.ListView();
 lv.setSize(140, 240);
@@ -34,6 +40,8 @@ lv.setItemSource([
 screen.addView(lv);
 
 function updateFrame() {
+    if (pb.value < 100) pb.setValue(pb.value + 10);
+    else pb.setValue(0);
     screen.draw();
 }
 
