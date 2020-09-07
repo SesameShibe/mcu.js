@@ -720,6 +720,8 @@ function max(a, b) {
         this.pressedColor = ui.makeColor(255, 255, 255);
         this.releasedColor = ui.makeColor(0, 0, 0);
 
+        this.moved = false;
+
         this.setBackground(this.releasedColor);
     }
     ui.ListViewItem.prototype = new ui.ViewGroup();
@@ -738,9 +740,16 @@ function max(a, b) {
         this.setBackground(this.releasedColor);
         ui.ViewGroup.prototype.touchUp.call(this, point);
 
-        if (this.parent.onItemClicked != null && isFunction(this.parent.onItemClicked)) {
+        if (this.parent.onItemClicked != null && isFunction(this.parent.onItemClicked) && !this.moved) {
             this.parent.onItemClicked(this.data, { position: point, index: this.index });
         }
+
+        this.moved = false;
+    }
+
+    ui.ListViewItem.prototype.touchMoved = function (oldPoint, newPoint) {
+        this.parent.touchMoved(oldPoint, newPoint);
+        this.moved = true;
     }
 
     ui.ListViewItem.prototype.setPressedColor = function (color) {
