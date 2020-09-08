@@ -439,8 +439,8 @@ function max(a, b) {
         this.data = null;
         this.index = 0;
 
-        this.pressedColor = ui.makeColor(255, 255, 255);
-        this.releasedColor = ui.makeColor(0, 0, 0);
+        this.pressedColor = ui.Colors.white;
+        this.releasedColor = ui.Colors.black;
 
         this.moved = false;
 
