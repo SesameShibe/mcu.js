@@ -124,12 +124,7 @@ function max(a, b) {
     ui.View.prototype.endDraw = function () {
         this.updateRequired = false;
         ui.RenderQueue.push(this);
-
-        if (this.parent != undefined)
-            ui.setRenderBounding(this.parent.position.x,
-                this.parent.position.y,
-                this.parent.position.x + this.parent.size.width,
-                this.parent.position.x + this.parent.size.height)
+        this.restoreRenderBounding();
     }
 
     ui.View.prototype.drawBackground = function () {
@@ -203,12 +198,24 @@ function max(a, b) {
         if (this.parent == undefined)
             return { left: 0, top: 0, right: 0, bottom: 0 };
 
-        var l = max(this.parent.position.x, this.position.x);
-        var t = max(this.parent.position.y, this.position.y);
-        var r = min(this.parent.position.x + this.parent.size.width, this.position.x + this.size.width);
-        var b = min(this.parent.position.y + this.parent.size.height, this.position.y + this.size.height);
+        var parentRenderBounding = this.parent.getRenderBounding();
+
+        var l = max(parentRenderBounding.left, this.position.x);
+        var t = max(parentRenderBounding.top, this.position.y);
+        var r = min(parentRenderBounding.right, this.position.x + this.size.width);
+        var b = min(parentRenderBounding.bottom, this.position.y + this.size.height);
 
         return { left: l, top: t, right: r, bottom: b };
+    }
+
+    ui.View.prototype.restoreRenderBounding = function () {
+        if (this.parent != undefined) {
+            var parentRenderBounding = this.parent.getRenderBounding();
+            ui.setRenderBounding(parentRenderBounding.left,
+                parentRenderBounding.top,
+                parentRenderBounding.right,
+                parentRenderBounding.bottom);
+        }
     }
 
     ui.View.prototype.touchDown = function (point) {
@@ -304,11 +311,7 @@ function max(a, b) {
             }
         }
 
-        if (this.parent != undefined)
-            ui.setRenderBounding(this.parent.position.x,
-                this.parent.position.y,
-                this.parent.position.x + this.parent.size.width,
-                this.parent.position.x + this.parent.size.height)
+        this.restoreRenderBounding();
     }
     // --------------------------------------------------------------------------------
 
