@@ -78,8 +78,20 @@ typedef struct hal_rect_t {
 	int16_t bottom;
 } hal_rect_t;
 
+typedef struct hal_icon_font_t {
+	int32_t magic; // "ICON"
+	int32_t sectionSize;
+	int16_t entryCount;
+	int8_t width;
+	int8_t height;
+	int32_t entrySize;
+} hal_icon_font_t;
+
 static hal_font_t* font;
 static hal_font_section_info_t* sections;
+
+static hal_icon_font_t* iconFont;
+static uint32_t* iconIds;
 
 static uint16_t lcdFB[LCD_WIDTH * LCD_HEIGHT];
 uint16_t lcdRowOffset, lcdColOffset;
@@ -182,16 +194,22 @@ void IRAM_ATTR halLcdUpdate() {
 }
 
 void halLcdInitFont() {
-	const void* font_data;
+	const void* font_partition;
 	spi_flash_mmap_handle_t handle;
 	const esp_partition_t* part =
 	    esp_partition_find_first((esp_partition_type_t) 64, (esp_partition_subtype_t) 0, "font");
-	esp_err_t error = esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA, &font_data, &handle);
+	esp_err_t error = esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA, &font_partition, &handle);
 
 	ESP_ERROR_CHECK(error);
 
-	font = (hal_font_t*) font_data;
-	sections = (hal_font_section_info_t*) (((uint8_t*) font_data) + 8);
+	iconFont = (hal_icon_font_t*) font_partition;
+	iconIds = (uint32_t*) (((uint8_t*) font_partition) + sizeof(hal_icon_font_t));
+	printf("icon magic: %x\n"
+	       "icon size: 0x%x\n",
+	       iconFont->magic, iconFont->sectionSize);
+
+	font = (hal_font_t*) (((uint8_t*) font_partition) + iconFont->sectionSize);
+	sections = (hal_font_section_info_t*) (((uint8_t*) font_partition) + iconFont->sectionSize + 8);
 
 	printf("Font partition address > 0x%x\n", part->address);
 	printf("Font partition size > 0x%x\n", part->size);
@@ -549,16 +567,6 @@ size_t IRAM_ATTR halLcdReadUtf8Char(uint16_t* readChar, int32_t* ppos, const cha
 	return byteCount;
 }
 
-static inline uint8_t IRAM_ATTR readBit(const uint8_t* data, int32_t index) {
-	uint8_t retv = 0;
-
-	// printf("Reading bit at: %d\n", index);
-	uint8_t bits = data[(index >> 3)];
-	retv = (bits >> (index & 7)) & 1;
-
-	return retv;
-}
-
 static inline hal_font_section_info_t* halGetFontSection(uint16_t c) {
 	hal_font_section_info_t* section = sections;
 
@@ -641,5 +649,46 @@ void halLcdDrawText(const char* string, int16_t x, int16_t y) {
 		}
 
 		halLcdReadUtf8Char(&unicode, &currPos, string);
+	}
+}
+
+void halLcdDrawIcon(uint32_t id, int16_t x, int16_t y) {
+	int32_t low = 0, high = iconFont->entryCount - 1;
+	int32_t iconIndex = -1;
+
+	while (low <= high) {
+		iconIndex = (low + high) / 2;
+		if (iconIds[iconIndex] > id) {
+			high = iconIndex - 1;
+		} else if (iconIds[iconIndex] < id) {
+			low = iconIndex + 1;
+		} else {
+			break;
+		}
+	}
+
+	printf("Icon index: %d\n", iconIndex);
+	if (iconIndex == -1) {
+		return;
+	}
+
+	uint8_t* iconData = (((uint8_t*) iconFont) + sizeof(hal_icon_font_t) + (iconFont->entryCount * 4) +
+	                     (iconFont->entrySize * iconIndex));
+
+	uint8_t b = 0;
+	uint16_t mask = 0x100;
+	for (int16_t yi = 0; yi < iconFont->height; yi++) {
+		for (int16_t xi = 0; xi < iconFont->width; xi++) {
+			if (mask == 0x100) {
+				b = *iconData;
+				iconData++;
+				mask = 1;
+			}
+
+			if ((b & mask) == mask) {
+				halLcdDrawDot(x + xi, y + yi);
+			}
+			mask <<= 1;
+		}
 	}
 }

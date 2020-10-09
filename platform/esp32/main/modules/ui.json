@@ -1,5 +1,5 @@
 {
-    "function" :{
+    "function": {
         "init": [
             "halLcdInit",
             "void"
@@ -21,7 +21,7 @@
             "halLcdGetPenColor",
             "u16"
         ],
-        "setRenderBounding":[
+        "setRenderBounding": [
             "halLcdSetRenderBounding",
             "void",
             "i16",
@@ -98,12 +98,12 @@
             "i16",
             "i16"
         ],
-        "measureTextWidth":[
+        "measureTextWidth": [
             "halLcdMeasureTextWidth",
             "i16",
             "str"
         ],
-        "measureTextHeight":[
+        "measureTextHeight": [
             "halLcdMeasureTextHeight",
             "i16",
             "str"
@@ -111,6 +111,13 @@
         "clear": [
             "halLcdClearScreen",
             "void"
+        ],
+        "drawIcon": [
+            "halLcdDrawIcon",
+            "void",
+            "u32",
+            "i16",
+            "i16"
         ]
     }
 }

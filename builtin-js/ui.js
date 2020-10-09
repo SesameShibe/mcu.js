@@ -112,7 +112,6 @@ function max(a, b) {
     }
 
 
-    // Implementing draw function by overriding this method.
     ui.View.prototype.drawImpl = function () {
         this.drawBackground();
         this.drawBorder();
@@ -327,6 +326,10 @@ function max(a, b) {
         ui.RenderQueue = new Array();
         ui.ViewGroup.prototype.draw.call(this);
         ui.update();
+    }
+
+    ui.Screen.prototype.getRenderBounding = function () {
+        return { left: 0, top: 0, right: 240, bottom: 240 };
     }
     // --------------------------------------------------------------------------------
 
