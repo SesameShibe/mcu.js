@@ -15,9 +15,7 @@ screen.addView(pb);
 var lv = new ui.ListView();
 lv.setSize(140, 240);
 lv.setPos(0, 0);
-lv.buildItem = function (data) {
-    var item = new ui.ListViewItem();
-
+lv.buildItem = function (item, data) {
     var icon = new ui.Icon(data.icon);
     icon.setSize(16, 16);
     icon.setPos(0, 0);
@@ -30,8 +28,6 @@ lv.buildItem = function (data) {
     title.autoLineBreak = true;
     title.touchTransparent = true;
     item.addViewRelativly(title);
-
-    return item;
 }
 lv.onItemClicked = function (data, args) {
     print('Item clicked: ' + data.title);
@@ -42,6 +38,7 @@ lv.setItemSource([
     { title: 'Apple', icon: 0xa92ed050 },
     { title: 'Facebook', icon: 0x81834af6 },
     { title: 'Google', icon: 0x651cf551 },
+    { title: 'Microsoft', icon: 0xe3e7859b },
 ])
 screen.addView(lv);
 

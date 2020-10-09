@@ -415,13 +415,10 @@ function max(a, b) {
     }
 
     ui.ListView.prototype.buildItemInternal = function (data) {
-        var item = this.buildItem(data);
-        if (item instanceof ui.ListViewItem) {
-            item.data = data;
-            item.setSize(this.size.width, this.itemHeight);
-        } else {
-            throw 'The buildItem callback must returns a ListViewItem object.';
-        }
+        var item = new ui.ListViewItem();
+        this.buildItem(item, data);
+        item.data = data;
+        item.setSize(this.size.width, this.itemHeight);
         return item;
     }
 
