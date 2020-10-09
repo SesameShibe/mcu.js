@@ -97,7 +97,7 @@ static uint16_t lcdFB[LCD_WIDTH * LCD_HEIGHT];
 uint16_t lcdRowOffset, lcdColOffset;
 
 static uint32_t penColor = 0;
-static hal_rect_t renderBounding = { 0, 0, 0, 0 };
+static hal_rect_t renderBorder = { 0, 0, 0, 0 };
 
 static ALWAYS_INLINE void halLcdSpiWrite(u32 dat, u8 bitlen) {
 	LCD_SPI_HW.mosi_dlen.val = bitlen - 1;
@@ -304,16 +304,16 @@ uint16_t halLcdGetPenColor() {
 	return penColor;
 }
 
-void halLcdSetRenderBounding(int16_t left, int16_t top, int16_t right, int16_t bottom) {
-	renderBounding.left = left < 0 ? 0 : left;
-	renderBounding.top = top < 0 ? 0 : top;
-	renderBounding.right = right > LCD_WIDTH ? LCD_WIDTH : right;
-	renderBounding.bottom = bottom > LCD_HEIGHT ? LCD_HEIGHT : bottom;
+void halLcdSetRenderBorder(int16_t left, int16_t top, int16_t right, int16_t bottom) {
+	renderBorder.left = left < 0 ? 0 : left;
+	renderBorder.top = top < 0 ? 0 : top;
+	renderBorder.right = right > LCD_WIDTH ? LCD_WIDTH : right;
+	renderBorder.bottom = bottom > LCD_HEIGHT ? LCD_HEIGHT : bottom;
 }
 
 void IRAM_ATTR halLcdDrawDot(int16_t x, int16_t y) {
 	// Ignore outside screen pixels
-	if (x < renderBounding.left || x >= renderBounding.right || y < renderBounding.top || y >= renderBounding.bottom)
+	if (x < renderBorder.left || x >= renderBorder.right || y < renderBorder.top || y >= renderBorder.bottom)
 		return;
 
 	lcdFB[(y * LCD_WIDTH) + x] = (uint16_t) penColor;

@@ -123,7 +123,7 @@ function max(a, b) {
     ui.View.prototype.endDraw = function () {
         this.updateRequired = false;
         ui.RenderQueue.push(this);
-        this.restoreRenderBounding();
+        this.restoreRenderBorder();
     }
 
     ui.View.prototype.drawBackground = function () {
@@ -193,27 +193,27 @@ function max(a, b) {
         }
     }
 
-    ui.View.prototype.getRenderBounding = function () {
+    ui.View.prototype.getRenderBorder = function () {
         if (this.parent == undefined)
             return { left: 0, top: 0, right: 0, bottom: 0 };
 
-        var parentRenderBounding = this.parent.getRenderBounding();
+        var parentRenderBorder = this.parent.getRenderBorder();
 
-        var l = max(parentRenderBounding.left, this.position.x);
-        var t = max(parentRenderBounding.top, this.position.y);
-        var r = min(parentRenderBounding.right, this.position.x + this.size.width);
-        var b = min(parentRenderBounding.bottom, this.position.y + this.size.height);
+        var l = max(parentRenderBorder.left, this.position.x);
+        var t = max(parentRenderBorder.top, this.position.y);
+        var r = min(parentRenderBorder.right, this.position.x + this.size.width);
+        var b = min(parentRenderBorder.bottom, this.position.y + this.size.height);
 
         return { left: l, top: t, right: r, bottom: b };
     }
 
-    ui.View.prototype.restoreRenderBounding = function () {
+    ui.View.prototype.restoreRenderBorder = function () {
         if (this.parent != undefined) {
-            var parentRenderBounding = this.parent.getRenderBounding();
-            ui.setRenderBounding(parentRenderBounding.left,
-                parentRenderBounding.top,
-                parentRenderBounding.right,
-                parentRenderBounding.bottom);
+            var parentRenderBorder = this.parent.getRenderBorder();
+            ui.setRenderBorder(parentRenderBorder.left,
+                parentRenderBorder.top,
+                parentRenderBorder.right,
+                parentRenderBorder.bottom);
         }
     }
 
@@ -309,7 +309,7 @@ function max(a, b) {
             }
         }
 
-        this.restoreRenderBounding();
+        this.restoreRenderBorder();
     }
     // --------------------------------------------------------------------------------
 
@@ -327,7 +327,7 @@ function max(a, b) {
         ui.update();
     }
 
-    ui.Screen.prototype.getRenderBounding = function () {
+    ui.Screen.prototype.getRenderBorder = function () {
         return { left: 0, top: 0, right: 240, bottom: 240 };
     }
     // --------------------------------------------------------------------------------
@@ -524,13 +524,13 @@ function max(a, b) {
     ui.TextView.prototype.drawImpl = function () {
         this.drawBackground();
 
-        var bounding = this.getRenderBounding();
+        var border = this.getRenderBorder();
         ui.setPenColor(this.foreground);
-        ui.setRenderBounding(
-            bounding.left,
-            bounding.top,
-            bounding.right,
-            bounding.bottom);
+        ui.setRenderBorder(
+            border.left,
+            border.top,
+            border.right,
+            border.bottom);
         if (!this.autoLineBreak) {
             ui.drawText(
                 this.text,

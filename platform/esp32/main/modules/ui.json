@@ -21,8 +21,8 @@
             "halLcdGetPenColor",
             "u16"
         ],
-        "setRenderBounding": [
-            "halLcdSetRenderBounding",
+        "setRenderBorder": [
+            "halLcdSetRenderBorder",
             "void",
             "i16",
             "i16",
