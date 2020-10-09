@@ -268,8 +268,7 @@ function max(a, b) {
     }
 
     ui.ViewGroup.prototype.addViewRelativly = function (view) {
-        view.position.x += this.position.x;
-        view.position.y += this.position.y;
+        view.setPos(view.position.x + this.position.x, view.position.y + this.position.y);
         this.addView(view)
     }
 
@@ -779,6 +778,29 @@ function max(a, b) {
             this.position.y + this.size.height - 1,
             this.cornerRadius
         )
+    }
+    // --------------------------------------------------------------------------------
+
+
+
+    // --------------------------------------------------------------------------------
+    ui.Icon = function (iconId) {
+        ui.View.call(this);
+        this.setIcon(iconId);
+    }
+    ui.Icon.prototype = new ui.View();
+
+    ui.Icon.prototype.setIcon = function (iconId) {
+        this.iconId = iconId;
+    }
+
+    ui.Icon.prototype.drawImpl = function () {
+        this.drawBackground();
+
+        ui.setPenColor(this.foreground);
+        ui.drawIcon(this.iconId, this.position.x, this.position.y);
+
+        this.drawBorder();
     }
     // --------------------------------------------------------------------------------
 }

@@ -18,12 +18,18 @@ lv.setPos(0, 0);
 lv.buildItem = function (data) {
     var item = new ui.ListViewItem();
 
-    var a = new ui.TextView();
-    a.setText(data.title);
-    a.setSize(-1, -1)
-    a.autoLineBreak = true;
-    a.touchTransparent = true;
-    item.addViewRelativly(a);
+    var icon = new ui.Icon(data.icon);
+    icon.setSize(16, 16);
+    icon.setPos(0, 0);
+    item.addViewRelativly(icon);
+
+    var title = new ui.TextView();
+    title.setText(data.title);
+    title.setSize(100, 32);
+    title.setPos(16, 0);
+    title.autoLineBreak = true;
+    title.touchTransparent = true;
+    item.addViewRelativly(title);
 
     return item;
 }
@@ -32,10 +38,10 @@ lv.onItemClicked = function (data, args) {
     tv.setText('Item clicked:\n' + data.title);
 }
 lv.setItemSource([
-    { title: 'Item 1' },
-    { title: 'Item 2' },
-    { title: 'Item 3' },
-    { title: 'Item 4' },
+    { title: 'Amazon', icon: 0x815b8877 },
+    { title: 'Apple', icon: 0xa92ed050 },
+    { title: 'Facebook', icon: 0x81834af6 },
+    { title: 'Google', icon: 0x651cf551 },
 ])
 screen.addView(lv);
 

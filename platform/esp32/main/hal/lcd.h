@@ -667,7 +667,6 @@ void halLcdDrawIcon(uint32_t id, int16_t x, int16_t y) {
 		}
 	}
 
-	printf("Icon index: %d\n", iconIndex);
 	if (iconIndex == -1) {
 		return;
 	}
