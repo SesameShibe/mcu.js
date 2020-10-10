@@ -93,7 +93,6 @@ function max(a, b) {
         this.border = ui.Colors.white;
         this.cornerRadius = 0;
 
-        this.updateRequired = false;
         this.visible = true;
         this.touchTransparent = false;
 
@@ -121,7 +120,6 @@ function max(a, b) {
     }
 
     ui.View.prototype.endDraw = function () {
-        this.updateRequired = false;
         ui.RenderQueue.push(this);
         this.restoreRenderBorder();
     }
@@ -146,41 +144,47 @@ function max(a, b) {
             this.cornerRadius);
     }
 
+    ui.View.prototype.requestUpdate = function () {
+        if (this.parent != undefined) {
+            this.parent.requestUpdate();
+        }
+    }
+
     ui.View.prototype.setForeground = function (color) {
-        this.updateRequired = true;
         this.foreground = color;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setBackground = function (color) {
-        this.updateRequired = true;
         this.background = color;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setBorder = function (color) {
-        this.updateRequired = true;
         this.border = color;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setSize = function (w, h) {
-        this.updateRequired = true;
         this.size.width = w;
         this.size.height = h;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setPos = function (x, y) {
-        this.updateRequired = true;
         this.position.x = x;
         this.position.y = y;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setCornerRadius = function (cornerRadius) {
-        this.updateRequired = true;
         this.cornerRadius = cornerRadius;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setVisible = function (visible) {
         this.visible = visible;
-        this.updateRequired = true;
+        this.requestUpdate();
     }
 
     ui.View.prototype.setParent = function (viewGroup) {
@@ -218,27 +222,27 @@ function max(a, b) {
     }
 
     ui.View.prototype.touchDown = function (point) {
-        this.updateRequired = true;
         if (this.onTouchDown != null && isFunction(this.onTouchDown))
             this.onTouchDown(point)
+        this.requestUpdate();
     }
 
     ui.View.prototype.touchUp = function (point) {
-        this.updateRequired = true;
         if (this.onTouchUp != null && isFunction(this.onTouchUp))
             this.onTouchUp(point);
+        this.requestUpdate();
     }
 
     ui.View.prototype.touchMoved = function (oldPoint, newPoint) {
-        this.updateRequired = true;
         if (this.onTouchMoved != null && isFunction(this.onTouchMoved))
             this.onTouchMoved(oldPoint, newPoint);
+        this.requestUpdate();
     }
 
     ui.View.prototype.longTouched = function (point) {
-        this.updateRequired = true;
         if (this.onLongTouched != null && isFunction(this.onLongTouched))
             this.onLongTouched(point);
+        this.requestUpdate();
     }
     // --------------------------------------------------------------------------------
 
@@ -316,19 +320,26 @@ function max(a, b) {
 
     // --------------------------------------------------------------------------------
     ui.Screen = function () {
-
+        this.updateRequired = true;
     }
     ui.Screen.prototype = new ui.ViewGroup();
 
     ui.Screen.prototype.draw = function () {
-        ui.clear();
-        ui.RenderQueue = new Array();
-        ui.ViewGroup.prototype.draw.call(this);
-        ui.update();
+        if (this.updateRequired) {
+            ui.clear();
+            ui.RenderQueue = new Array();
+            ui.ViewGroup.prototype.draw.call(this);
+            ui.update();
+            this.updateRequired = false;
+        }
     }
 
     ui.Screen.prototype.getRenderBorder = function () {
         return { left: 0, top: 0, right: 240, bottom: 240 };
+    }
+
+    ui.Screen.prototype.requestUpdate = function () {
+        this.updateRequired = true;
     }
     // --------------------------------------------------------------------------------
 
@@ -507,18 +518,18 @@ function max(a, b) {
 
     ui.TextView.prototype.setText = function (text) {
         this.text = text;
-        this.updateRequired = true;
+        this.requestUpdate();
     }
 
     ui.TextView.prototype.setTextScroll = function (posX, posY) {
-        this.updateRequired = true;
         this.textScrollX = posX;
         this.textScrollY = posY;
+        this.requestUpdate();
     }
 
     ui.TextView.prototype.setPadding = function (padding) {
-        this.updateRequired = true;
         this.padding = padding;
+        this.requestUpdate();
     }
 
     ui.TextView.prototype.drawImpl = function () {
@@ -636,12 +647,12 @@ function max(a, b) {
     ui.TextBox.prototype = new ui.TextView();
 
     ui.TextBox.prototype.insert = function (s) {
-        this.updateRequired = true;
         var head = this.text.substring(0, this.cursor);
         var tail = this.text.substring(this.cursor, this.text.length);
 
         this.text = head + s + tail;
         this.cursor = this.cursor + s.length;
+        this.requestUpdate();
     }
 
     ui.TextBox.prototype.backspace = function () {
@@ -650,20 +661,23 @@ function max(a, b) {
 
         this.setText(head.substring(0, head.length - 1) + tail);
         this.setCursor(this.cursor - 1);
+        this.requestUpdate();
     }
 
     ui.TextBox.prototype.clear = function () {
         this.text = "";
         this.cursor = 0;
+        this.requestUpdate();
     }
 
     ui.TextBox.prototype.setText = function (text) {
-        this.updateRequired = true;
         this.insert(text)
+        this.requestUpdate();
     }
 
     ui.TextBox.prototype.setCursor = function (index) {
         this.cursor = index;
+        this.requestUpdate();
     }
 
     ui.TextBox.prototype.touchDown = function (point) {
@@ -742,18 +756,22 @@ function max(a, b) {
 
     ui.ProgressBar.prototype.setMin = function (min) {
         this.min = min;
+        this.requestUpdate();
     }
 
     ui.ProgressBar.prototype.setMax = function (max) {
         this.max = max;
+        this.requestUpdate();
     }
 
     ui.ProgressBar.prototype.setValue = function (value) {
         this.value = value;
+        this.requestUpdate();
     }
 
     ui.ProgressBar.prototype.setProgressColor = function (color) {
         this.progressColor = color;
+        this.requestUpdate();
     }
 
     ui.ProgressBar.prototype.getPercentage = function () {
