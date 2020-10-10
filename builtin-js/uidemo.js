@@ -19,6 +19,7 @@ lv.buildItem = function (item, data) {
     var icon = new ui.Icon(data.icon);
     icon.setSize(16, 16);
     icon.setPos(1, 8);
+    icon.setBackground(ui.Colors.transparent);
     item.addViewRelativly(icon);
 
     var title = new ui.TextView();
@@ -26,6 +27,7 @@ lv.buildItem = function (item, data) {
     title.setSize(100, 28);
     title.setPos(17, 1);
     title.setBorderStyle(ui.BorderStyle.none);
+    title.setBackground(ui.Colors.transparent);
     title.autoLineBreak = true;
     title.touchTransparent = true;
     item.addViewRelativly(title);

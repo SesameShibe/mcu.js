@@ -32,7 +32,8 @@ function max(a, b) {
         red: 0x1F,
         greed: 0x7E0,
         blue: 0xF7D8,
-        lightBlue: 0xFD86
+        lightBlue: 0xFD86,
+        transparent: ui.COLOR_TRANSPARENT
     }
 
     ui.BorderStyle = {

@@ -15,7 +15,7 @@
         "setPenColor": [
             "halLcdSetPenColor",
             "void",
-            "u16"
+            "u32"
         ],
         "getPenColor": [
             "halLcdGetPenColor",
@@ -119,5 +119,8 @@
             "i16",
             "i16"
         ]
+    },
+    "const": {
+        "COLOR_TRANSPARENT": "COLOR_TRANSPARENT"
     }
 }

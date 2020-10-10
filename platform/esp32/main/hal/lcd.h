@@ -56,6 +56,8 @@ spi_device_handle_t lcdSpiDev;
 #define CIRCLE_CORNER_BR 1 << 3
 #define TEXT_LINE_HEIGHT 16
 
+#define COLOR_TRANSPARENT 0xFFFF00
+
 typedef struct hal_font_section_info_t {
 	uint16_t codeStart;
 	uint16_t codeEnd;
@@ -296,7 +298,7 @@ int16_t max(int16_t a, int16_t b) {
 	return a > b ? a : b;
 }
 
-void halLcdSetPenColor(uint16_t color) {
+void halLcdSetPenColor(uint32_t color) {
 	penColor = color;
 }
 
@@ -314,6 +316,9 @@ void halLcdSetRenderBorder(int16_t left, int16_t top, int16_t right, int16_t bot
 void IRAM_ATTR halLcdDrawDot(int16_t x, int16_t y) {
 	// Ignore outside screen pixels
 	if (x < renderBorder.left || x >= renderBorder.right || y < renderBorder.top || y >= renderBorder.bottom)
+		return;
+
+	if (penColor == COLOR_TRANSPARENT)
 		return;
 
 	lcdFB[(y * LCD_WIDTH) + x] = (uint16_t) penColor;
