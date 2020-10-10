@@ -95,6 +95,7 @@ int mainLoop() {
 	genJSInit(ctx);
 	module_fs_init(ctx);
 
+	printf("Initialising Javascript modules...\n");
 	/* boot */
 	loadBuiltinJS(ctx, js_underscore, "underscore");
 	loadBuiltinJS(ctx, js_boot, "boot");
@@ -103,6 +104,7 @@ int mainLoop() {
 	loadBuiltinJS(ctx, js_http, "http");
 	loadBuiltinJS(ctx, js_ws, "ws");
 	loadBuiltinJS(ctx, js_touch, "touch");
+	loadBuiltinJS(ctx, js_icons, "icons");
 	loadBuiltinJS(ctx, js_ui, "ui");
 	loadBuiltinJS(ctx, js_board, "board");
 	loadBuiltinJS(ctx, js_devserver, "devserver");

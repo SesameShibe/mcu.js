@@ -35,11 +35,11 @@ lv.onItemClicked = function (data, args) {
     tv.setText('Item clicked:\n' + data.title);
 }
 lv.setItemSource([
-    { title: 'Amazon', icon: 0x815b8877 },
-    { title: 'Apple', icon: 0xa92ed050 },
-    { title: 'Facebook', icon: 0x81834af6 },
-    { title: 'Google', icon: 0x651cf551 },
-    { title: 'Microsoft', icon: 0xe3e7859b },
+    { title: 'Amazon', icon: Icons.amazon },
+    { title: 'Apple', icon: Icons.apple },
+    { title: 'Facebook', icon: Icons.facebook },
+    { title: 'Google', icon: Icons.google },
+    { title: 'Microsoft', icon: Icons.windows },
 ])
 screen.addView(lv);
 
