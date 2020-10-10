@@ -35,6 +35,11 @@ function max(a, b) {
         lightBlue: 0xFD86
     }
 
+    ui.BorderStyle = {
+        none: 0,
+        thin: 1
+    }
+
     ui.RenderQueue = new Array();
     ui.LastTouchedView = null;
     ui.LastTouchedPoint = null;
@@ -91,6 +96,7 @@ function max(a, b) {
         this.foreground = ui.Colors.white;
         this.background = 0;
         this.border = ui.Colors.white;
+        this.borderStyle = ui.BorderStyle.thin;
         this.cornerRadius = 0;
 
         this.visible = true;
@@ -135,13 +141,17 @@ function max(a, b) {
     }
 
     ui.View.prototype.drawBorder = function () {
-        ui.setPenColor(this.border);
-        ui.drawRectangle(
-            this.position.x,
-            this.position.y,
-            this.position.x + this.size.width - 1,
-            this.position.y + this.size.height - 1,
-            this.cornerRadius);
+        if (this.borderStyle == ui.BorderStyle.none) {
+            return;
+        } else if (this.borderStyle == ui.BorderStyle.thin) {
+            ui.setPenColor(this.border);
+            ui.drawRectangle(
+                this.position.x,
+                this.position.y,
+                this.position.x + this.size.width - 1,
+                this.position.y + this.size.height - 1,
+                this.cornerRadius);
+        }
     }
 
     ui.View.prototype.requestUpdate = function () {
@@ -162,6 +172,11 @@ function max(a, b) {
 
     ui.View.prototype.setBorder = function (color) {
         this.border = color;
+        this.requestUpdate();
+    }
+
+    ui.View.prototype.setBorderStyle = function (style) {
+        this.borderStyle = style;
         this.requestUpdate();
     }
 
@@ -802,6 +817,7 @@ function max(a, b) {
     ui.Icon = function (iconId) {
         ui.View.call(this);
         this.setIcon(iconId);
+        this.setBorderStyle(ui.BorderStyle.none);
     }
     ui.Icon.prototype = new ui.View();
 
