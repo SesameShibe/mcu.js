@@ -22,8 +22,8 @@ function max(a, b) {
 (function () {
     ui.makeColor = function (r, g, b) {
         return (((b >> 3) & 0x1F) << 11)
-            | (((g >> 2) & 0x3F) << 5)
-            | ((r >> 3) & 0x1F);
+            | (((r >> 2) & 0x3F) << 5)
+            | ((g >> 3) & 0x1F);
     }
 
     ui.Colors = {
