@@ -7,6 +7,10 @@ Array.prototype.findIndex = function (f) {
     return -1;
 };
 
+Number.prototype.clamp = function (min, max) {
+    return Math.min(Math.max(this, min), max);
+};
+
 function isFunction(functionToCheck) {
     return functionToCheck && {}.toString.call(functionToCheck) === '[object Function]';
 }
@@ -329,6 +333,10 @@ function max(a, b) {
             }
         }
 
+        this.endDraw();
+    }
+
+    ui.ViewGroup.prototype.endDraw = function () {
         this.restoreRenderBorder();
     }
     // --------------------------------------------------------------------------------
@@ -368,8 +376,70 @@ function max(a, b) {
         this.scrollY = 0;
         this.scrollHorizonal = false;
         this.scrollVertical = true;
+
+        this.contentWidth = 0;
+        this.contentHeight = 0;
     }
     ui.ScrollLayout.prototype = new ui.ViewGroup();
+
+    ui.ScrollLayout.prototype.addView = function (view) {
+        ui.ViewGroup.prototype.addView.call(this, view);
+
+        // Cache content size
+        this.refreshContentSize();
+    }
+
+    ui.ScrollLayout.prototype.removeView = function (view) {
+        ui.ViewGroup.prototype.removeView.call(this, view);
+
+        // Cache content size
+        this.refreshContentSize();
+    }
+
+    ui.ScrollLayout.prototype.refreshContentSize = function () {
+        this.contentWidth = this.calcContentWidth();
+        this.contentHeight = this.calcContentHeight();
+    }
+
+    ui.ScrollLayout.prototype.calcContentWidth = function () {
+        var leftEdge = this.Views[0].position.x;
+        var rightEdge = this.Views[0].position.x + this.Views[0].size.width;
+
+        for (var i = 0; i < this.Views.length; i++) {
+            var view = this.Views[i];
+            if (view.position.x < leftEdge) {
+                leftEdge = view.position.x;
+            }
+
+            var r = view.position.x + view.size.width;
+            if (r > rightEdge) {
+                rightEdge = r;
+            }
+        }
+
+        var contentWidth = rightEdge - leftEdge;
+        return contentWidth;
+    }
+
+    ui.ScrollLayout.prototype.calcContentHeight = function () {
+        var topEdge = this.Views[0].position.y;
+        var bottomEdge = this.Views[0].position.y + this.Views[0].size.height;
+
+        for (var i = 0; i < this.Views.length; i++) {
+            var view = this.Views[i];
+            if (view.position.y < topEdge) {
+                topEdge = view.position.y;
+            }
+
+            var b = view.position.y + view.size.height;
+            if (b > bottomEdge) {
+                bottomEdge = b;
+            }
+        }
+
+        var contentHeight = bottomEdge - topEdge;
+        return contentHeight;
+    }
 
     ui.ScrollLayout.prototype.touchDown = function (point) {
 
@@ -393,16 +463,75 @@ function max(a, b) {
             diffY = oldPoint.y - newPoint.y;
         }
 
-        for (var index = 0; index < this.Views.length; index++) {
-            var view = this.Views[index];
+        this.setScroll(this.scrollX + diffX, this.scrollY + diffY);
+    }
 
-            if (view.setPos != undefined) {
-                view.setPos(view.position.x - diffX, view.position.y - diffY);
+    ui.ScrollLayout.prototype.longTouched = function (point) {
+
+    }
+
+    ui.ScrollLayout.prototype.setScroll = function (x, y) {
+        var scrollChanged = false
+        var diffX = 0
+        var diffY = 0
+        x = x.clamp(0, this.contentWidth - this.size.width)
+        y = y.clamp(0, this.contentHeight - this.size.height)
+
+        if (this.scrollX != x) {
+            diffX = x - this.scrollX
+            this.scrollX = x
+            scrollChanged = true
+        }
+        if (this.scrollY != y) {
+            diffY = y - this.scrollY
+            this.scrollY = y
+            scrollChanged = true
+        }
+
+        if (scrollChanged) {
+            for (var index = 0; index < this.Views.length; index++) {
+                var view = this.Views[index];
+
+                if (view.setPos != undefined) {
+                    view.setPos(view.position.x - diffX, view.position.y - diffY)
+                }
             }
         }
     }
 
-    ui.ScrollLayout.prototype.longTouched = function (point) {
+    ui.ScrollLayout.prototype.endDraw = function () {
+        if (this.scrollVertical)
+            this.drawVerticalScrollBar();
+
+        if (this.scrollHorizonal)
+            this.drawHorizonalScrollBar()
+
+        ui.ViewGroup.prototype.endDraw.call(this);
+    }
+
+    ui.ScrollLayout.prototype.drawVerticalScrollBar = function () {
+        var barWidth = 5;
+        var barHeight = this.size.height - 1;
+        var barLeft = this.position.x + this.size.width - barWidth - 1;
+        var barTop = this.position.y;
+
+        ui.setPenColor(this.background)
+        ui.fillRectangle(barLeft, barTop, barLeft + barWidth, barTop + barHeight, 1)
+        ui.setPenColor(this.foreground)
+        ui.drawRectangle(barLeft, barTop, barLeft + barWidth, barTop + barHeight, 1)
+
+        var scrollerHeight = barHeight;
+        if (this.size.height < this.contentHeight) {
+            scrollerHeight = this.size.height / this.contentHeight * scrollerHeight;
+        }
+        var scrollerWidth = 3
+        var scrollProgress = this.scrollY / this.contentHeight;
+        var scrollerTop = scrollProgress * barHeight;
+        var scrollerLeft = barLeft + ((barWidth - scrollerWidth) / 2)
+        ui.fillRectangle(scrollerLeft, scrollerTop, scrollerLeft + scrollerWidth, scrollerTop + scrollerHeight, 0)
+    }
+
+    ui.ScrollLayout.prototype.drawHorizonalScrollBar = function () {
 
     }
     // --------------------------------------------------------------------------------
