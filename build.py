@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 
 import sys
@@ -145,7 +145,7 @@ def dataToU8Array(d, arrName):
     for i in range(0, len(d)):
         if (i % 16 == 0):
             ret += '\n'
-        ret += '0x%02x, ' % ord(d[i])
+        ret += '0x%02x, ' % d[i]
     ret += '};\n\n'
     return ret
 
@@ -157,10 +157,10 @@ def generate():
         if (not fn.startswith('.')) and fn.endswith('.js'):
             print(fn)
             with open('builtin-js/' + fn, 'rb') as f:
-                d = f.read() + '\x00'
+                d = f.read() + b'\x00'
             js += dataToU8Array(d, 'js_%s' % fn.split('.')[0])
     tryMkdir('platform/esp32/main/__generated')
-    with open('platform/esp32/main/__generated/gen_js.h', 'wb') as f:
+    with open('platform/esp32/main/__generated/gen_js.h', 'w') as f:
         f.write(js)
     print('Generating glue code from module json')
     gluecodegen.generate('platform/esp32/main/modules')

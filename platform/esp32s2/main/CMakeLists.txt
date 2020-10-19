@@ -1,0 +1,2 @@
+idf_component_register(SRCS "../../esp32/main/main.c" "../../esp32/main/duktape/src/duktape.c" "../../esp32/main/duktape/src/print-alert/duk_print_alert.c"
+INCLUDE_DIRS "../../esp32/main/" "../../esp32/main/duktape/src" )
