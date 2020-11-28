@@ -70,15 +70,6 @@ typedef struct hal_rect_t {
 	int16_t bottom;
 } hal_rect_t;
 
-typedef struct hal_icon_font_t {
-	int32_t magic; // "ICON"
-	int32_t sectionSize;
-	int16_t entryCount;
-	int8_t width;
-	int8_t height;
-	int32_t entrySize;
-} hal_icon_font_t;
-
 static hal_font_t* font;
 static hal_font_section_info_t* sections;
 
