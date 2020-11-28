@@ -89,20 +89,19 @@ int16_t halLcdMeasureTextHeight(const char* string) {
 }
 
 void halFontDrawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int16_t x, int16_t y) {
-	uint8_t b = 0;
-	uint16_t mask = 0x100;
 	for (int16_t yi = 0; yi < height; yi++) {
-		for (int16_t xi = 0; xi < width; xi++) {
-			if (mask == 0x100) {
-				b = *glyphData;
-				glyphData++;
-				mask = 1;
-			}
+		for (int16_t xi = 0; xi < width; xi += 8) {
+			uint8_t b = *glyphData;
+			glyphData++;
 
-			if ((b & mask) == mask) {
-				halLcdDrawDot(x + xi, y + yi);
-			}
-			mask <<= 1;
+			if ((b & 0x01) == 0x01) halLcdDrawDot(x + xi    , y + yi);
+			if ((b & 0x02) == 0x02) halLcdDrawDot(x + xi + 1, y + yi);
+			if ((b & 0x04) == 0x04) halLcdDrawDot(x + xi + 2, y + yi);
+			if ((b & 0x08) == 0x08) halLcdDrawDot(x + xi + 3, y + yi);
+			if ((b & 0x10) == 0x10) halLcdDrawDot(x + xi + 4, y + yi);
+			if ((b & 0x20) == 0x20) halLcdDrawDot(x + xi + 5, y + yi);
+			if ((b & 0x40) == 0x40) halLcdDrawDot(x + xi + 6, y + yi);
+			if ((b & 0x80) == 0x80) halLcdDrawDot(x + xi + 7, y + yi);
 		}
 	}
 }
