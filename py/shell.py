@@ -37,7 +37,7 @@ def recvLoop():
         try:
             char = reader.read(1)
             sys.stdout.write(char)
-        except UnicodeDecodeError, err:
+        except err:
             sys.stderr.write('['+binascii.b2a_hex(err.object[err.start:err.end])+']')
 
 

@@ -159,7 +159,7 @@ static duk_ret_t glue%s%s(duk_context *ctx)
 ''' % (camelFormat(MODULE_NAME), camelFormat(funcName), genLocalVarDefine(transTypeList(typeList)), genArgumentFetchCode(typeList), genFunctionCallAndResult(funcName, targetFuncName, typeList))
 
 def arity(typeList):
-    if not TYPE_RULES.has_key(typeList[0]):
+    if not typeList[0] in TYPE_RULES:
         typeList = typeList[1:]
     return len(typeList) - 1
 
@@ -229,7 +229,7 @@ def genJSInit(modulesJson):
     for moduleName in modulesJson:
         ret += 'module_%s_init(ctx);\n' % moduleName
     ret += '}\n'
-    with open('platform/esp32/main/__generated/gen_jsmods.h', 'wb') as f:
+    with open('platform/esp32/main/__generated/gen_jsmods.h', 'w') as f:
         f.write(ret)
 
 
@@ -245,7 +245,7 @@ def genModule(moduleDict):
         typeList = funcDict[funcName]
         targetFuncName = 'hal%s%s' % (
             camelFormat(MODULE_NAME), camelFormat(funcName))
-        if not TYPE_RULES.has_key(typeList[0]):
+        if not typeList[0] in TYPE_RULES:
             # the first item is the function name
             targetFuncName = typeList[0]
             typeList = typeList[1:]

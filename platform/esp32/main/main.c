@@ -18,6 +18,29 @@
 #include "print-alert/duk_print_alert.h"
 
 
+
+#define MCUJS_MALLOC_CAPS (MALLOC_CAP_SPIRAM)
+
+DUK_INTERNAL void *mcujs_alloc_function(void *udata, duk_size_t size) {
+	void *res;
+	DUK_UNREF(udata);
+	res = heap_caps_malloc(size, MCUJS_MALLOC_CAPS);
+	return res;
+}
+
+DUK_INTERNAL void *mcujs_realloc_function(void *udata, void *ptr, duk_size_t newsize) {
+	void *res;
+	DUK_UNREF(udata);
+	res = heap_caps_realloc(ptr, newsize, MCUJS_MALLOC_CAPS);
+	return res;
+}
+
+DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
+	DUK_UNREF(udata);
+	heap_caps_free(ptr);
+}
+
+
 #include "hal/crypto.h"
 #include "hal/fs.h"
 #include "hal/os.h"
@@ -57,27 +80,6 @@ void loadBuiltinJS(duk_context* ctx, const u8* bin, const char* filename) {
 		printf("load %s failed: %s\n", filename, duk_safe_to_stacktrace(ctx, -1));
 		duk_pop(ctx);
 	}
-}
-
-#define MCUJS_MALLOC_CAPS (MALLOC_CAP_SPIRAM)
-
-DUK_INTERNAL void *mcujs_alloc_function(void *udata, duk_size_t size) {
-	void *res;
-	DUK_UNREF(udata);
-	res = heap_caps_malloc(size, MCUJS_MALLOC_CAPS);
-	return res;
-}
-
-DUK_INTERNAL void *mcujs_realloc_function(void *udata, void *ptr, duk_size_t newsize) {
-	void *res;
-	DUK_UNREF(udata);
-	res = heap_caps_realloc(ptr, newsize, MCUJS_MALLOC_CAPS);
-	return res;
-}
-
-DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
-	DUK_UNREF(udata);
-	heap_caps_free(ptr);
 }
 
 

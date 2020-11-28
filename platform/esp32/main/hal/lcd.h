@@ -48,7 +48,12 @@ static const uint8_t lcdInitCode[] = {
 #define LCD_SET_DC(v) halGpioWrite(LCD_PIN_DC, (v))
 
 #define LCD_SPI_BUS SPI3_HOST
+#ifdef CONFIG_IDF_TARGET_ESP32S2
+#define LCD_SPI_HW GPSPI3
+#else 
 #define LCD_SPI_HW SPI3
+#endif
+
 spi_device_handle_t lcdSpiDev;
 
 #define CIRCLE_CORNER_TL 1 << 0
@@ -65,7 +70,22 @@ typedef struct hal_rect_t {
 	int16_t bottom;
 } hal_rect_t;
 
-static uint16_t lcdFB[LCD_WIDTH * LCD_HEIGHT];
+typedef struct hal_icon_font_t {
+	int32_t magic; // "ICON"
+	int32_t sectionSize;
+	int16_t entryCount;
+	int8_t width;
+	int8_t height;
+	int32_t entrySize;
+} hal_icon_font_t;
+
+static hal_font_t* font;
+static hal_font_section_info_t* sections;
+
+static hal_icon_font_t* iconFont;
+static uint32_t* iconIds;
+
+static uint16_t *lcdFB;
 uint16_t lcdRowOffset, lcdColOffset;
 
 static uint32_t penColor = 0;
@@ -161,11 +181,12 @@ void IRAM_ATTR halLcdUpdate() {
 	halLcdWriteCmd8(LCD_CMD_RAMWR);
 	LCD_SET_DC(1);
 	LCD_SET_CS(0);
-	halLcdWritePixels((u32*) lcdFB, sizeof(lcdFB) / 4);
+	halLcdWritePixels((u32*) lcdFB, LCD_WIDTH * LCD_HEIGHT * 2/ 4);
 	LCD_SET_CS(1);
 }
 
 void halLcdInit() {
+	lcdFB = mcujs_alloc_function(0, LCD_WIDTH*LCD_WIDTH*2);
 	spi_bus_config_t cfg = { .mosi_io_num = LCD_PIN_MOSI,
 		                     .miso_io_num = -1,
 		                     .sclk_io_num = LCD_PIN_SCLK,
@@ -202,7 +223,7 @@ void halLcdInit() {
 	ESP_ERROR_CHECK(ret);
 
 	halLcdExecuteInitCode(lcdInitCode);
-	memset(lcdFB, 0x0f, sizeof(lcdFB));
+	memset(lcdFB, 0x0f, LCD_WIDTH * LCD_HEIGHT * 2);
 	halLcdUpdate();
 	halGpioWrite(LCD_PIN_BL, 1);
 
@@ -210,12 +231,12 @@ void halLcdInit() {
 }
 
 JS_BUFFER halLcdGetFB() {
-	JS_BUFFER buf = { .buf = (u8*) lcdFB, .size = sizeof(lcdFB) };
+	JS_BUFFER buf = { .buf = (u8*) lcdFB, .size = LCD_WIDTH * LCD_HEIGHT * 2};
 	return buf;
 }
 
 void halLcdClearScreen() {
-	memset(lcdFB, 0, sizeof(lcdFB));
+	memset(lcdFB, 0, LCD_WIDTH * LCD_HEIGHT * 2);
 }
 
 void swapInt(int16_t* a, int16_t* b) {
