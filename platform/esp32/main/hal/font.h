@@ -65,7 +65,7 @@ static hal_font_section_info_t* halFontGetSection(uint16_t c) {
 	return NULL;
 }
 
-int16_t halLcdMeasureTextWidth(const char* string) {
+int16_t halFontMeasureTextWidth(const char* string) {
 	uint16_t unicode = 0;
 	int16_t width = 0;
 	int32_t currPos = 0;
@@ -119,7 +119,7 @@ uint16_t halFontDrawChar(uint16_t c, int16_t x, int16_t y) {
 	return section->charWidth;
 }
 
-void halLcdDrawText(const char* string, int16_t x, int16_t y) {
+void halFontDrawText(const char* string, int16_t x, int16_t y) {
 	uint16_t unicode = 0;
 	int32_t currPos = 0;
 	int16_t dx = x, dy = y;
@@ -137,7 +137,7 @@ void halLcdDrawText(const char* string, int16_t x, int16_t y) {
 	}
 }
 
-void halLcdDrawIcon(uint32_t id, int16_t x, int16_t y) {
+void halFontDrawIcon(uint32_t id, int16_t x, int16_t y) {
 	int32_t low = 0, high = iconFont->entryCount - 1;
 	int32_t iconIndex = -1;
 
@@ -177,7 +177,7 @@ void halLcdDrawIcon(uint32_t id, int16_t x, int16_t y) {
 	}
 }
 
-void halFontInitFont() {
+void halFontInit() {
 	const void* font_partition;
 	spi_flash_mmap_handle_t handle;
 	const esp_partition_t* part =

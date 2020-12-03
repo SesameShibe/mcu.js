@@ -97,7 +97,7 @@ int mainLoop() {
 	genJSInit(ctx);
 	module_fs_init(ctx);
 
-	printf("Initialising Javascript modules...\n");
+	printf("Initializing Javascript modules...\n");
 	/* boot */
 	loadBuiltinJS(ctx, js_underscore, "underscore");
 	loadBuiltinJS(ctx, js_boot, "boot");

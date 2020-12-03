@@ -21,8 +21,8 @@
             "halLcdGetPenColor",
             "u16"
         ],
-        "setRenderBorder": [
-            "halLcdSetRenderBorder",
+        "setRenderRect": [
+            "halLcdSetRenderRect",
             "void",
             "i16",
             "i16",
@@ -92,14 +92,14 @@
             "i32"
         ],
         "drawText": [
-            "halLcdDrawText",
+            "halFontDrawText",
             "void",
             "str",
             "i16",
             "i16"
         ],
         "measureTextWidth": [
-            "halLcdMeasureTextWidth",
+            "halFontMeasureTextWidth",
             "i16",
             "str"
         ],
@@ -113,7 +113,7 @@
             "void"
         ],
         "drawIcon": [
-            "halLcdDrawIcon",
+            "halFontDrawIcon",
             "void",
             "u32",
             "i16",

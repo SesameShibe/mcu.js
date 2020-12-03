@@ -132,7 +132,7 @@ function max(a, b) {
 
     ui.View.prototype.endDraw = function () {
         ui.RenderQueue.push(this);
-        this.restoreRenderBorder();
+        this.restoreRenderRect();
     }
 
     ui.View.prototype.drawBackground = function () {
@@ -217,27 +217,27 @@ function max(a, b) {
         }
     }
 
-    ui.View.prototype.getRenderBorder = function () {
+    ui.View.prototype.getRenderRect = function () {
         if (this.parent == undefined)
             return { left: 0, top: 0, right: 0, bottom: 0 };
 
-        var parentRenderBorder = this.parent.getRenderBorder();
+        var parentRenderRect = this.parent.getRenderRect();
 
-        var l = max(parentRenderBorder.left, this.position.x);
-        var t = max(parentRenderBorder.top, this.position.y);
-        var r = min(parentRenderBorder.right, this.position.x + this.size.width);
-        var b = min(parentRenderBorder.bottom, this.position.y + this.size.height);
+        var l = max(parentRenderRect.left, this.position.x);
+        var t = max(parentRenderRect.top, this.position.y);
+        var r = min(parentRenderRect.right, this.position.x + this.size.width);
+        var b = min(parentRenderRect.bottom, this.position.y + this.size.height);
 
         return { left: l, top: t, right: r, bottom: b };
     }
 
-    ui.View.prototype.restoreRenderBorder = function () {
+    ui.View.prototype.restoreRenderRect = function () {
         if (this.parent != undefined) {
-            var parentRenderBorder = this.parent.getRenderBorder();
-            ui.setRenderBorder(parentRenderBorder.left,
-                parentRenderBorder.top,
-                parentRenderBorder.right,
-                parentRenderBorder.bottom);
+            var parentRenderRect = this.parent.getRenderRect();
+            ui.setRenderRect(parentRenderRect.left,
+                parentRenderRect.top,
+                parentRenderRect.right,
+                parentRenderRect.bottom);
         }
     }
 
@@ -337,7 +337,7 @@ function max(a, b) {
     }
 
     ui.ViewGroup.prototype.endDraw = function () {
-        this.restoreRenderBorder();
+        this.restoreRenderRect();
     }
     // --------------------------------------------------------------------------------
 
@@ -358,7 +358,7 @@ function max(a, b) {
         }
     }
 
-    ui.Screen.prototype.getRenderBorder = function () {
+    ui.Screen.prototype.getRenderRect = function () {
         return { left: 0, top: 0, right: 240, bottom: 240 };
     }
 
@@ -680,9 +680,9 @@ function max(a, b) {
     ui.TextView.prototype.drawImpl = function () {
         this.drawBackground();
 
-        var border = this.getRenderBorder();
+        var border = this.getRenderRect();
         ui.setPenColor(this.foreground);
-        ui.setRenderBorder(
+        ui.setRenderRect(
             border.left,
             border.top,
             border.right,
