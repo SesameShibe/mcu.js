@@ -1,9 +1,9 @@
 #pragma once
 #include "driver/spi_master.h"
 #include "esp_partition.h"
+#include "font.h"
 #include "global.h"
 #include "gpio.h"
-#include "font.h"
 
 #define LCD_PIN_DC (27)
 #define LCD_PIN_CS (5)
@@ -50,7 +50,7 @@ static const uint8_t lcdInitCode[] = {
 #define LCD_SPI_BUS SPI3_HOST
 #ifdef CONFIG_IDF_TARGET_ESP32S2
 #define LCD_SPI_HW GPSPI3
-#else 
+#else
 #define LCD_SPI_HW SPI3
 #endif
 
@@ -76,7 +76,8 @@ static hal_font_section_info_t* sections;
 static hal_icon_font_t* iconFont;
 static uint32_t* iconIds;
 
-static uint16_t *lcdFB;
+static uint16_t* lcdFB;
+static uint16_t* lcdFBCopy;
 uint16_t lcdRowOffset, lcdColOffset;
 
 static uint32_t penColor = 0;
@@ -172,12 +173,13 @@ void IRAM_ATTR halLcdUpdate() {
 	halLcdWriteCmd8(LCD_CMD_RAMWR);
 	LCD_SET_DC(1);
 	LCD_SET_CS(0);
-	halLcdWritePixels((u32*) lcdFB, LCD_WIDTH * LCD_HEIGHT * 2/ 4);
+	halLcdWritePixels((u32*) lcdFB, LCD_WIDTH * LCD_HEIGHT * 2 / 4);
 	LCD_SET_CS(1);
 }
 
 void halLcdInit() {
-	lcdFB = mcujs_alloc_function(0, LCD_WIDTH*LCD_WIDTH*2);
+	lcdFB = mcujs_alloc_function(0, LCD_WIDTH * LCD_WIDTH * 2);
+	lcdFBCopy = mcujs_alloc_function(0, LCD_WIDTH * LCD_WIDTH * 2);
 	spi_bus_config_t cfg = { .mosi_io_num = LCD_PIN_MOSI,
 		                     .miso_io_num = -1,
 		                     .sclk_io_num = LCD_PIN_SCLK,
@@ -221,9 +223,61 @@ void halLcdInit() {
 	halFontInit();
 }
 
-JS_BUFFER halLcdGetFB() {
-	JS_BUFFER buf = { .buf = (u8*) lcdFB, .size = LCD_WIDTH * LCD_HEIGHT * 2};
+JS_BUFFER halLcdCopyFB(int16_t left, int16_t top, int16_t right, int16_t bottom) {
+	JS_BUFFER buf;
+	if (left == 0 && top == 0 && right == LCD_WIDTH && bottom == LCD_HEIGHT) {
+		// Should be faster when copy the whole screen.
+		memcpy(lcdFBCopy, lcdFB, LCD_WIDTH * LCD_HEIGHT * 2);
+		buf.buf = lcdFBCopy;
+		buf.size = LCD_WIDTH * LCD_HEIGHT * 2;
+	} else {
+		int16_t index = 0;
+
+		memset(lcdFBCopy, 0, LCD_WIDTH * LCD_HEIGHT * 2);
+		do {
+			do {
+				lcdFBCopy[index] = lcdFB[(top * LCD_WIDTH) + left];
+				index++;
+			} while (++left < right);
+		} while (++top < bottom);
+		buf.buf = lcdFBCopy;
+		buf.size = index;
+	}
+
 	return buf;
+}
+
+JS_BUFFER halLcdGetFB() {
+	JS_BUFFER buf = { .buf = (u8*) lcdFB, .size = LCD_WIDTH * LCD_HEIGHT * 2 };
+	return buf;
+}
+
+void halLcdSetFB(JS_BUFFER fb) {
+	if (fb.size >= LCD_WIDTH * LCD_HEIGHT * 2) {
+		memcpy(lcdFB, fb.buf, LCD_WIDTH * LCD_HEIGHT * 2);
+	}
+}
+
+void halLcdPutPixels(int16_t x, int16_t y, int16_t width, int16_t height, JS_BUFFER buf) {
+	int16_t right = x + width;
+	int16_t bottom = y + height;
+	int16_t index = 0;
+	uint16_t* pixels = (uint16_t*) buf.buf;
+
+	do {
+		do {
+			if (index >= buf.size)
+				break;
+
+			if (x < renderRect.left || x >= renderRect.right || y < renderRect.top || y >= renderRect.bottom)
+				continue;
+
+			uint16_t pixel = pixels[index];
+			lcdFB[(y * LCD_WIDTH) + x] = pixel;
+
+			index++;
+		} while (++x < right);
+	} while (++y < bottom);
 }
 
 void halLcdClearScreen() {

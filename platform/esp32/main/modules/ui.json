@@ -12,6 +12,28 @@
             "halLcdGetFB",
             "buf"
         ],
+        "setFB": [
+            "halLcdSetFB",
+            "void",
+            "buf"
+        ],
+        "copyFB":[
+            "halLcdCopyFB",
+            "buf",
+            "u16",
+            "u16",
+            "u16",
+            "u16"
+        ],
+        "putPixels": [
+            "halLcdPutPixels",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "buf"
+        ],
         "setPenColor": [
             "halLcdSetPenColor",
             "void",
