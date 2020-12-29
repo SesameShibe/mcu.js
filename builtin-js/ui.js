@@ -680,13 +680,13 @@ function max(a, b) {
     ui.TextView.prototype.drawImpl = function () {
         this.drawBackground();
 
-        var border = this.getRenderRect();
-        ui.setPenColor(this.foreground);
+        var rect = this.getRenderRect();
         ui.setRenderRect(
-            border.left,
-            border.top,
-            border.right,
-            border.bottom);
+            rect.left,
+            rect.top,
+            rect.right,
+            rect.bottom);
+        ui.setPenColor(this.foreground);
         if (!this.autoLineBreak) {
             ui.drawText(
                 this.text,

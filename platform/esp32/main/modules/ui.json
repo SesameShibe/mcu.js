@@ -25,6 +25,11 @@
             "u16",
             "u16"
         ],
+        "freeCopy":[
+            "halLcbReleaseCopy",
+            "void",
+            "buf"
+        ],
         "putPixels": [
             "halLcdPutPixels",
             "void",
@@ -140,6 +145,12 @@
             "u32",
             "i16",
             "i16"
+        ],
+        "printBuf":[
+            "halLcbPrintBuf",
+            "void",
+            "buf",
+            "i32"
         ]
     },
     "const": {

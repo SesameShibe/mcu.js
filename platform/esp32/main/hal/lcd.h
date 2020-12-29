@@ -77,7 +77,6 @@ static hal_icon_font_t* iconFont;
 static uint32_t* iconIds;
 
 static uint16_t* lcdFB;
-static uint16_t* lcdFBCopy;
 uint16_t lcdRowOffset, lcdColOffset;
 
 static uint32_t penColor = 0;
@@ -179,7 +178,6 @@ void IRAM_ATTR halLcdUpdate() {
 
 void halLcdInit() {
 	lcdFB = mcujs_alloc_function(0, LCD_WIDTH * LCD_WIDTH * 2);
-	lcdFBCopy = mcujs_alloc_function(0, LCD_WIDTH * LCD_WIDTH * 2);
 	spi_bus_config_t cfg = { .mosi_io_num = LCD_PIN_MOSI,
 		                     .miso_io_num = -1,
 		                     .sclk_io_num = LCD_PIN_SCLK,
@@ -223,12 +221,30 @@ void halLcdInit() {
 	halFontInit();
 }
 
+void halLcbPrintBuf(JS_BUFFER buf, int32_t len) {
+	if (len == -1)
+		len = buf.size;
+
+	int8_t column = 0;
+	printf("\n");
+	for (int i = 0; i < len; i++) {
+		printf("%02x ", buf.buf[i]);
+
+		column++;
+		if (column == 16) {
+			printf("\n");
+			column = 0;
+		}
+	}
+}
+
 JS_BUFFER halLcdCopyFB(int16_t left, int16_t top, int16_t right, int16_t bottom) {
 	JS_BUFFER buf;
+	uint16_t* lcdFBCopy = mcujs_alloc_function(0, (right - left) * (bottom - top) * 2);
 	if (left == 0 && top == 0 && right == LCD_WIDTH && bottom == LCD_HEIGHT) {
 		// Should be faster when copy the whole screen.
 		memcpy(lcdFBCopy, lcdFB, LCD_WIDTH * LCD_HEIGHT * 2);
-		buf.buf = lcdFBCopy;
+		buf.buf = (uint8_t*) lcdFBCopy;
 		buf.size = LCD_WIDTH * LCD_HEIGHT * 2;
 	} else {
 		int16_t index = 0;
@@ -240,11 +256,15 @@ JS_BUFFER halLcdCopyFB(int16_t left, int16_t top, int16_t right, int16_t bottom)
 				index++;
 			} while (++left < right);
 		} while (++top < bottom);
-		buf.buf = lcdFBCopy;
+		buf.buf = (uint8_t*) lcdFBCopy;
 		buf.size = index;
 	}
 
 	return buf;
+}
+
+void halLcbReleaseCopy(JS_BUFFER buf) {
+	mcujs_free_function(&buf, buf.buf);
 }
 
 JS_BUFFER halLcdGetFB() {
@@ -261,23 +281,25 @@ void halLcdSetFB(JS_BUFFER fb) {
 void halLcdPutPixels(int16_t x, int16_t y, int16_t width, int16_t height, JS_BUFFER buf) {
 	int16_t right = x + width;
 	int16_t bottom = y + height;
-	int16_t index = 0;
+	size_t index = 0;
 	uint16_t* pixels = (uint16_t*) buf.buf;
 
+	int16_t yi = y;
 	do {
+		int16_t xi = x;
 		do {
 			if (index >= buf.size)
 				break;
 
-			if (x < renderRect.left || x >= renderRect.right || y < renderRect.top || y >= renderRect.bottom)
+			if (xi < renderRect.left || xi >= renderRect.right || yi < renderRect.top || yi >= renderRect.bottom)
 				continue;
 
 			uint16_t pixel = pixels[index];
-			lcdFB[(y * LCD_WIDTH) + x] = pixel;
+			lcdFB[(yi * LCD_WIDTH) + xi] = pixel;
 
 			index++;
-		} while (++x < right);
-	} while (++y < bottom);
+		} while (++xi < right);
+	} while (++yi < bottom);
 }
 
 void halLcdClearScreen() {

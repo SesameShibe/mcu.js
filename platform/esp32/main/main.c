@@ -108,6 +108,7 @@ int mainLoop() {
 	loadBuiltinJS(ctx, js_touch, "touch");
 	loadBuiltinJS(ctx, js_icons, "icons");
 	loadBuiltinJS(ctx, js_ui, "ui");
+	loadBuiltinJS(ctx, js_clock, "ui");
 	loadBuiltinJS(ctx, js_board, "board");
 	loadBuiltinJS(ctx, js_devserver, "devserver");
 	
