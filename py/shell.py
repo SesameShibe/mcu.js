@@ -43,14 +43,15 @@ def recvLoop():
             sys.stdout.write(char)
         except UnicodeDecodeError as uerr:
             if uerr.object == b'\xFB':
+                print('Saving screenshot... ')
                 head = ser.read(4)
                 width, height = struct.unpack('<HH', head)
                 buf = ser.read(width*height*2+4)
                 bmp = (width, height, buf)
                 savescreen(bmp)
-        except Exception as err:
-            sys.stderr.write(
-                '['+binascii.b2a_hex(err.object[err.start:err.end])+']')
+            else:
+                sys.stderr.write(
+                    '['+binascii.b2a_hex(err.object[err.start:err.end])+']')
 
 
 def runfile(fn):
@@ -65,7 +66,6 @@ def screenshot(path):
     global shotpath
     shotpath = path
     ser.write(b'\nsaveBitmap(lcd.getFB());\n\xF8')
-    sys.stdout.write('Saving screenshot... ')
 
 
 def savescreen(bmp):
