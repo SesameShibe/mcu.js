@@ -51,6 +51,7 @@ DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
 #include "hal/spi.h"
 #include "hal/i2c.h"
 #include "hal/wifi.h"
+#include "hal/gfx.h"
 
 
 #include "__generated/gen_js.h"
@@ -107,8 +108,9 @@ int mainLoop() {
 	loadBuiltinJS(ctx, js_ws, "ws");
 	loadBuiltinJS(ctx, js_touch, "touch");
 	loadBuiltinJS(ctx, js_icons, "icons");
-	loadBuiltinJS(ctx, js_ui, "ui");
-	loadBuiltinJS(ctx, js_clock, "ui");
+	loadBuiltinJS(ctx, js_ui_new, "ui");
+	// loadBuiltinJS(ctx, js_ui, "ui");
+	// loadBuiltinJS(ctx, js_clock, "ui");
 	loadBuiltinJS(ctx, js_board, "board");
 	loadBuiltinJS(ctx, js_devserver, "devserver");
 	

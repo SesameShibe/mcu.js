@@ -1,0 +1,128 @@
+{
+    "function": {
+        "drawLine": [
+            "halGfxDrawLine",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawRectangle": [
+            "halGfxDrawRectangle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i32"
+        ],
+        "fillRectangle": [
+            "halGfxFillRectangle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i32"
+        ],
+        "drawTriangle": [
+            "halGfxDrawTriangle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "fillTriangle": [
+            "halGfxFillTriangle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawCircle": [
+            "halGfxDrawCircle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i32"
+        ],
+        "fillCircle": [
+            "halGfxFillCircle",
+            "void",
+            "buf",
+            "u16",
+            "i16",
+            "i16",
+            "i16",
+            "i32"
+        ],
+        "drawText": [
+            "halGfxDrawText",
+            "void",
+            "buf",
+            "u16",
+            "str",
+            "i16",
+            "i16"
+        ],
+        "drawIcon":[
+            "halGfxDrawIcon",
+            "void",
+            "buf",
+            "u16",
+            "u32",
+            "i16",
+            "i16"
+        ],
+        "drawBitmap":[
+            "halGfxDrawBitmap",
+            "void",
+            "buf",
+            "buf",
+            "i16",
+            "i16"
+        ],
+        "drawBitmapWithTransparent":[
+            "halGfxDrawBitmapWithTransparent",
+            "void",
+            "buf",
+            "buf",
+            "i16",
+            "i16",
+            "u16"
+        ],
+
+        "newBitmap":[
+            "halGfxNewBitmap",
+            "void",
+            "u16",
+            "u16",
+            "u16"
+        ],
+        "releaseBitmap":[
+            "halGfxReleaseBitmap",
+            "void",
+            "buf"
+        ]
+    }
+}

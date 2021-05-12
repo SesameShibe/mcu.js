@@ -24,6 +24,12 @@ typedef struct hal_icon_font_t {
 	int32_t entrySize;
 } hal_icon_font_t;
 
+typedef struct hal_font_glyph_t {
+	uint16_t width;
+	uint16_t height;
+	uint8_t* data;
+} hal_font_glyph_t;
+
 static hal_font_t* font;
 static hal_font_section_info_t* sections;
 
@@ -32,29 +38,12 @@ static uint32_t* iconIds;
 
 #define TEXT_LINE_HEIGHT 16
 
-size_t halFontReadUtf8Char(uint16_t* readChar, int32_t* ppos, const char* string) {
-	size_t byteCount = 0;
-	uint16_t unicode = 0;
-	uint32_t pos = *ppos;
-
-	if ((string[pos] & 0x80) == 0) {
-		unicode = (uint16_t) string[pos];
-		byteCount = 1;
-	} else if ((string[pos] & 0xE0) == 0xC0) {
-		unicode = ((string[pos] & 0x1F) << 6) | (string[pos + 1] & 0x3F);
-		byteCount = 2;
-	} else if ((string[pos] & 0xF0) == 0xE0) {
-		unicode = ((string[pos] & 0x0F) << 12) | ((string[pos + 1] & 0x3F) << 6) | (string[pos + 2] & 0x3F);
-		byteCount = 3;
-	}
-
-	*readChar = unicode;
-	*ppos = pos + byteCount;
-	return byteCount;
-}
-
 static hal_font_section_info_t* halFontGetSection(uint16_t c) {
 	hal_font_section_info_t* section = sections;
+
+	if (font == NULL) {
+		halFontInit();
+	}
 
 	for (int i = 0; i < font->sectionCount; i++) {
 		if (c >= section->codeStart && c <= section->codeEnd)
@@ -65,81 +54,28 @@ static hal_font_section_info_t* halFontGetSection(uint16_t c) {
 	return NULL;
 }
 
-int16_t halFontMeasureTextWidth(const char* string) {
-	uint16_t unicode = 0;
-	int16_t width = 0;
-	int32_t currPos = 0;
-	halFontReadUtf8Char(&unicode, &currPos, string);
-
-	while (unicode) {
-		hal_font_section_info_t* section = halFontGetSection(unicode);
-		halFontReadUtf8Char(&unicode, &currPos, string);
-
-		if (section == NULL)
-			continue;
-
-		width += section->charWidth;
-	}
-
-	return width;
-}
-
-int16_t halLcdMeasureTextHeight(const char* string) {
-	return 16;
-}
-
-void halFontDrawGlyph(const uint8_t* glyphData, uint16_t width, uint16_t height, int16_t x, int16_t y) {
-	for (int16_t yi = 0; yi < height; yi++) {
-		for (int16_t xi = 0; xi < width; xi += 8) {
-			uint8_t b = *glyphData;
-			glyphData++;
-
-			if ((b & 0x01) == 0x01) halLcdDrawDot(x + xi    , y + yi);
-			if ((b & 0x02) == 0x02) halLcdDrawDot(x + xi + 1, y + yi);
-			if ((b & 0x04) == 0x04) halLcdDrawDot(x + xi + 2, y + yi);
-			if ((b & 0x08) == 0x08) halLcdDrawDot(x + xi + 3, y + yi);
-			if ((b & 0x10) == 0x10) halLcdDrawDot(x + xi + 4, y + yi);
-			if ((b & 0x20) == 0x20) halLcdDrawDot(x + xi + 5, y + yi);
-			if ((b & 0x40) == 0x40) halLcdDrawDot(x + xi + 6, y + yi);
-			if ((b & 0x80) == 0x80) halLcdDrawDot(x + xi + 7, y + yi);
-		}
-	}
-}
-
-uint16_t halFontDrawChar(uint16_t c, int16_t x, int16_t y) {
-	const uint8_t* glyphData = NULL;
+hal_font_glyph_t halFontGetGlyph(uint16_t c) {
+	hal_font_glyph_t glyph;
 	hal_font_section_info_t* section = halFontGetSection(c);
 
-	if (section == NULL)
-		return 0;
+	memset(&glyph, 0, sizeof(hal_font_glyph_t));
 
-	glyphData = (const uint8_t*) (&((uint8_t*) font)[0] +
-	                              (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
-	halFontDrawGlyph(glyphData, section->charWidth, section->charHeight, x, y + (16 - section->charHeight));
-	return section->charWidth;
-}
-
-void halFontDrawText(const char* string, int16_t x, int16_t y) {
-	uint16_t unicode = 0;
-	int32_t currPos = 0;
-	int16_t dx = x, dy = y;
-	halFontReadUtf8Char(&unicode, &currPos, string);
-
-	while (unicode) {
-		if (unicode == 0xd || unicode == 0xa) {
-			dx = x;
-			dy += TEXT_LINE_HEIGHT;
-		} else {
-			dx += halFontDrawChar(unicode, dx, dy);
-		}
-
-		halFontReadUtf8Char(&unicode, &currPos, string);
+	if (section != NULL) {
+		glyph.data = (uint8_t*) (&((uint8_t*) font)[0] +
+		                         (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
+		glyph.width = section->charWidth;
+		glyph.height = section->charHeight;
 	}
+
+	return glyph;
 }
 
-void halFontDrawIcon(uint32_t id, int16_t x, int16_t y) {
+hal_font_glyph_t halFontGetIcon(uint32_t id) {
 	int32_t low = 0, high = iconFont->entryCount - 1;
 	int32_t iconIndex = -1;
+	hal_font_glyph_t glyph;
+
+	memset(&glyph, 0, sizeof(hal_font_glyph_t));
 
 	while (low <= high) {
 		iconIndex = (low + high) / 2;
@@ -152,29 +88,14 @@ void halFontDrawIcon(uint32_t id, int16_t x, int16_t y) {
 		}
 	}
 
-	if (iconIndex == -1) {
-		return;
+	if (low <= high) {
+		glyph.data = (((uint8_t*) iconFont) + sizeof(hal_icon_font_t) + (iconFont->entryCount * 4) +
+		              (iconFont->entrySize * iconIndex));
+		glyph.width = iconFont->width;
+		glyph.height = iconFont->height;
 	}
 
-	uint8_t* iconData = (((uint8_t*) iconFont) + sizeof(hal_icon_font_t) + (iconFont->entryCount * 4) +
-	                     (iconFont->entrySize * iconIndex));
-
-	uint8_t b = 0;
-	uint16_t mask = 0x100;
-	for (int16_t yi = 0; yi < iconFont->height; yi++) {
-		for (int16_t xi = 0; xi < iconFont->width; xi++) {
-			if (mask == 0x100) {
-				b = *iconData;
-				iconData++;
-				mask = 1;
-			}
-
-			if ((b & mask) == mask) {
-				halLcdDrawDot(x + xi, y + yi);
-			}
-			mask <<= 1;
-		}
-	}
+	return glyph;
 }
 
 void halFontInit() {
