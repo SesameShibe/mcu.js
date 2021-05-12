@@ -78,7 +78,7 @@ def progressbar(currentSize, totalsize):
 
 def downlaodAndUnpack(toolName, tool):
     url = None
-    if tool.has_key('url'):
+    if 'url' in tool:
         url = tool['url']
     else:
         url = tool['url-' + platform.system().lower()]
@@ -105,13 +105,13 @@ def downlaodAndUnpack(toolName, tool):
                 recvLen += len(data)
                 progressbar(recvLen, totalFileLen)
 
-    if tool.has_key('patch'):
+    if 'patch' in tool:
         with open(downloadPath, 'r+b') as f:
             f.seek(0)
             f.write(tool['patch'])
 
     unpackPath = 'toolchain/%s' % (toolName)
-    if tool.has_key('path'):
+    if 'path' in tool:
         unpackPath = tool['path']
 
     print('Unpacking to %s' % unpackPath)
