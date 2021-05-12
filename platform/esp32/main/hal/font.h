@@ -41,10 +41,6 @@ static uint32_t* iconIds;
 static hal_font_section_info_t* halFontGetSection(uint16_t c) {
 	hal_font_section_info_t* section = sections;
 
-	if (font == NULL) {
-		halFontInit();
-	}
-
 	for (int i = 0; i < font->sectionCount; i++) {
 		if (c >= section->codeStart && c <= section->codeEnd)
 			return section;

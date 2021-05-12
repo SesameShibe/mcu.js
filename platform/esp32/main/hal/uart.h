@@ -28,6 +28,10 @@ void halUartWriteString(int32_t uart_num, const char* str) {
 	uart_write_bytes((uart_port_t) uart_num, str, len);
 }
 
+void halUartWriteBuffer(int32_t uart_num, JS_BUFFER buf) {
+	uart_write_bytes((uart_port_t) uart_num, (const char*) buf.buf, buf.size);
+}
+
 void halUartWriteByte(int32_t uart_num, int32_t c) {
 	char s[2] = { 0, 0 };
 	s[0] = (char) c;

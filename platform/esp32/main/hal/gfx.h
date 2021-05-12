@@ -337,7 +337,7 @@ void halGfxDrawBitmap1Bpp(JS_BUFFER buf, int16_t color, const uint8_t* data, uin
 void halGfxDrawBitmapRgb565(JS_BUFFER buf, const uint16_t* data, uint16_t width, int16_t height, int16_t x,
                             uint16_t y) {
 	for (int16_t yi = 0; yi < height; yi++) {
-		for (int16_t xi = 0; xi < width; xi += 8) {
+		for (int16_t xi = 0; xi < width; xi++) {
 			halGfxDrawDot(buf, data[yi * width + xi], x + xi, y + yi);
 		}
 	}
@@ -354,7 +354,7 @@ void halGfxDrawBitmapWithTransparent(JS_BUFFER buf, JS_BUFFER bmp, int16_t x, in
 	uint16_t* data = halGfxGetBitmapData(bmp);
 
 	for (int16_t yi = 0; yi < bmpSize.height; yi++) {
-		for (int16_t xi = 0; xi < bmpSize.width; xi += 8) {
+		for (int16_t xi = 0; xi < bmpSize.width; xi++) {
 			uint16_t pix = data[yi * bmpSize.width + xi];
 			if (pix == transparentColor)
 				continue;

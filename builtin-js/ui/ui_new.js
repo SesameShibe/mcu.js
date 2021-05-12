@@ -13,10 +13,16 @@ function makeColor(r, g, b) {
         | ((g >> 3) & 0x1F);
 }
 
+function saveBitmap(bmp) {
+    uart.writeByte(0, 0xFB);
+    uart.writeBuf(0, bmp);
+}
+
 (function () {
 
     View = function () {
         this.background = makeColor(0x80, 0x80, 0x80)
+        this.bitmap = null
         this.children = new Array();
         this.cornerRadius = 0;
         this.foreground = 0xFFFF;
@@ -41,23 +47,24 @@ function makeColor(r, g, b) {
     }
 
     View.prototype.clear = function () {
-        print('clear bitmap')
         gfx.fillRectangle(this.bitmap, this.transparentColor,
             0, 0, this.size.width, this.size.height,
             this.cornerRadius);
     }
 
+    View.prototype.dispose = function () {
+        gfx.releaseBitmap(this.bitmap);
+    }
+
     View.prototype.drawBackground = function () {
-        print('draw bg')
         gfx.fillRectangle(this.bitmap, this.background,
             0, 0, this.size.width, this.size.height,
             this.cornerRadius);
     }
 
     View.prototype.drawBorder = function () {
-        print('draw bdr')
         gfx.drawRectangle(this.bitmap, this.foreground,
-            0, 0, this.size.width, this.size.height,
+            0, 0, this.size.width - 1, this.size.height - 1,
             this.cornerRadius);
     }
 
@@ -65,7 +72,6 @@ function makeColor(r, g, b) {
         if (this.size.width == 0 || this.size.height == 0)
             return
 
-        print('allocating bitmap...')
         this.bitmap = gfx.newBitmap(this.size.width, this.size.height)
         this.render();
     }
@@ -92,7 +98,6 @@ function makeColor(r, g, b) {
             if (this.transparentColor == this.foreground) {
                 this.transparentColor++
             }
-            this.render();
         }
     }
 
@@ -107,19 +112,21 @@ function makeColor(r, g, b) {
     View.prototype.setBackground = function (bg) {
         this.background = bg;
         this.resetTransparentColor();
+        this.render();
     }
 
     View.prototype.setCornerRadius = function (rd) {
         this.cornerRadius = rd;
+        this.render();
     }
 
     View.prototype.setForeground = function (fg) {
         this.foreground = fg;
         this.resetTransparentColor();
+        this.render();
     }
 
     View.prototype.setLocation = function (x, y) {
-        this.clear();
         this.location = { x: x, y: y };
     }
 
@@ -142,7 +149,7 @@ function makeColor(r, g, b) {
     Label.prototype.render = function () {
         this.clear()
         this.drawBackground()
-        
+
         gfx.drawText(this.bitmap,
             this.foreground,
             this.text,
@@ -200,14 +207,22 @@ function makeColor(r, g, b) {
 })();
 
 (function () {
-    ScreenManager = function () {
+    UIManager = function () {
         this.views = new Array()
         this.drawQueue = new Array()
         this.lastTouchedPoint = null;
         this.lastTouchedView = null;
     }
 
-    ScreenManager.prototype.drawView = function (view, x, y) {
+    UIManager.prototype.disposeView = function (view) {
+        if (view.parent != null) {
+            view.parent.removeView(view)
+        }
+        view.dispose()
+        delete view
+    }
+
+    UIManager.prototype.drawView = function (view, x, y) {
         gfx.drawBitmapWithTransparent(
             lcd.getFB(),
             view.bitmap,
@@ -224,7 +239,7 @@ function makeColor(r, g, b) {
         }
     }
 
-    ScreenManager.prototype.draw = function () {
+    UIManager.prototype.draw = function () {
         this.drawQueue = new Array()
 
         gfx.fillRectangle(lcd.getFB(), 0, 0, 0, 240, 240)
@@ -235,13 +250,13 @@ function makeColor(r, g, b) {
         lcd.update();
     }
 
-    ScreenManager.prototype.pollKey = function () {
+    UIManager.prototype.pollKey = function () {
         while (true) {
             // Should do something here.
         }
     }
 
-    ScreenManager.prototype.pollTouch = function () {
+    UIManager.prototype.pollTouch = function () {
         while (true) {
             if (this.readTouch()) {
                 this.draw()
@@ -249,7 +264,7 @@ function makeColor(r, g, b) {
         }
     }
 
-    ScreenManager.prototype.readTouch = function () {
+    UIManager.prototype.readTouch = function () {
         if (!touch.isInited) touch.init();
 
         var touched = touch.isTouched();
