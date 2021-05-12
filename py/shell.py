@@ -45,7 +45,7 @@ def recvLoop():
             if uerr.object == b'\xFB':
                 head = ser.read(4)
                 width, height = struct.unpack('<HH', head)
-                buf = ser.read(width*height*2)
+                buf = ser.read(width*height*2+4)
                 bmp = (width, height, buf)
                 savescreen(bmp)
         except Exception as err:
@@ -79,8 +79,9 @@ def savescreen(bmp):
         for x in range(w):
             index = (y * w + x) * 2
             b1, b2 = buf[index], buf[index+1]
-            r = (((b1 & 0b11111000) >> 3) * 527 +23) >> 6
-            g = ((((b1 & 0b00000111) << 3) | ((b2 & 0b11100000) >> 5)) * 259 + 33) >> 6
+            r = (((b1 & 0b11111000) >> 3) * 527 + 23) >> 6
+            g = ((((b1 & 0b00000111) << 3) | (
+                (b2 & 0b11100000) >> 5)) * 259 + 33) >> 6
             b = ((b2 & 0b00011111) * 527 + 23) >> 6
 
             img.putpixel((x, y), (r, g, b))
