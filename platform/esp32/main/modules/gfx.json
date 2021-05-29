@@ -85,7 +85,12 @@
             "i16",
             "i16"
         ],
-        "drawIcon":[
+        "measureText": [
+            "halGfxMeasureText",
+            "u32",
+            "str"
+        ],
+        "drawIcon": [
             "halGfxDrawIcon",
             "void",
             "buf",
@@ -94,7 +99,7 @@
             "i16",
             "i16"
         ],
-        "drawBitmap":[
+        "drawBitmap": [
             "halGfxDrawBitmap",
             "void",
             "buf",
@@ -102,7 +107,7 @@
             "i16",
             "i16"
         ],
-        "drawBitmapWithTransparent":[
+        "drawBitmapWithTransparent": [
             "halGfxDrawBitmapWithTransparent",
             "void",
             "buf",
@@ -111,15 +116,14 @@
             "i16",
             "u16"
         ],
-
-        "newBitmap":[
+        "newBitmap": [
             "halGfxNewBitmap",
             "buf",
             "u16",
             "u16",
             "u16"
         ],
-        "releaseBitmap":[
+        "releaseBitmap": [
             "halGfxReleaseBitmap",
             "void",
             "buf"

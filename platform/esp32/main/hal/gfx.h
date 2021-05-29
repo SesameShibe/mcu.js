@@ -24,6 +24,11 @@ typedef struct gfx_size_t {
 	uint16_t height;
 } gfx_size_t;
 
+typedef union u_size_t {
+	uint32_t val;
+	gfx_size_t size;
+} u_size_t;
+
 typedef struct gfx_pixel_t {
 	uint16_t b : 5;
 	uint16_t g : 6;
@@ -363,20 +368,23 @@ void halGfxDrawBitmapWithTransparent(JS_BUFFER buf, JS_BUFFER bmp, int16_t x, in
 	}
 }
 
-uint16_t halGfxDrawChar(JS_BUFFER buf, int16_t color, uint16_t c, int16_t x, int16_t y) {
+u_size_t halGfxDrawChar(JS_BUFFER buf, int16_t color, uint16_t c, int16_t x, int16_t y) {
+	u_size_t size;
 	hal_font_glyph_t glyph = halFontGetGlyph(c);
 
 	if (glyph.width > 0 && glyph.height > 0) {
 		halGfxDrawBitmap1Bpp(buf, color, glyph.data, glyph.width, glyph.height, x, y);
-		return glyph.width;
-	} else {
-		return 0;
+		size.size.width = glyph.width;
+		size.size.height = glyph.height;
 	}
+
+	return size;
 }
 
 void halGfxDrawText(JS_BUFFER buf, int16_t color, const char* string, int16_t x, int16_t y) {
 	uint16_t unicode = 0;
 	int16_t dx = x, dy = y;
+	u_size_t char_size;
 	char* s = (char*) string;
 
 	while ((unicode = halUtfReadUtf8Char(&s)) != 0) {
@@ -384,9 +392,31 @@ void halGfxDrawText(JS_BUFFER buf, int16_t color, const char* string, int16_t x,
 			dx = x;
 			dy += TEXT_LINE_HEIGHT;
 		} else {
-			dx += halGfxDrawChar(buf, color, unicode, dx, dy);
+			char_size = halGfxDrawChar(buf, color, unicode, dx, dy);
+			dx += char_size.size.width;
 		}
 	}
+}
+
+uint32_t halGfxMeasureText(const char* string) {
+	u_size_t size;
+	uint16_t unicode = 0;
+	uint16_t width = 0;
+	char* s = (char*) string;
+
+	size.size.height = TEXT_LINE_HEIGHT;
+	while ((unicode = halUtfReadUtf8Char(&s)) != 0) {
+		if (unicode == 0xd || unicode == 0xa) {
+			size.size.width = (width > size.size.width) ? width : size.size.width;
+			width = 0;
+			size.size.height += TEXT_LINE_HEIGHT;
+		} else {
+			hal_font_glyph_t glyph = halFontGetGlyph(unicode);
+			width += glyph.width;
+		}
+	}
+	size.size.width = (width > size.size.width) ? width : size.size.width;
+	return size.val;
 }
 
 void halGfxDrawIcon(JS_BUFFER buf, int16_t color, uint32_t id, int16_t x, int16_t y) {

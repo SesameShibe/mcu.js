@@ -8,9 +8,11 @@ Array.prototype.findIndex = function (f) {
 };
 
 function makeColor(r, g, b) {
-    return (((b >> 3) & 0x1F) << 11)
-        | (((r >> 2) & 0x3F) << 5)
-        | ((g >> 3) & 0x1F);
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+}
+
+function parseSize(val) {
+    return { width: val & 0xFFFF, height: (val >> 16) & 0xFFFF }
 }
 
 function saveBitmap(bmp) {
@@ -23,27 +25,26 @@ function saveBitmap(bmp) {
     View = function () {
         this.background = makeColor(0x80, 0x80, 0x80)
         this.bitmap = null
-        this.children = new Array();
-        this.cornerRadius = 0;
-        this.foreground = 0xFFFF;
-        this.location = { x: 0, y: 0 };
-        this.parent = null;
-        this.size = { width: 0, height: 0 };
+        this.children = new Array()
+        this.cornerRadius = 0
+        this.foreground = 0xFFFF
+        this.location = { x: 0, y: 0 }
+        this.parent = null
+        this.size = { width: 0, height: 0 }
         this.transparentColor = 0
-
-        this.init();
     }
 
     View.prototype.addView = function (view) {
-        var p = this.parent;
+        var p = this.parent
         while (p != undefined) {
             if (p === view)
-                throw "Cannot add parent to child.";
-            p = p.parent;
+                throw "Cannot add parent to child."
+            p = p.parent
         }
 
-        view.parent = this;
-        this.children.push(view);
+        view.parent = this
+        this.children.push(view)
+        view.init()
     }
 
     View.prototype.clear = function () {
@@ -57,15 +58,45 @@ function saveBitmap(bmp) {
     }
 
     View.prototype.drawBackground = function () {
-        gfx.fillRectangle(this.bitmap, this.background,
-            0, 0, this.size.width, this.size.height,
-            this.cornerRadius);
+        if (typeof (this.background) == 'string' && this.background.toLowerCase() == 'transparent') {
+            gfx.fillRectangle(this.bitmap, this.transparentColor,
+                0, 0, this.size.width, this.size.height,
+                this.cornerRadius)
+        } else {
+            gfx.fillRectangle(this.bitmap, this.background,
+                0, 0, this.size.width, this.size.height,
+                this.cornerRadius)
+        }
     }
 
     View.prototype.drawBorder = function () {
         gfx.drawRectangle(this.bitmap, this.foreground,
             0, 0, this.size.width - 1, this.size.height - 1,
             this.cornerRadius);
+    }
+
+    View.prototype.getBottom = function () {
+        return this.getTop() + this.size.height
+    }
+
+    View.prototype.getLeft = function () {
+        if (this.parent == null) {
+            return this.location.x
+        } else {
+            return this.parent.getLeft() + this.location.x
+        }
+    }
+
+    View.prototype.getRight = function () {
+        return this.getLeft() + this.size.width
+    }
+
+    View.prototype.getTop = function () {
+        if (this.parent == null) {
+            return this.location.y
+        } else {
+            return this.parent.getTop() + this.location.y
+        }
     }
 
     View.prototype.init = function () {
@@ -78,10 +109,10 @@ function saveBitmap(bmp) {
 
     View.prototype.rect = function () {
         return {
-            left: this.location.x,
-            top: this.location.y,
-            right: this.location.x + this.size.width,
-            bottom: this.location.y + this.size.height
+            left: this.getLeft(),
+            top: this.getTop(),
+            right: this.getRight(),
+            bottom: this.getBottom()
         }
     }
 
@@ -108,6 +139,50 @@ function saveBitmap(bmp) {
         }
     }
 
+    // Touch Events
+    View.prototype.longTouched = function (point) {
+        if (this.onLongTouched != null) {
+            var args = {
+                point: point,
+                relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
+            }
+            this.onLongTouched(args)
+        }
+    }
+
+    View.prototype.touchDown = function (point) {
+        if (this.onTouchDown != null) {
+            var args = {
+                point: point,
+                relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
+            }
+            this.onTouchDown(args)
+        }
+    }
+
+    View.prototype.touchMoved = function (oldPoint, newPoint) {
+        if (this.onTouchMoved != null) {
+            var args = {
+                oldPoint: oldPoint,
+                relativeOldPoint: { x: oldPoint.x - this.getLeft(), y: oldPoint.y - this.getTop() },
+                newPoint: newPoint,
+                relativeNewPoint: { x: newPoint.x - this.getLeft(), y: newPoint.y - this.getTop() }
+            }
+            this.onTouchMoved(args)
+        }
+    }
+
+    View.prototype.touchUp = function (point) {
+        if (this.onTouchUp != null) {
+            var args = {
+                point: point,
+                relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
+            }
+            this.onTouchUp(args)
+        }
+    }
+    // Touch Events End
+
     // Setters
     View.prototype.setBackground = function (bg) {
         this.background = bg;
@@ -131,29 +206,84 @@ function saveBitmap(bmp) {
     }
 
     View.prototype.setSize = function (width, height) {
-        this.clear();
-        this.size = { width: width, height: height };
-        this.init()
+        if (this.size.width != width || this.size.height != height) {
+            this.clear();
+            this.size = { width: width, height: height };
+
+            if (this.bitmap != null) {
+                gfx.releaseBitmap(this.bitmap)
+            }
+
+            this.init()
+        }
     }
-    // Setters end
+    // Setters End
 })();
 
 (function () {
-    Label = function () {
+    Button = function (text) {
         View.call(this)
 
-        this.text = 'label'
+        this.pressed = false
+        this.pressedColor = 0xFE52
+        this.releasedColor = 0x3436
+        this.onClicked = null
+
+        this.setSize(96, 32)
+        this.setText(text)
     }
-    Label.prototype = new View()
+    Button.prototype = new View()
 
-    Label.prototype.render = function () {
+    Button.prototype.render = function () {
         this.clear()
-        this.drawBackground()
+        if (this.pressed) {
+            gfx.fillRectangle(this.bitmap, this.pressedColor,
+                0, 0, this.size.width, this.size.height,
+                this.cornerRadius);
+        } else {
+            gfx.fillRectangle(this.bitmap, this.releasedColor,
+                0, 0, this.size.width, this.size.height,
+                this.cornerRadius);
+        }
+    }
 
-        gfx.drawText(this.bitmap,
-            this.foreground,
-            this.text,
-            0, 0)
+    Button.prototype.setSize = function (width, height) {
+        View.prototype.setSize.call(this, width, height)
+        if (this.label != null) {
+            this.label.setLocation(
+                (this.size.width - this.label.size.width) / 2,
+                (this.size.height - this.label.size.height) / 2
+            )
+        }
+    }
+
+    Button.prototype.setText = function (text) {
+        if (this.label == undefined || this.label == null) {
+            this.label = new Label(text)
+            this.label.touchTransparent = true
+            this.label.setBackground('transparent')
+            this.addView(this.label)
+        }
+
+        this.label.setText(text)
+        this.label.setLocation(
+            (this.size.width - this.label.size.width) / 2,
+            (this.size.height - this.label.size.height) / 2
+        )
+    }
+
+    Button.prototype.touchDown = function (point) {
+        this.pressed = true
+        View.prototype.touchDown.call(this, point)
+    }
+
+    Button.prototype.touchUp = function (point) {
+        this.pressed = false
+        View.prototype.touchUp.call(this, point)
+
+        if (this.onClicked != null) {
+            this.onClicked(point)
+        }
     }
 })();
 
@@ -173,6 +303,31 @@ function saveBitmap(bmp) {
             this.foreground,
             this.iconId,
             0, 0)
+    }
+})();
+
+(function () {
+    Label = function (text) {
+        View.call(this)
+
+        this.setText(text)
+    }
+    Label.prototype = new View()
+
+    Label.prototype.render = function () {
+        this.clear()
+        this.drawBackground()
+
+        gfx.drawText(this.bitmap,
+            this.foreground,
+            this.text,
+            0, 0)
+    }
+
+    Label.prototype.setText = function (text) {
+        this.text = text
+        var s = parseSize(gfx.measureText(this.text))
+        this.setSize(s.width, s.height)
     }
 })();
 
@@ -210,8 +365,9 @@ function saveBitmap(bmp) {
     UIManager = function () {
         this.views = new Array()
         this.drawQueue = new Array()
-        this.lastTouchedPoint = null;
-        this.lastTouchedView = null;
+        this.lastTouchedPoint = null
+        this.lastTouchedView = null
+        this.pressCounter = 0
     }
 
     UIManager.prototype.disposeView = function (view) {
@@ -223,6 +379,7 @@ function saveBitmap(bmp) {
     }
 
     UIManager.prototype.drawView = function (view, x, y) {
+        view.render()
         gfx.drawBitmapWithTransparent(
             lcd.getFB(),
             view.bitmap,
@@ -257,11 +414,12 @@ function saveBitmap(bmp) {
     }
 
     UIManager.prototype.pollTouch = function () {
-        while (true) {
-            if (this.readTouch()) {
-                this.draw()
+        var mngr = this
+        setInterval(function () {
+            if (mngr.readTouch()) {
+                mngr.draw()
             }
-        }
+        }, 10)
     }
 
     UIManager.prototype.readTouch = function () {
@@ -275,26 +433,31 @@ function saveBitmap(bmp) {
                 // Touch down
                 for (var i = this.drawQueue.length - 1; i >= 0; i--) {
                     var v = this.drawQueue[i];
-                    if ((point.x > v.position.x)
-                        && (point.x < (v.position.x + v.size.width))
-                        && (point.y > v.position.y)
-                        && point.y < (v.position.y + v.size.height)
+                    var rect = v.rect();
+                    if ((point.x > rect.left)
+                        && (point.x < rect.right)
+                        && (point.y > rect.top)
+                        && (point.y < rect.bottom)
                         && (!v.touchTransparent)) {
-                        //v.touchDown(point);
+                        v.touchDown(point);
 
                         this.lastTouchedView = v;
                         this.lastTouchedPoint = point;
                         return true;
                     }
                 }
-            } else if (this.lastTouchedPoint.x == point.x
-                && this.lastTouchedPoint.y == point.y) {
+            } else if (Math.abs(this.lastTouchedPoint.x - point.x) < 5
+                && Math.abs(this.lastTouchedPoint.y - point.y) < 5) {
                 // Long touch
-                //this.lastTouchedView.longTouched(this.lastTouchedPoint);
+                this.pressCounter++
+                if (this.pressCounter > 5) {
+                    this.lastTouchedView.longTouched(this.lastTouchedPoint);
+                    this.pressCounter = 0
+                }
                 return true;
             } else {
                 // Touch moved
-                //this.lastTouchedView.touchMoved(this.lastTouchedPoint, point);
+                this.lastTouchedView.touchMoved(this.lastTouchedPoint, point);
                 this.lastTouchedPoint = point;
                 return true;
             }
@@ -302,7 +465,7 @@ function saveBitmap(bmp) {
             // Touch up
             if (this.lastTouchedPoint != null
                 && this.lastTouchedView != null) {
-                //this.lastTouchedView.touchUp(this.lastTouchedPoint);
+                this.lastTouchedView.touchUp(this.lastTouchedPoint);
                 this.lastTouchedPoint = null;
                 this.lastTouchedView = null;
                 return true;
