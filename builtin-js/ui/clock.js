@@ -8,9 +8,9 @@
         this.radius = 120;
         this.hourScaleSize = 6
         this.minuteScaleSize = 2
-        this.hourRadius = 20
-        this.minuteRadius = 40
-        this.secondRadius = 60
+        this.hourRadius = 40
+        this.minuteRadius = 60
+        this.secondRadius = 80
 
         this.hour = 0
         this.minute = 0

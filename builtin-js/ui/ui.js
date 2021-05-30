@@ -8,7 +8,7 @@ Array.prototype.findIndex = function (f) {
 };
 
 function makeColor(r, g, b) {
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3)
+    return ((b & 0xF8) << 8) | ((r & 0xFC) << 3) | (g >> 3)
 }
 
 function parseSize(val) {
@@ -32,6 +32,7 @@ function saveBitmap(bmp) {
         this.parent = null
         this.size = { width: 0, height: 0 }
         this.transparentColor = 0
+        this.doClick = true
     }
 
     View.prototype.addView = function (view) {
@@ -141,27 +142,29 @@ function saveBitmap(bmp) {
 
     // Touch Events
     View.prototype.longTouched = function (point) {
-        if (this.onLongTouched != null) {
+        if (this.onLongTouched) {
             var args = {
                 point: point,
                 relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
             }
             this.onLongTouched(args)
+            this.doClick = false
         }
     }
 
     View.prototype.touchDown = function (point) {
-        if (this.onTouchDown != null) {
+        if (this.onTouchDown) {
             var args = {
                 point: point,
                 relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
             }
             this.onTouchDown(args)
+            this.doClick = true
         }
     }
 
     View.prototype.touchMoved = function (oldPoint, newPoint) {
-        if (this.onTouchMoved != null) {
+        if (this.onTouchMoved) {
             var args = {
                 oldPoint: oldPoint,
                 relativeOldPoint: { x: oldPoint.x - this.getLeft(), y: oldPoint.y - this.getTop() },
@@ -169,16 +172,22 @@ function saveBitmap(bmp) {
                 relativeNewPoint: { x: newPoint.x - this.getLeft(), y: newPoint.y - this.getTop() }
             }
             this.onTouchMoved(args)
+            this.doClick = false
         }
     }
 
     View.prototype.touchUp = function (point) {
-        if (this.onTouchUp != null) {
-            var args = {
-                point: point,
-                relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
-            }
+        var args = {
+            point: point,
+            relativePoint: { x: point.x - this.getLeft(), y: point.y - this.getTop() }
+        }
+        
+        if (this.onTouchUp) {
             this.onTouchUp(args)
+        }
+        
+        if (this.doClick && this.onClicked) {
+            this.onClicked(args)
         }
     }
     // Touch Events End
@@ -227,7 +236,6 @@ function saveBitmap(bmp) {
         this.pressed = false
         this.pressedColor = 0xFE52
         this.releasedColor = 0x3436
-        this.onClicked = null
 
         this.setSize(96, 32)
         this.setText(text)
@@ -280,10 +288,6 @@ function saveBitmap(bmp) {
     Button.prototype.touchUp = function (point) {
         this.pressed = false
         View.prototype.touchUp.call(this, point)
-
-        if (this.onClicked != null) {
-            this.onClicked(point)
-        }
     }
 })();
 
@@ -363,7 +367,10 @@ function saveBitmap(bmp) {
 
 (function () {
     UIManager = function () {
-        this.views = new Array()
+        this.pages = new Array()
+        this.currentPage = new View()
+        this.currentPage.setSize(240, 240)
+
         this.drawQueue = new Array()
         this.lastTouchedPoint = null
         this.lastTouchedView = null
@@ -400,26 +407,15 @@ function saveBitmap(bmp) {
         this.drawQueue = new Array()
 
         gfx.fillRectangle(lcd.getFB(), 0, 0, 0, 240, 240)
-        for (var i = 0; i < this.views.length; i++) {
-            var view = this.views[i]
-            this.drawView(view, view.location.x, view.location.y)
-        }
+        this.drawView(this.currentPage, 0, 0)
         lcd.update();
+        this.updateRequired = false
     }
 
     UIManager.prototype.pollKey = function () {
         while (true) {
             // Should do something here.
         }
-    }
-
-    UIManager.prototype.pollTouch = function () {
-        var mngr = this
-        setInterval(function () {
-            if (mngr.readTouch()) {
-                mngr.draw()
-            }
-        }, 10)
     }
 
     UIManager.prototype.readTouch = function () {
@@ -473,5 +469,19 @@ function saveBitmap(bmp) {
         }
 
         return false;
+    }
+
+    UIManager.prototype.requestUpdate = function () {
+        this.updateRequired = true
+    }
+
+    UIManager.Manager = new UIManager()
+
+    UIManager.pollScreen = function () {
+        setInterval(function () {
+            if (UIManager.Manager.readTouch() || UIManager.Manager.updateRequired) {
+                UIManager.Manager.draw()
+            }
+        }, 10)
     }
 })();
