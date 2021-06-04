@@ -1,3 +1,5 @@
+#pragma once
+
 void halLcdDrawDot(int16_t, int16_t);
 
 typedef struct hal_font_section_info_t {

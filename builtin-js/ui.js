@@ -31,12 +31,26 @@ function max(a, b) {
     }
 
     ui.Colors = {
-        white: 0xFFFF,
-        black: 0,
-        red: 0x1F,
-        greed: 0x7E0,
-        blue: 0xF7D8,
-        lightBlue: 0xFD86,
+        black: 0x0000,
+        navy: 0x000f,
+        darkgreen: 0x03e0,
+        darkcyan: 0x03ef,
+        maroon: 0x7800,
+        purple: 0x780f,
+        olive: 0x7be0,
+        lightgrey: 0xc618,
+        darkgrey: 0x7bef,
+        blue: 0x001f,
+        green: 0x07e0,
+        cyan: 0x07ff,
+        red: 0xf800,
+        magenta: 0xf81f,
+        yellow: 0xffe0,
+        white: 0xffff,
+        orange: 0xfd20,
+        greenyellow: 0xafe5,
+        pink: 0xfc18,
+
         transparent: ui.COLOR_TRANSPARENT
     }
 

@@ -5,6 +5,8 @@
 #include <assert.h>
 
 typedef uint8_t u8;
+typedef uint16_t u16;
+
 u8 dataBuf[1024];
 int dataBufPos;
 u8 lastCmd;
@@ -52,11 +54,16 @@ void spi_end() {
 
 }
 
+/*
 #define TFT_WIDTH  240
 #define TFT_HEIGHT 240
 #include "ST7789_Defines.h"
 void init()
 #include "ST7789_Init.h"
+*/
+
+
+#include "HX8347_Init.h"
 
 int main() {
     init();

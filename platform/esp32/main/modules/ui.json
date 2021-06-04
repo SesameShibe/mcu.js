@@ -1,8 +1,22 @@
 {
     "function": {
+        "setReg":[
+            "halLcdSetReg",
+            "void",
+            "u8",
+            "u8"
+        ],
         "init": [
             "halLcdInit",
             "void"
+        ],
+        "getTouchBuffer":[
+            "halLcdGetTouchBuffer",
+            "buf"
+        ],
+        "readTouch":[
+            "halLcdReadTouch",
+            "i32"
         ],
         "update": [
             "halLcdUpdate",

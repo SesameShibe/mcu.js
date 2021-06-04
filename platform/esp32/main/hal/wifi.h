@@ -22,9 +22,8 @@ static EventGroupHandle_t wifi_event_group;
 static void wifiEventHandler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
+    /*
     if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        printf("got ip:%s\n",ip4addr_ntoa(&event->ip_info.ip));
         retry_num = 0;
         xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
@@ -43,7 +42,7 @@ static void wifiEventHandler(void* arg, esp_event_base_t event_base,
         //pass
     } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
         //pass
-    }
+    }*/
 }
 
 bool hasStatus(i32 statusBit){
@@ -86,7 +85,7 @@ static bool wifiLowLevelInit(bool persistent){
         wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
         esp_err_t err = esp_wifi_init(&cfg);
         if(err){
-            printf("esp_wifi_init %d\n", err);
+            //printf("esp_wifi_init %d\n", err);
             return false;
         }
         if(!persistent){
@@ -222,7 +221,7 @@ int halWifiStaIsConnected(){
 int halWifiStaBegin()
 {
     if (!enableSTA(true)){
-        printf("STA enable failed!\n");
+        //printf("STA enable failed!\n");
         return false;
     }
     retry_num = 0; //reset
@@ -234,9 +233,9 @@ int halWifiStaBegin()
 void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    strncpy((char*) conf.sta.ssid, ssid, sizeof(conf.sta.ssid));
+    strncpy((char*) conf.sta.ssid, ssid, sizeof(conf.sta.ssid)-1);
     if (strcmp(pass,"undefined")) {
-        strncpy((char*) conf.sta.password, pass, sizeof(conf.sta.password));
+        strncpy((char*) conf.sta.password, pass, sizeof(conf.sta.password)-1);
     }
 
     wifi_config_t current_conf;
@@ -296,10 +295,10 @@ void halWifiApConfig(const char* ssid, const char* pass, uint32_t auth,
     wifi_auth_mode_t auth_mode = (wifi_auth_mode_t)auth;
     wifi_config_t conf;
     memset(&conf, 0, sizeof(wifi_config_t));
-    strncpy((char*) conf.ap.ssid, ssid, sizeof(conf.ap.ssid));
+    strncpy((char*) conf.ap.ssid, ssid, sizeof(conf.ap.ssid)-1);
     if (auth)
     {
-        strncpy((char*) conf.ap.password, pass, sizeof(conf.ap.password));
+        strncpy((char*) conf.ap.password, pass, sizeof(conf.ap.password)-1);
     }
     conf.ap.authmode = auth_mode;
     if (max)

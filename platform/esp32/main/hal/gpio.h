@@ -14,7 +14,7 @@ static void halGpioConfig(u32 pin, u32 mode, u32 pupd) {
 	gpio_config(&io_conf);
 }
 
-static void IRAM_ATTR halGpioWrite(u32 gpio_num, u32 level) {
+static inline void halGpioWrite(u32 gpio_num, u32 level) {
 	if (level) {
 		if (gpio_num < 32) {
 			GPIO.out_w1ts = (1 << gpio_num);
@@ -30,7 +30,7 @@ static void IRAM_ATTR halGpioWrite(u32 gpio_num, u32 level) {
 	}
 }
 
-static u32 IRAM_ATTR halGpioRead(u32 gpio_num) {
+static inline u32 halGpioRead(u32 gpio_num) {
 	if (gpio_num < 32) {
         return (GPIO.in >> gpio_num) & 0x1;
     } else {
