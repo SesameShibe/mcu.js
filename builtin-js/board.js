@@ -85,9 +85,10 @@ global.board.probe.push(function () {
             return 1;
         }
     }
-    ui.init()
+    lcd.init()
     board.bl.set(100)
     global.board.name = 't-watch'
+    os.initFont()
     return true
 });
 

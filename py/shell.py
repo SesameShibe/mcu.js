@@ -3,14 +3,18 @@ from __future__ import unicode_literals
 import binascii
 import codecs
 import serial
+import struct
 import sys
 import time
 import threading
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 
+from PIL import Image
+
 COM_PORT = 'COM6'
 ser = ''
+shotpath = '1.png'
 
 
 def getFileEncoding(path):
@@ -37,8 +41,17 @@ def recvLoop():
         try:
             char = reader.read(1)
             sys.stdout.write(char)
-        except err:
-            sys.stderr.write('['+binascii.b2a_hex(err.object[err.start:err.end])+']')
+        except UnicodeDecodeError as uerr:
+            if uerr.object == b'\xFB':
+                print('Saving screenshot... ')
+                head = ser.read(4)
+                width, height = struct.unpack('<HH', head)
+                buf = ser.read(width*height*2+4)
+                bmp = (width, height, buf)
+                savescreen(bmp)
+            else:
+                sys.stderr.write(
+                    '['+binascii.b2a_hex(err.object[err.start:err.end])+']')
 
 
 def runfile(fn):
@@ -47,6 +60,34 @@ def runfile(fn):
     writer = codecs.getwriter('utf-8')(ser)
     writer.write(data)
     ser.write(b'\xF8')
+
+
+def screenshot(path):
+    global shotpath
+    shotpath = path
+    ser.write(b'\nsaveBitmap(lcd.getFB());\n\xF8')
+
+
+def savescreen(bmp):
+    global shotpath
+    if not shotpath:
+        shotpath = '1.png'
+    w, h, buf = bmp
+    img = Image.new('RGB', (w, h))
+
+    for y in range(h):
+        for x in range(w):
+            index = (y * w + x) * 2
+            b1, b2 = buf[index], buf[index+1]
+            r = (((b1 & 0b11111000) >> 3) * 527 + 23) >> 6
+            g = ((((b1 & 0b00000111) << 3) | (
+                (b2 & 0b11100000) >> 5)) * 259 + 33) >> 6
+            b = ((b2 & 0b00011111) * 527 + 23) >> 6
+
+            img.putpixel((x, y), (r, g, b))
+
+    img.save(shotpath)
+    print(shotpath)
 
 
 def start():

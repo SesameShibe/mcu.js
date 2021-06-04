@@ -7,6 +7,8 @@ import zipfile
 import requests
 import platform
 
+from fnmatch import fnmatch
+
 sys.path.append('py')
 import gluecodegen
 import shell
@@ -23,26 +25,26 @@ PLATFORMS = {
             'esp-idf': {
                 'url': 'https://dl.espressif.com/dl/esp-idf/releases/esp-idf-v4.0.zip',
                 'version': 'v4.0',
-            # },
-            # 'esp32-arduino': {
-            #     'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
-            #     'version': '1.0.4',
-            #     'path': 'platform/esp32/components/arduino',
-            #     'patch': b'PK'
+                # },
+                # 'esp32-arduino': {
+                #     'url': 'https://mcujs.org/dl/arduino-esp32-1.0.4.zip',
+                #     'version': '1.0.4',
+                #     'path': 'platform/esp32/components/arduino',
+                #     'patch': b'PK'
             }
         }
     },
     'k210': {
         'toolchain': {
             'k210-standalone-sdk': {
-                'url':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-standalone-sdk-0.5.6.zip',
-                'version':'0.5.6',
+                'url': 'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-standalone-sdk-0.5.6.zip',
+                'version': '0.5.6',
             },
             'riscv64-toolchain': {
-                'url-linux':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-ubuntu-amd64-8.2.0-20190213.tar.gz',
-                'url-darwin':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-osx-mojave-8.2.0-20190213.tar.gz',
-                'url-windows':'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-win-amd64-8.2.0-20190213.zip',
-                'version':'20190213'
+                'url-linux': 'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-ubuntu-amd64-8.2.0-20190213.tar.gz',
+                'url-darwin': 'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-osx-mojave-8.2.0-20190213.tar.gz',
+                'url-windows': 'https://s3.cn-north-1.amazonaws.com.cn/dl.kendryte.com/documents/kendryte-toolchain-win-amd64-8.2.0-20190213.zip',
+                'version': '20190213'
             }
         }
     }
@@ -150,15 +152,23 @@ def dataToU8Array(d, arrName):
     return ret
 
 
+def walk(path, pattern='*.*'):
+    for root, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+            if fnmatch(filename, pattern):
+                yield os.path.join(root, filename)
+
+
 def generate():
     print('Generating header file gen_js.h from builtin-js directory.')
     js = ''
-    for fn in os.listdir('builtin-js'):
-        if (not fn.startswith('.')) and fn.endswith('.js'):
+    for fn in walk('builtin-js', '*.js'):
+        notdir = os.path.split(fn)[1]
+        if (not notdir.startswith('.')):
             print(fn)
-            with open('builtin-js/' + fn, 'rb') as f:
+            with open(fn, 'rb') as f:
                 d = f.read() + b'\x00'
-            js += dataToU8Array(d, 'js_%s' % fn.split('.')[0])
+            js += dataToU8Array(d, 'js_%s' % notdir.split('.')[0])
     tryMkdir('platform/esp32/main/__generated')
     with open('platform/esp32/main/__generated/gen_js.h', 'w') as f:
         f.write(js)
@@ -173,12 +183,14 @@ def build():
         generate()
         os.system('cd platform/esp32 && idf.py build')
 
+
 def flash():
     if isWindows():
         pass
     else:
         generate()
         os.system('cd platform/esp32 && idf.py flash')
+
 
 def startShellInEnvironment():
     if isWindows():
@@ -211,7 +223,7 @@ Available options:
 
 
 action = ''
-os.environ['ESPPORT'] = os.getcwd() + '/COM6' # set serial port name
+os.environ['ESPPORT'] = os.getcwd() + '/COM6'  # set serial port name
 os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + \
     PLATFORMS['esp32']['toolchain']['esp-idf']['version']
 os.environ['PATH'] += ':' + \

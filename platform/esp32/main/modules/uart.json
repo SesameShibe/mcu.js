@@ -17,6 +17,12 @@
             "i32",
             "str"
         ],
+        "writeBuf": [
+            "halUartWriteBuffer",
+            "void",
+            "i32",
+            "buf"
+        ],
         "writeByte": [
             "void",
             "i32",

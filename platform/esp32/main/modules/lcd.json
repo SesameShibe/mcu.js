@@ -1,0 +1,19 @@
+{
+    "function": {
+        "init": [
+            "halLcdInit",
+            "void"
+        ],
+        "update": [
+            "halLcdUpdate",
+            "void"
+        ],
+        "getFB": [
+            "halLcdGetFB",
+            "buf"
+        ]
+    },
+    "const": {
+        "COLOR_TRANSPARENT": "COLOR_TRANSPARENT"
+    }
+}

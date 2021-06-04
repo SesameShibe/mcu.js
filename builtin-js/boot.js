@@ -5,15 +5,15 @@ const global = this;
     nativePrint = print;
 
     global.interfacePrint = print;
-    global.print = function(data){
-        if (isCalling){
+    global.print = function (data) {
+        if (isCalling) {
             return nativePrint(data);
-        }else{
+        } else {
             isCalling = true;
             try {
                 interfacePrint(data);
             } catch (e) {
-                print('Unhandled error: ' + e) ;
+                print('Unhandled error: ' + e);
             }
             isCalling = false;
             return;
@@ -43,8 +43,31 @@ const global = this;
         if (loopCount <= 0) {
             loopCount = 1;
         }
-        intervalList.push([loopCount, handler, arg]);
+        for (var id = 0; id < Number.MAX_VALUE; id++) {
+            var idExists = false;
+            for (var i = 0; i < intervalList.length; i++) {
+                var t = intervalList[i];
+                if (t.id == id) {
+                    idExists = true;
+                    break;
+                }
+            }
+
+            if (!idExists) {
+                intervalList.push({ id: id, task: [loopCount, handler, arg] });
+                return id;
+            }
+        }
     };
+    global.clearInterval = function (id) {
+        for (var i = 0; i < intervalList.length; i++) {
+            var t = intervalList[i];
+            if (t.id == id) {
+                intervalList.splice(i)
+                break;
+            }
+        }
+    }
     function handleTimeouts() {
         while (true) {
             var i;
@@ -64,7 +87,7 @@ const global = this;
     }
     function handleIntervals() {
         for (var i = 0; i < intervalList.length; i++) {
-            var t = intervalList[i];
+            var t = intervalList[i].task;
             if ((periodCount % t[0]) == 0) {
                 t[1].call(global, t[2]);
             }
@@ -83,12 +106,12 @@ const global = this;
 function boot() {
     fs.mountSpiffs();
     //eval /spi/boot.js
-    if(fs.exists('/spi/boot.js')){
+    if (fs.exists('/spi/boot.js')) {
         var fd = fs.open("/spi/boot.js", fs.O_RDONLY);
-        var size = fs.lseek(fd,0,fs.SEEK_END);
-        fs.lseek(fd,0,fs.SEEK_SET)
+        var size = fs.lseek(fd, 0, fs.SEEK_END);
+        fs.lseek(fd, 0, fs.SEEK_SET)
         var buf = new Buffer(size);
-        fs.read(fd,buf,size);
+        fs.read(fd, buf, size);
         global.eval(buf.toString());
     }
     mainLoop();
