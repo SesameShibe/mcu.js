@@ -1,0 +1,42 @@
+{
+    "function": {
+        "init":[
+            "void"
+        ],
+        "run":[
+            "void"
+        ],
+        "lv_scr_act":[
+            "ptr"
+        ],
+        "lv_btn_create":[
+            "ptr",
+            "ptr"
+        ],
+        "lv_obj_set_size":[
+            "void",
+            "ptr",
+            "int",
+            "int"
+        ],
+        "lv_obj_set_pos":[
+            "void",
+            "ptr",
+            "int",
+            "int"
+        ],
+        "lv_obj_center":[
+            "void",
+            "ptr"
+        ],
+        "lv_label_create":[
+            "ptr",
+            "ptr"
+        ],
+        "lv_label_set_text":[
+            "void",
+            "ptr",
+            "str"
+        ]
+    }
+}

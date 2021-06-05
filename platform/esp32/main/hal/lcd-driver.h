@@ -13,65 +13,65 @@ spi_ll_clock_val_t lcdSpiClockReg;
 spi_ll_clock_val_t lcdXpt2046ClockReg;
 
 const u8 lcdInitCode[] = {
-    0x1A, 0x01, 0x02,  // cmd
-    0x1B, 0x01, 0x88,  // cmd
-    0x23, 0x01, 0x00,  // cmd
-    0x24, 0x01, 0xEE,  // cmd
-    0x25, 0x01, 0x15,  // cmd
-    0x2D, 0x01, 0x03,  // cmd
-    0x18, 0x01, 0x1E,  // cmd
-    0x19, 0x01, 0x01,  // cmd
-    0x01, 0x01, 0x00,  // cmd
-    0x1F, 0x01, 0x88,  // cmd
-    0xFF, 5,           // delay
-    0x1F, 0x01, 0x80,  // cmd
-    0xFF, 5,           // delay
-    0x1F, 0x01, 0x90,  // cmd
-    0xFF, 5,           // delay
-    0x1F, 0x01, 0xD0,  // cmd
-    0xFF, 5,           // delay
-    0x2F, 0x01, 0x00,  // cmd
-    0x17, 0x01, 0x05,  // cmd
-    0x16, 0x01, 0x70,  // cmd
-    0x36, 0x01, 0x09,  // cmd
-    0x29, 0x01, 0x31,  // cmd
-    0x71, 0x01, 0x1A,  // cmd
-    0x40, 0x01, 0x01,  // cmd
-    0x41, 0x01, 0x08,  // cmd
-    0x42, 0x01, 0x04,  // cmd
-    0x43, 0x01, 0x2D,  // cmd
-    0x44, 0x01, 0x30,  // cmd
-    0x45, 0x01, 0x3E,  // cmd
-    0x46, 0x01, 0x02,  // cmd
-    0x47, 0x01, 0x69,  // cmd
-    0x48, 0x01, 0x07,  // cmd
-    0x49, 0x01, 0x0E,  // cmd
-    0x4A, 0x01, 0x12,  // cmd
-    0x4B, 0x01, 0x14,  // cmd
-    0x4C, 0x01, 0x17,  // cmd
-    0x50, 0x01, 0x01,  // cmd
-    0x51, 0x01, 0x0F,  // cmd
-    0x52, 0x01, 0x12,  // cmd
-    0x53, 0x01, 0x3B,  // cmd
-    0x54, 0x01, 0x37,  // cmd
-    0x55, 0x01, 0x3E,  // cmd
-    0x56, 0x01, 0x16,  // cmd
-    0x57, 0x01, 0x7D,  // cmd
-    0x58, 0x01, 0x08,  // cmd
-    0x59, 0x01, 0x0B,  // cmd
-    0x5A, 0x01, 0x0D,  // cmd
-    0x5B, 0x01, 0x11,  // cmd
-    0x5C, 0x01, 0x18,  // cmd
-    0x5D, 0x01, 0xFF,  // cmd
-    0x1B, 0x01, 0x1A,  // cmd
-    0x1A, 0x01, 0x55,  // cmd
-    0x24, 0x01, 0x10,  // cmd
-    0x25, 0x01, 0x38,  // cmd
-    0x28, 0x01, 0x38,  // cmd
-    0xFF, 40,          // delay
-    0x28, 0x01, 0x3C,  // cmd
-    0x22, 0x00,        // cmd
-    0xFF, 0xFF         // FIN
+    0x1A, 0x01, 0x02, // cmd
+    0x1B, 0x01, 0x88, // cmd
+    0x23, 0x01, 0x00, // cmd
+    0x24, 0x01, 0xEE, // cmd
+    0x25, 0x01, 0x15, // cmd
+    0x2D, 0x01, 0x03, // cmd
+    0x18, 0x01, 0x1E, // cmd
+    0x19, 0x01, 0x01, // cmd
+    0x01, 0x01, 0x00, // cmd
+    0x1F, 0x01, 0x88, // cmd
+    0xFF, 5,          // delay
+    0x1F, 0x01, 0x80, // cmd
+    0xFF, 5,          // delay
+    0x1F, 0x01, 0x90, // cmd
+    0xFF, 5,          // delay
+    0x1F, 0x01, 0xD0, // cmd
+    0xFF, 5,          // delay
+    0x2F, 0x01, 0x00, // cmd
+    0x17, 0x01, 0x05, // cmd
+    0x16, 0x01, 0x70, // cmd
+    0x36, 0x01, 0x09, // cmd
+    0x29, 0x01, 0x31, // cmd
+    0x71, 0x01, 0x1A, // cmd
+    0x40, 0x01, 0x01, // cmd
+    0x41, 0x01, 0x08, // cmd
+    0x42, 0x01, 0x04, // cmd
+    0x43, 0x01, 0x2D, // cmd
+    0x44, 0x01, 0x30, // cmd
+    0x45, 0x01, 0x3E, // cmd
+    0x46, 0x01, 0x02, // cmd
+    0x47, 0x01, 0x69, // cmd
+    0x48, 0x01, 0x07, // cmd
+    0x49, 0x01, 0x0E, // cmd
+    0x4A, 0x01, 0x12, // cmd
+    0x4B, 0x01, 0x14, // cmd
+    0x4C, 0x01, 0x17, // cmd
+    0x50, 0x01, 0x01, // cmd
+    0x51, 0x01, 0x0F, // cmd
+    0x52, 0x01, 0x12, // cmd
+    0x53, 0x01, 0x3B, // cmd
+    0x54, 0x01, 0x37, // cmd
+    0x55, 0x01, 0x3E, // cmd
+    0x56, 0x01, 0x16, // cmd
+    0x57, 0x01, 0x7D, // cmd
+    0x58, 0x01, 0x08, // cmd
+    0x59, 0x01, 0x0B, // cmd
+    0x5A, 0x01, 0x0D, // cmd
+    0x5B, 0x01, 0x11, // cmd
+    0x5C, 0x01, 0x18, // cmd
+    0x5D, 0x01, 0xFF, // cmd
+    0x1B, 0x01, 0x1A, // cmd
+    0x1A, 0x01, 0x55, // cmd
+    0x24, 0x01, 0x10, // cmd
+    0x25, 0x01, 0x38, // cmd
+    0x28, 0x01, 0x38, // cmd
+    0xFF, 40,         // delay
+    0x28, 0x01, 0x3C, // cmd
+    0x22, 0x00,       // cmd
+    0xFF, 0xFF        // FIN
 
 };
 
@@ -145,37 +145,36 @@ void IRAM_ATTR halLcdWriteDat8(u8 dat) {
   LCD_SET_CS(1);
 }
 
-static ALWAYS_INLINE u32 convertPixelByteOrder(u32 src) {
-  uint8_t* d = (uint8_t*)&(src);
+static ALWAYS_INLINE u32 convertPixelByteOrder32(u32 src) {
+  uint8_t *d = (uint8_t *)&(src);
   return d[1] | (d[0] << 8) | (d[3] << 16) | (d[2] << 24);
 }
 
-static ALWAYS_INLINE  void halLcdWritePixels(u32* buf, u32 lenInU32) {
+// Assuming the processor supports unaligned u32 read
+static ALWAYS_INLINE void halLcdWritePixels(u16 *buf, u32 u16Len) {
   const int maxSendU32ForOnce = 16;
   int i;
+  u32 *u32Buf = (u32 *)buf;
 
   LCD_SPI_HW.mosi_dlen.val = (maxSendU32ForOnce * 32) - 1;
   LCD_SPI_HW.miso_dlen.val = 0;
-  while (lenInU32 >= maxSendU32ForOnce) {
+  while (u16Len >= maxSendU32ForOnce * 2) {
     for (i = 0; i < maxSendU32ForOnce; i++) {
-      LCD_SPI_HW.data_buf[i] = convertPixelByteOrder(buf[i]);
+      LCD_SPI_HW.data_buf[i] = convertPixelByteOrder32(u32Buf[i]);
     }
     LCD_SPI_HW.cmd.usr = 1;
-    lenInU32 -= maxSendU32ForOnce;
-    buf += maxSendU32ForOnce;
+    u16Len -= maxSendU32ForOnce * 2;
+    u32Buf += maxSendU32ForOnce;
     while (LCD_SPI_HW.cmd.usr)
       ;
   }
-  for (i = 0; i < lenInU32; i++) {
-    LCD_SPI_HW.mosi_dlen.val = (lenInU32 * 32) - 1;
-    LCD_SPI_HW.data_buf[i] = convertPixelByteOrder(buf[i]);
-    LCD_SPI_HW.cmd.usr = 1;
-    while (LCD_SPI_HW.cmd.usr)
-      ;
+  buf = (u16 *)u32Buf;
+  for (i = 0; i < u16Len; i++) {
+    halLcdSpiWrite(convertPixelByteOrder32(buf[i]), 16);
   }
 }
 
-void halLcdExecuteInitCode(const u8* code) {
+void halLcdExecuteInitCode(const u8 *code) {
   int i;
 
   while (1) {
@@ -205,11 +204,9 @@ static void halLcdWriteReg(u8 cmd, u8 data) {
 
 void halLcdSetReg(u8 cmd, u8 data) { halLcdWriteReg(cmd, data); }
 
-void IRAM_ATTR halLcdUpdate() {
-  u16 x1 = 0, x2 = x1 + LCD_WIDTH - 1;
-  u16 y1 = 0, y2 = y1 + LCD_HEIGHT - 1;
+void IRAM_ATTR halLcdUpdate(u16 x1, u16 x2, u16 y1, u16 y2, u16 *buf) {
 
-  halLcdWriteReg(0x02, x1 >> 8);  // Column address set
+  halLcdWriteReg(0x02, x1 >> 8); // Column address set
   halLcdWriteReg(0x03, x1 & 0xff);
   halLcdWriteReg(0x04, x2 >> 8);
   halLcdWriteReg(0x05, x2 & 0xff);
@@ -223,14 +220,18 @@ void IRAM_ATTR halLcdUpdate() {
 
   LCD_SET_DC(1);
   LCD_SET_CS(0);
-  halLcdWritePixels((u32*)lcdFB, LCD_WIDTH * LCD_HEIGHT * 2 / 4);
+  halLcdWritePixels(buf, (x2 - x1 + 1) * (y2 - y1 + 1));
   LCD_SET_CS(1);
+}
+
+void halLcdUpdateAll() {
+  halLcdUpdate(0, LCD_WIDTH - 1, 0, LCD_HEIGHT - 1, lcdFB);
 }
 
 static int32_t touchBuffer[4];
 
 JS_BUFFER halLcdGetTouchBuffer() {
-  JS_BUFFER ret = {(u8*)touchBuffer, sizeof(touchBuffer)};
+  JS_BUFFER ret = {(u8 *)touchBuffer, sizeof(touchBuffer)};
   return ret;
 }
 
@@ -246,9 +247,9 @@ int32_t halLcdReadTouch() {
   halLcdWrite8(0xB3 /* Z1 */);
   int z1 = halLcdXchg16(0xC3 /* Z2 */) >> 3;
   int z2 = halLcdXchg16(0x93 /* X */) >> 3;
-  halLcdXchg16(0x93 /* X */);  // dummy X measure, 1st is always noisy
+  halLcdXchg16(0x93 /* X */); // dummy X measure, 1st is always noisy
   x[0] = halLcdXchg16(0xD3 /* Y */) >> 3;
-  y[0] = halLcdXchg16(0x93 /* X */) >> 3;  // make 3 x-y measurements
+  y[0] = halLcdXchg16(0x93 /* X */) >> 3; // make 3 x-y measurements
   x[1] = halLcdXchg16(0xD3 /* Y */) >> 3;
   y[1] = halLcdXchg16(0x93 /* X */) >> 3;
   x[2] = halLcdXchg16(0xD3 /* Y */) >> 3;
@@ -269,7 +270,7 @@ int32_t halLcdReadTouch() {
   return isTouched;
 }
 
-void halLcdDriverInit() {
+void halLcdInit() {
   printf("lcd driver init...\n");
   spi_bus_config_t cfg = {.mosi_io_num = LCD_PIN_MOSI,
                           .miso_io_num = -1,
@@ -280,11 +281,11 @@ void halLcdDriverInit() {
                           .flags = 0,
                           .intr_flags = 0};
   spi_device_interface_config_t devcfg = {
-      .clock_speed_hz = LCD_SPI_CLOCK,  // Clock
-      .mode = 0,                        // SPI mode 0
-      .spics_io_num = -1,               // CS pin
-      .queue_size = 7,  // We want to be able to queue 7 transactions at a time
-      .pre_cb = NULL,   // Specify pre-transfer callback to handle D/C line
+      .clock_speed_hz = LCD_SPI_CLOCK, // Clock
+      .mode = 0,                       // SPI mode 0
+      .spics_io_num = -1,              // CS pin
+      .queue_size = 7, // We want to be able to queue 7 transactions at a time
+      .pre_cb = NULL,  // Specify pre-transfer callback to handle D/C line
   };
   esp_err_t ret = spi_bus_initialize(LCD_SPI_BUS, &cfg, 1);
   ESP_ERROR_CHECK(ret);
@@ -303,18 +304,18 @@ void halLcdDriverInit() {
 
   /* Do a dummy transmission to config the freq settings */
   spi_transaction_t t;
-  memset(&t, 0, sizeof(t));  // Zero out the transaction
+  memset(&t, 0, sizeof(t)); // Zero out the transaction
   t.length = 8;
   t.flags = SPI_TRANS_USE_TXDATA;
   t.tx_data[0] = 0;
-  ret = spi_device_polling_transmit(lcdSpiDev, &t);  // Transmit!
+  ret = spi_device_polling_transmit(lcdSpiDev, &t); // Transmit!
   ESP_ERROR_CHECK(ret);
 
   spi_ll_master_cal_clock(SPI_LL_PERIPH_CLK_FREQ, LCD_SPI_CLOCK, 128,
                           &lcdSpiClockReg);
   spi_ll_master_cal_clock(SPI_LL_PERIPH_CLK_FREQ, LCD_XPT2046_CLOCK, 128,
                           &lcdXpt2046ClockReg);
-  printf("%08x %08x\n", lcdSpiClockReg, lcdXpt2046ClockReg);
+  printf("spi clock reg: %08x %08x\n", lcdSpiClockReg, lcdXpt2046ClockReg);
   LCD_SPI_HW.clock.val = lcdSpiClockReg;
 
   LCD_SET_CS(1);
@@ -323,6 +324,5 @@ void halLcdDriverInit() {
 
   halLcdExecuteInitCode(lcdInitCode);
   memset(lcdFB, 0x0f, LCD_WIDTH * LCD_HEIGHT * 2);
-  halLcdUpdate();
   halGpioWrite(LCD_PIN_BL, 1);
 }

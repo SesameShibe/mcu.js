@@ -16,6 +16,7 @@ TYPE_RULES = {
     'bool': ('int ', 'duk_to_boolean', 'duk_push_boolean'),
     'str': ('const char *', 'duk_to_string', 'duk_push_string'),
     'buf': ('JS_BUFFER ', 'duk_get_buffer_data', ''),
+    'ptr': ('void*', 'duk_get_pointer', 'duk_push_pointer'),
 }
 
 
@@ -245,10 +246,13 @@ def genModule(moduleDict):
         typeList = funcDict[funcName]
         targetFuncName = 'hal%s%s' % (
             camelFormat(MODULE_NAME), camelFormat(funcName))
+        if funcName[:3] == "lv_":
+            targetFuncName = funcName
         if not typeList[0] in TYPE_RULES:
             # the first item is the function name
             targetFuncName = typeList[0]
             typeList = typeList[1:]
+        
         ret += (genFunction(funcName, targetFuncName, typeList))
     ret += (genRegisterCode(moduleDict))
     return ret
