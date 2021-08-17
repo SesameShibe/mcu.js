@@ -38,16 +38,19 @@ static ALWAYS_INLINE u8 i2cGpioRead(u32 mask) {
 #define GET_SDA() i2cGpioRead(i2cBus[busID].maskSDA)*/
 
 void halI2cStart(u8 busID) {
-    SWI2C_DELAY;
 	SET_SDA(1);
-	SET_SDA(0);
+	//SWI2C_DELAY;
+	SET_SCL(1);
 	SWI2C_DELAY;
+	SET_SDA(0);
+	//SWI2C_DELAY;
 	SET_SCL(0);
+	SWI2C_DELAY;
 }
 
 void halI2cStop(u8 busID) {
 	SET_SDA(0);
-	SWI2C_DELAY;
+	//SWI2C_DELAY;
 	SET_SCL(1);
 	SWI2C_DELAY;
 	SET_SDA(1);
@@ -56,20 +59,22 @@ void halI2cStop(u8 busID) {
 
 static void halI2cWriteBit(u8 busID, u8 bit) {
 	SET_SDA(bit);
-	SWI2C_DELAY;
+	//SWI2C_DELAY;
 	SET_SCL(1);
 	SWI2C_DELAY;
 	SET_SCL(0);
+	SWI2C_DELAY;
 }
 
 static u8 halI2cReadBit(u8 busID) {
 	SET_SDA(1);
-	SWI2C_DELAY;
+	//SWI2C_DELAY;
 	SET_SCL(1);
 	SWI2C_DELAY;
 	u8 ret = GET_SDA();
-	SWI2C_DELAY;
+	//SWI2C_DELAY;
 	SET_SCL(0);
+	SWI2C_DELAY;
     return ret;
 }
 
