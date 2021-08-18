@@ -1,129 +1,138 @@
 #pragma once
+#include "esp_partition.h"
+#include "global.h"
+#include "lcd-driver.h"
 
-void halLcdDrawDot(int16_t, int16_t);
+spi_flash_mmap_handle_t fontMmapHandle;
 
-typedef struct hal_font_section_info_t {
-	uint16_t codeStart;
-	uint16_t codeEnd;
-	uint8_t charWidth;
-	uint8_t charHeight;
-	uint16_t glyphEntrySize;
-	uint32_t dataOffset;
-} hal_font_section_info_t;
+u16 fbPosX;
+u16 fbPosY;
+u16 fbFgColor;
 
-typedef struct hal_font_t {
-	uint32_t magic; // "FONT"
-	uint16_t sectionCount;
-	uint16_t version;
-} hal_font_t;
+typedef struct _FB_FONT {
+  int valid;
+  int charWidth;
+  int charHeight;
+  int charDataSize;
+  int pageSize;
+  u8 *pData;
+  u8 *pIndex;
+  u8 *pCharData;
+} FB_FONT;
 
-typedef struct hal_icon_font_t {
-	int32_t magic; // "ICON"
-	int32_t sectionSize;
-	int16_t entryCount;
-	int8_t width;
-	int8_t height;
-	int32_t entrySize;
-} hal_icon_font_t;
+FB_FONT fbFontAscii16;
+FB_FONT fbFontCJK16;
 
-typedef struct hal_font_glyph_t {
-	uint16_t width;
-	uint16_t height;
-	uint8_t* data;
-} hal_font_glyph_t;
+FB_FONT *fbCurrentFont;
 
-static hal_font_t* font;
-static hal_font_section_info_t* sections;
+static inline void fbSetP(u16 x, u16 y, u16 v) { gfx.drawPixel(x, y, v); }
 
-static hal_icon_font_t* iconFont;
-static uint32_t* iconIds;
+static void fbInitFont() {
+  FB_FONT *pFont = &fbFontCJK16;
+  const void *mmapedAddr = 0;
 
-#define TEXT_LINE_HEIGHT 16
 
-static hal_font_section_info_t* halFontGetSection(uint16_t c) {
-	hal_font_section_info_t* section = sections;
+  memset(pFont, 0, sizeof(FB_FONT));
+  auto part = esp_partition_find_first((esp_partition_type_t)0x40,
+                                       (esp_partition_subtype_t)0, "font");
+  auto ret = esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA,
+                                &mmapedAddr, &fontMmapHandle);
+  if (ret != 0) {
+    printf("mmap font failed...\n");
+    return;
+  }
+  pFont->valid = 1;
+  pFont->charWidth = 16;  //*(u8*)(pFont + 14);
+  pFont->charHeight = 15; //*(u8*)(pFont + 15);
+  pFont->charDataSize = 1 + ((pFont->charWidth + 7) / 8) * pFont->charHeight;
+  pFont->pageSize = pFont->charDataSize * 256;
+  pFont->pData = (u8 *)mmapedAddr;
+  pFont->pIndex = pFont->pData  + 16;
+  pFont->pCharData = pFont->pIndex + 256;
 
-	for (int i = 0; i < font->sectionCount; i++) {
-		if (c >= section->codeStart && c <= section->codeEnd)
-			return section;
-		section = &sections[i];
-	}
-
-	return NULL;
+  fbCurrentFont = pFont;
 }
 
-hal_font_glyph_t halFontGetGlyph(uint16_t c) {
-	hal_font_glyph_t glyph;
-	hal_font_section_info_t* section = halFontGetSection(c);
+static int fbDrawUnicodeRune(u32 rune) {
+  if (!fbCurrentFont) {
+    return 0;
+  }
+  int fontW = fbCurrentFont->charWidth;
+  int fontH = fbCurrentFont->charHeight;
+  int fontCharSize = fbCurrentFont->charDataSize;
+  int fontPageSize = fbCurrentFont->pageSize;
 
-	memset(&glyph, 0, sizeof(hal_font_glyph_t));
+  int screenW = gfx.width();
+  int screenH = gfx.height();
+  rune = (u16)(rune);
+  if (rune == '\n') {
+    fbPosY += fontH + 1;
+    fbPosX = 0;
+    return 0;
+  }
+  u8 pgOffset = fbCurrentFont->pIndex[rune >> 8];
+  if (pgOffset == 0xFF) {
+    return 0;
+  }
+  u8 *ptr = fbCurrentFont->pCharData + fontPageSize * pgOffset +
+            fontCharSize * (rune & 0xff);
+  u8 width = *ptr;
+  ptr++;
 
-	if (section != NULL) {
-		glyph.data = (uint8_t*) (&((uint8_t*) font)[0] +
-		                         (section->dataOffset + (section->glyphEntrySize * (c - section->codeStart))));
-		glyph.width = section->charWidth;
-		glyph.height = section->charHeight;
-	}
-
-	return glyph;
+  if (fbPosX + width >= screenW) {
+    fbPosY += fontH + 1;
+    fbPosX = 0;
+  }
+  if (fbPosY + fontH >= screenH) {
+    return 0;
+  }
+  for (u8 y = 0; y < fontH; y++) {
+    for (u8 x = 0; x < width; x++) {
+      u8 pix = ptr[y * 2 + x / 8] & (1 << (x % 8));
+      if (pix) {
+        fbSetP(fbPosX + x, fbPosY + y, 1);
+      }
+    }
+  }
+  fbPosX += width + 1;
+  if (fbPosX >= screenW) {
+    fbPosY += fontH + 1;
+    fbPosX = 0;
+  }
+  return width;
 }
 
-hal_font_glyph_t halFontGetIcon(uint32_t id) {
-	int32_t low = 0, high = iconFont->entryCount - 1;
-	int32_t iconIndex = -1;
-	hal_font_glyph_t glyph;
-
-	memset(&glyph, 0, sizeof(hal_font_glyph_t));
-
-	while (low <= high) {
-		iconIndex = (low + high) / 2;
-		if (iconIds[iconIndex] > id) {
-			high = iconIndex - 1;
-		} else if (iconIds[iconIndex] < id) {
-			low = iconIndex + 1;
-		} else {
-			break;
-		}
-	}
-
-	if (low <= high) {
-		glyph.data = (((uint8_t*) iconFont) + sizeof(hal_icon_font_t) + (iconFont->entryCount * 4) +
-		              (iconFont->entrySize * iconIndex));
-		glyph.width = iconFont->width;
-		glyph.height = iconFont->height;
-	}
-
-	return glyph;
-}
-
-void halFontInit() {
-	const void* font_partition;
-	spi_flash_mmap_handle_t handle;
-	const esp_partition_t* part =
-	    esp_partition_find_first((esp_partition_type_t) 64, (esp_partition_subtype_t) 0, "font");
-	esp_err_t error = esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA, &font_partition, &handle);
-
-	ESP_ERROR_CHECK(error);
-
-	iconFont = (hal_icon_font_t*) font_partition;
-	iconIds = (uint32_t*) (((uint8_t*) font_partition) + sizeof(hal_icon_font_t));
-	printf("icon magic: %x\n"
-	       "icon size: 0x%x\n",
-	       iconFont->magic, iconFont->sectionSize);
-
-	font = (hal_font_t*) (((uint8_t*) font_partition) + iconFont->sectionSize);
-	sections = (hal_font_section_info_t*) (((uint8_t*) font_partition) + iconFont->sectionSize + 8);
-
-	printf("Font partition address > 0x%x\n", part->address);
-	printf("Font partition size > 0x%x\n", part->size);
-	printf("Magic %x\nVersion:%x\n", font->magic, font->version);
-	printf("First section info:\n"
-	       "    code start=0x%x\n"
-	       "    code end=0x%x\n"
-	       "    char width=0x%x\n"
-	       "    char height=0x%x\n"
-	       "    entry size=0x%x\n"
-	       "    data offset=0x%x\n",
-	       sections->codeStart, sections->codeEnd, sections->charWidth, sections->charHeight, sections->glyphEntrySize,
-	       sections->dataOffset);
+static void fbDrawUtf8String(const char *utf8Str) {
+  u8 *p = (u8 *)utf8Str;
+  u16 rune = 0;
+  while (*p) {
+    rune = 0;
+    u8 byte1 = *p;
+    p++;
+    if ((byte1 & 0x80) == 0) {
+      rune = byte1;
+    } else {
+      u8 byte2 = *p;
+      p++;
+      if (byte2 == 0) {
+        break;
+      }
+      if ((byte1 & 0xE0) == 0xC0) {
+        rune = ((byte1 & 0x1F) << 6) | (byte2 & 0x3F);
+      } else {
+        u8 byte3 = *p;
+        p++;
+        if (byte3 == 0) {
+          break;
+        }
+        if ((byte1 & 0xf0) == 0xE0) {
+          rune =
+              ((byte1 & 0x0F) << 12) | ((byte2 & 0x3F) << 6) | (byte3 & 0x3F);
+        } else {
+          break;
+        }
+      }
+    }
+    fbDrawUnicodeRune(rune);
+  }
 }

@@ -18,10 +18,6 @@
         ],
         "reboot": [
             "u32"
-        ],
-        "initFont": [
-            "halFontInit",
-            "void"
         ]
     }
 }

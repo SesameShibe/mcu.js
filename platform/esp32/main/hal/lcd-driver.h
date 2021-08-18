@@ -2,98 +2,30 @@
 
 #include "driver/spi_master.h"
 #include "esp_partition.h"
-#include "font.h"
 #include "global.h"
 #include "gpio.h"
 #include "hal/spi_ll.h"
 
-#define LCD_SPI_CLOCK (20000000)
-#define LCD_XPT2046_CLOCK (1000)
-spi_ll_clock_val_t lcdSpiClockReg;
-spi_ll_clock_val_t lcdXpt2046ClockReg;
+#define LCD_SPI_CLOCK (1000000)
+#define LCD_COLOR_WHITE (1)
+#define LCD_COLOR_BLACK (0)
+#define LCD_COLOR_INVERSE (2)
 
-const u8 lcdInitCode[] = {
-    0x1A, 0x01, 0x02, // cmd
-    0x1B, 0x01, 0x88, // cmd
-    0x23, 0x01, 0x00, // cmd
-    0x24, 0x01, 0xEE, // cmd
-    0x25, 0x01, 0x15, // cmd
-    0x2D, 0x01, 0x03, // cmd
-    0x18, 0x01, 0x1E, // cmd
-    0x19, 0x01, 0x01, // cmd
-    0x01, 0x01, 0x00, // cmd
-    0x1F, 0x01, 0x88, // cmd
-    0xFF, 5,          // delay
-    0x1F, 0x01, 0x80, // cmd
-    0xFF, 5,          // delay
-    0x1F, 0x01, 0x90, // cmd
-    0xFF, 5,          // delay
-    0x1F, 0x01, 0xD0, // cmd
-    0xFF, 5,          // delay
-    0x2F, 0x01, 0x00, // cmd
-    0x17, 0x01, 0x05, // cmd
-    0x16, 0x01, 0x70, // cmd
-    0x36, 0x01, 0x09, // cmd
-    0x29, 0x01, 0x31, // cmd
-    0x71, 0x01, 0x1A, // cmd
-    0x40, 0x01, 0x01, // cmd
-    0x41, 0x01, 0x08, // cmd
-    0x42, 0x01, 0x04, // cmd
-    0x43, 0x01, 0x2D, // cmd
-    0x44, 0x01, 0x30, // cmd
-    0x45, 0x01, 0x3E, // cmd
-    0x46, 0x01, 0x02, // cmd
-    0x47, 0x01, 0x69, // cmd
-    0x48, 0x01, 0x07, // cmd
-    0x49, 0x01, 0x0E, // cmd
-    0x4A, 0x01, 0x12, // cmd
-    0x4B, 0x01, 0x14, // cmd
-    0x4C, 0x01, 0x17, // cmd
-    0x50, 0x01, 0x01, // cmd
-    0x51, 0x01, 0x0F, // cmd
-    0x52, 0x01, 0x12, // cmd
-    0x53, 0x01, 0x3B, // cmd
-    0x54, 0x01, 0x37, // cmd
-    0x55, 0x01, 0x3E, // cmd
-    0x56, 0x01, 0x16, // cmd
-    0x57, 0x01, 0x7D, // cmd
-    0x58, 0x01, 0x08, // cmd
-    0x59, 0x01, 0x0B, // cmd
-    0x5A, 0x01, 0x0D, // cmd
-    0x5B, 0x01, 0x11, // cmd
-    0x5C, 0x01, 0x18, // cmd
-    0x5D, 0x01, 0xFF, // cmd
-    0x1B, 0x01, 0x1A, // cmd
-    0x1A, 0x01, 0x55, // cmd
-    0x24, 0x01, 0x10, // cmd
-    0x25, 0x01, 0x38, // cmd
-    0x28, 0x01, 0x38, // cmd
-    0xFF, 40,         // delay
-    0x28, 0x01, 0x3C, // cmd
-    0x22, 0x00,       // cmd
-    0xFF, 0xFF        // FIN
-
-};
-
-#define LCD_PIN_DC (12)
-#define LCD_PIN_CS (5)
+#define LCD_PIN_RSTN (27)
+#define LCD_PIN_DC (26)
+#define LCD_PIN_CS (15)
 #define LCD_PIN_SCLK (18)
 #define LCD_PIN_MOSI (23)
-#define LCD_PIN_BL (13)
-#define LCD_PIN_XPT2046_CS (4)
 #define LCD_PIN_MISO (19)
 
-#define LCD_WIDTH (320)
-#define LCD_HEIGHT (240)
-#define LCD_CMD_CASET 0x02
-#define LCD_CMD_PASET 0x06
-#define LCD_CMD_RAMWR 0x22
+#define LCD_WIDTH (128)
+#define LCD_HEIGHT (64)
 
-EXT_RAM_ATTR u16 lcdFB[320 * 240];
+u8 lcdFB[(LCD_WIDTH * LCD_HEIGHT) / 8];
 
 #define LCD_SET_CS(v) halGpioWrite(LCD_PIN_CS, (v))
 #define LCD_SET_DC(v) halGpioWrite(LCD_PIN_DC, (v))
-#define LCD_SET_XPT2046_CS(v) halGpioWrite(LCD_PIN_XPT2046_CS, (v))
+#define LCD_SET_RSTN(v) halGpioWrite(LCD_PIN_RSTN, (v))
 
 #define LCD_SPI_BUS SPI3_HOST
 #ifdef CONFIG_IDF_TARGET_ESP32S2
@@ -113,216 +45,209 @@ static ALWAYS_INLINE void halLcdSpiWrite(u32 dat, u8 bitlen) {
     ;
 }
 
-static void halLcdWrite8(u8 dat) { halLcdSpiWrite(dat, 8); }
-
-static u16 halLcdXchg16(u16 dat) {
-  LCD_SPI_HW.mosi_dlen.usr_mosi_dbitlen = 15;
-  LCD_SPI_HW.miso_dlen.usr_miso_dbitlen = 15;
-  LCD_SPI_HW.data_buf[0] = dat;
-
-  LCD_SPI_HW.cmd.usr = 1;
-  while (LCD_SPI_HW.cmd.usr)
-    ;
-  dat = LCD_SPI_HW.data_buf[0];
-  /*
-  if (!LCD_SPI_HW.ctrl.rd_bit_order) {
-    dat = (dat >> 8) | (dat << 8);
-  }*/
-  return dat;
+/* Send data to the LCD. Uses spi_device_polling_transmit, which waits until the
+ * transfer is complete.
+ *
+ * Since data transactions are usually small, they are handled in polling
+ * mode for higher speed. The overhead of interrupt transactions is more than
+ * just waiting for the transaction to complete.
+ */
+void spiWriteBuf(spi_device_handle_t spi, const uint8_t *data, int len) {
+  esp_err_t ret;
+  spi_transaction_t t;
+  if (len == 0)
+    return;                 // no need to send anything
+  memset(&t, 0, sizeof(t)); // Zero out the transaction
+  t.length = len * 8;       // Len is in bytes, transaction length is in bits.
+  t.tx_buffer = data;       // Data
+  t.user = (void *)1;       // D/C needs to be set to 1
+  ret = spi_device_polling_transmit(spi, &t); // Transmit!
+  assert(ret == ESP_OK);                      // Should have had no issues.
 }
 
-void IRAM_ATTR halLcdWriteCmd8(u8 dat) {
+static void halLcdWrite8(u8 dat) { spiWriteBuf(lcdSpiDev, &dat, 1); }
+
+void halLcdWriteCmd8(u8 dat) {
   LCD_SET_DC(0);
   LCD_SET_CS(0);
-  halLcdSpiWrite(dat, 8);
+  halLcdWrite8(dat);
   LCD_SET_CS(1);
 }
 
-void IRAM_ATTR halLcdWriteDat8(u8 dat) {
+void halLcdWriteDat8(u8 dat) {
   LCD_SET_DC(1);
   LCD_SET_CS(0);
-  halLcdSpiWrite(dat, 8);
+  halLcdWrite8(dat);
   LCD_SET_CS(1);
 }
 
-static ALWAYS_INLINE u32 convertPixelByteOrder32(u32 src) {
-  uint8_t *d = (uint8_t *)&(src);
-  return d[1] | (d[0] << 8) | (d[3] << 16) | (d[2] << 24);
-}
+void halLcdUpdate() {
+  const int bankSize = LCD_WIDTH * 8 / 8;
 
-// Assuming the processor supports unaligned u32 read
-static ALWAYS_INLINE void halLcdWritePixels(u16 *buf, u32 u16Len) {
-  const int maxSendU32ForOnce = 16;
-  int i;
-  u32 *u32Buf = (u32 *)buf;
-
-  LCD_SPI_HW.mosi_dlen.val = (maxSendU32ForOnce * 32) - 1;
-  LCD_SPI_HW.miso_dlen.val = 0;
-  while (u16Len >= maxSendU32ForOnce * 2) {
-    for (i = 0; i < maxSendU32ForOnce; i++) {
-      LCD_SPI_HW.data_buf[i] = convertPixelByteOrder32(u32Buf[i]);
-    }
-    LCD_SPI_HW.cmd.usr = 1;
-    u16Len -= maxSendU32ForOnce * 2;
-    u32Buf += maxSendU32ForOnce;
-    while (LCD_SPI_HW.cmd.usr)
-      ;
-  }
-  buf = (u16 *)u32Buf;
-  for (i = 0; i < u16Len; i++) {
-    halLcdSpiWrite(convertPixelByteOrder32(buf[i]), 16);
+  for (int i = 0; i < 8; i++) {
+    halLcdWriteCmd8(0xb0 + i);
+    halLcdWriteCmd8(0x00);
+    halLcdWriteCmd8(0x10);
+    LCD_SET_DC(1);
+    LCD_SET_CS(0);
+    spiWriteBuf(lcdSpiDev, lcdFB + bankSize * i, bankSize);
+    LCD_SET_CS(1);
   }
 }
 
-void halLcdExecuteInitCode(const u8 *code) {
-  int i;
+const u8 lcd_init_table[] = {
 
-  while (1) {
-    u8 opCode = code[0];
-    u8 datLen = code[1];
-    if (opCode == 0xFF) {
-      if (datLen == 0xFF) {
-        break;
-      } else {
-        halOsSleepMs(datLen);
-      }
-      code += 2;
-    } else {
-      halLcdWriteCmd8(opCode);
-      for (i = 0; i < datLen; i++) {
-        halLcdWriteDat8(code[2 + i]);
-      }
-      code += 2 + datLen;
-    }
+    0xFD, // Set Command Lock
+    0X12, //   Default => 0x12
+          //     0x12 => Driver IC interface is unlocked from entering command.
+          //     0x16 => All Commands are locked except 0xFD.
+
+    0XAE, // Set Display On/Off
+          //   Default => 0xAE
+          //     0xAE => Display Off
+          //     0xAF => Display On
+
+    0xD5, // Set Display Clock Divide Ratio / Oscillator Frequency
+    0X30, // Set Clock as 116 Frames/Sec
+          //   Default => 0x70
+          //     D[3:0] => Display Clock Divider
+          //     D[7:4] => Oscillator Frequency
+
+    0xA8, // Set Multiplex Ratio
+    0X37, //   Default => 0x3F (1/56 Duty)
+
+    0xD3, // Set Display Offset
+    0X08, //   Default => 0x00
+
+    0x40, // Set Mapping RAM Display Start Line (0x00~0x3F)
+          //   Default => 0x40 (0x00)
+
+    0xA1, // Set SEG/Column Mapping (0xA0/0xA1)
+          //   Default => 0xA0
+          //     0xA0 => Column Address 0 Mapped to SEG0
+          //     0xA1 => Column Address 0 Mapped to SEG127
+
+    0xC8, // Set COM/Row Scan Direction (0xC0/0xC8)
+          //   Default => 0xC0
+          //     0xC0 => Scan from COM0 to 63
+          //     0xC8 => Scan from COM63 to 0
+
+    0xDA, // Set COM Pins Hardware Configuration
+    0x12, //   Default => 0x12
+          //     Alternative COM Pin Configuration
+          //     Disable COM Left/Right Re-Map
+
+    0x81, // Set SEG Output Current
+    0x8F, // Set Contrast Control for Bank 0
+
+    0xD9, // Set Pre-Charge as 2 Clocks & Discharge as 5 Clocks
+    0x25, //   Default => 0x22 (2 Display Clocks [Phase 2] / 2 Display Clocks
+          //   [Phase 1])
+          //     D[3:0] => Phase 1 Period in 1~15 Display Clocks
+          //     D[7:4] => Phase 2 Period in 1~15 Display Clocks
+
+    0xDB, // Set VCOMH Deselect Level
+    0x34, //   Default => 0x34 (0.78*VCC)
+
+    0xA4, // Set Entire Display On / Off
+          //   Default => 0xA4
+          //     0xA4 => Normal Display
+          //     0xA5 => Entire Display On
+
+    0xA6, // Set Inverse Display On/Off
+          //   Default => 0xA6
+          //     0xA6 => Normal Display
+          //     0xA7 => Inverse Display On
+
+    0XAF, // Display On (0xAE/0xAF)
+};
+
+#include "Adafruit_GFX.h"
+class MyLcdGfx : public Adafruit_GFX {
+public:
+  void drawPixel(int16_t x, int16_t y, uint16_t color);
+  MyLcdGfx() : Adafruit_GFX(LCD_WIDTH, LCD_HEIGHT) {}
+};
+
+void IRAM_ATTR MyLcdGfx::drawPixel(int16_t x, int16_t y, uint16_t color) {
+
+  int16_t t;
+  switch (rotation) {
+  case 1:
+    t = x;
+    x = WIDTH - 1 - y;
+    y = t;
+    break;
+  case 2:
+    x = WIDTH - 1 - x;
+    y = HEIGHT - 1 - y;
+    break;
+  case 3:
+    t = x;
+    x = y;
+    y = HEIGHT - 1 - t;
+    break;
+  }
+
+  if ((x < 0) || (y < 0) || (x >= LCD_WIDTH) || (y >= LCD_HEIGHT))
+    return;
+
+  switch (color) {
+  case LCD_COLOR_WHITE:
+    lcdFB[x + (y / 8) * WIDTH] |= (1 << (y & 7));
+    break;
+  case LCD_COLOR_BLACK:
+    lcdFB[x + (y / 8) * WIDTH] &= ~(1 << (y & 7));
+    break;
+  case LCD_COLOR_INVERSE:
+    lcdFB[x + (y / 8) * WIDTH] ^= (1 << (y & 7));
+    break;
   }
 }
 
-static void halLcdWriteReg(u8 cmd, u8 data) {
-  halLcdWriteCmd8(cmd);
-  halLcdWriteDat8(data);
-}
-
-void halLcdSetReg(u8 cmd, u8 data) { halLcdWriteReg(cmd, data); }
-
-void IRAM_ATTR halLcdUpdate(u16 x1, u16 x2, u16 y1, u16 y2, u16 *buf) {
-
-  halLcdWriteReg(0x02, x1 >> 8); // Column address set
-  halLcdWriteReg(0x03, x1 & 0xff);
-  halLcdWriteReg(0x04, x2 >> 8);
-  halLcdWriteReg(0x05, x2 & 0xff);
-
-  halLcdWriteReg(0x06, y1 >> 8);
-  halLcdWriteReg(0x07, y1 & 0xff);
-  halLcdWriteReg(0x08, y2 >> 8);
-  halLcdWriteReg(0x09, y2 & 0xff);
-
-  halLcdWriteCmd8(0x22);
-
-  LCD_SET_DC(1);
-  LCD_SET_CS(0);
-  halLcdWritePixels(buf, (x2 - x1 + 1) * (y2 - y1 + 1));
-  LCD_SET_CS(1);
-}
-
-void halLcdUpdateAll() {
-  halLcdUpdate(0, LCD_WIDTH - 1, 0, LCD_HEIGHT - 1, lcdFB);
-}
-
-static int32_t touchBuffer[4];
-
-JS_BUFFER halLcdGetTouchBuffer() {
-  JS_BUFFER ret = {(u8 *)touchBuffer, sizeof(touchBuffer)};
-  return ret;
-}
-
-int32_t halLcdReadTouch() {
-  int isTouched = 0;
-  int x[3], y[3];
-  float mappedX = 0, mappedY = 0;
-
-  LCD_SPI_HW.clock.val = lcdXpt2046ClockReg;
-  LCD_SET_XPT2046_CS(0);
-  halLcdWrite8(0xB3 /* Z1 */);
-  halLcdWrite8(0xB3 /* Z1 */);
-  halLcdWrite8(0xB3 /* Z1 */);
-  int z1 = halLcdXchg16(0xC3 /* Z2 */) >> 3;
-  int z2 = halLcdXchg16(0x93 /* X */) >> 3;
-  halLcdXchg16(0x93 /* X */); // dummy X measure, 1st is always noisy
-  x[0] = halLcdXchg16(0xD3 /* Y */) >> 3;
-  y[0] = halLcdXchg16(0x93 /* X */) >> 3; // make 3 x-y measurements
-  x[1] = halLcdXchg16(0xD3 /* Y */) >> 3;
-  y[1] = halLcdXchg16(0x93 /* X */) >> 3;
-  x[2] = halLcdXchg16(0xD3 /* Y */) >> 3;
-  y[2] = halLcdXchg16(0xD3) >> 3;
-  halLcdXchg16(0);
-  LCD_SET_XPT2046_CS(1);
-  LCD_SPI_HW.clock.val = lcdSpiClockReg;
-
-  if ((z1 - z2) > 100) {
-    isTouched = 1;
-  }
-  if (isTouched) {
-    mappedY = 1.0 - ((x[0] + x[1] + x[2]) / 3.0) / 4096.0;
-    mappedX = 1.0 - ((y[0] + y[1] + y[2]) / 3.0) / 4096.0;
-  }
-  touchBuffer[0] = mappedX * 320;
-  touchBuffer[1] = mappedY * 240;
-  return isTouched;
-}
+MyLcdGfx gfx;
+#include "font.h"
 
 void halLcdInit() {
+
   printf("lcd driver init...\n");
+  halGpioWrite(LCD_PIN_RSTN, 0);
+  halGpioConfig(LCD_PIN_RSTN, GPIO_MODE_OUTPUT, 0);
+  halOsSleepMs(100);
+  halGpioWrite(LCD_PIN_RSTN, 1);
+  halOsSleepMs(100);
+
   spi_bus_config_t cfg = {.mosi_io_num = LCD_PIN_MOSI,
-                          .miso_io_num = -1,
+                          .miso_io_num = LCD_PIN_MISO,
                           .sclk_io_num = LCD_PIN_SCLK,
                           .quadwp_io_num = -1,
                           .quadhd_io_num = -1,
-                          .max_transfer_sz = 0,
+                          .max_transfer_sz = sizeof(lcdFB) + 32,
                           .flags = 0,
                           .intr_flags = 0};
-  spi_device_interface_config_t devcfg = {
-      .clock_speed_hz = LCD_SPI_CLOCK, // Clock
-      .mode = 0,                       // SPI mode 0
-      .spics_io_num = -1,              // CS pin
-      .queue_size = 7, // We want to be able to queue 7 transactions at a time
-      .pre_cb = NULL,  // Specify pre-transfer callback to handle D/C line
-  };
-  esp_err_t ret = spi_bus_initialize(LCD_SPI_BUS, &cfg, 1);
+  spi_device_interface_config_t devcfg;
+  memset(&devcfg, 0, sizeof(devcfg));
+  devcfg.clock_speed_hz = LCD_SPI_CLOCK; // Clock
+  devcfg.mode = 0;                       // SPI mode 0
+  devcfg.spics_io_num = -1;              // CS pin
+  devcfg.queue_size = 7; // We want to be able to queue 7 transactions at a time
+  esp_err_t ret = spi_bus_initialize(LCD_SPI_BUS, &cfg, SPI_DMA_CH_AUTO);
   ESP_ERROR_CHECK(ret);
   ret = spi_bus_add_device(LCD_SPI_BUS, &devcfg, &lcdSpiDev);
   ESP_ERROR_CHECK(ret);
 
   LCD_SET_CS(1);
   LCD_SET_DC(1);
-  halGpioWrite(LCD_PIN_XPT2046_CS, 1);
-  halGpioWrite(LCD_PIN_BL, 1);
   halGpioConfig(LCD_PIN_CS, GPIO_MODE_OUTPUT, 0);
   halGpioConfig(LCD_PIN_DC, GPIO_MODE_OUTPUT, 0);
-  halGpioConfig(LCD_PIN_BL, GPIO_MODE_OUTPUT, 0);
-  halGpioConfig(LCD_PIN_XPT2046_CS, GPIO_MODE_OUTPUT, 0);
-  halGpioConfig(LCD_PIN_MISO, GPIO_MODE_INPUT, 0);
-
-  /* Do a dummy transmission to config the freq settings */
-  spi_transaction_t t;
-  memset(&t, 0, sizeof(t)); // Zero out the transaction
-  t.length = 8;
-  t.flags = SPI_TRANS_USE_TXDATA;
-  t.tx_data[0] = 0;
-  ret = spi_device_polling_transmit(lcdSpiDev, &t); // Transmit!
-  ESP_ERROR_CHECK(ret);
-
-  spi_ll_master_cal_clock(SPI_LL_PERIPH_CLK_FREQ, LCD_SPI_CLOCK, 128,
-                          &lcdSpiClockReg);
-  spi_ll_master_cal_clock(SPI_LL_PERIPH_CLK_FREQ, LCD_XPT2046_CLOCK, 128,
-                          &lcdXpt2046ClockReg);
-  printf("spi clock reg: %08x %08x\n", lcdSpiClockReg, lcdXpt2046ClockReg);
-  LCD_SPI_HW.clock.val = lcdSpiClockReg;
-
-  LCD_SET_CS(1);
-  halOsSleepMs(120);
-  LCD_SET_CS(0);
-
-  halLcdExecuteInitCode(lcdInitCode);
-  memset(lcdFB, 0x0f, LCD_WIDTH * LCD_HEIGHT * 2);
-  halGpioWrite(LCD_PIN_BL, 1);
+  for (int i = 0; i < sizeof(lcd_init_table); i++) {
+    halLcdWriteCmd8(lcd_init_table[i]);
+    halOsSleepMs(5);
+  }
+  gfx.drawCircle(35, 35, 10, 1);
+  gfx.drawTriangle(60, 30, 50, 50, 70, 50, 1);
+  gfx.drawRoundRect(90, 20, 20, 20, 4, 1);
+  fbInitFont();
+  fbDrawUtf8String("mcu.js 中文字体测试");
+  halLcdUpdate();
 }

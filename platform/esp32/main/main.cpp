@@ -44,10 +44,9 @@ DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
 #include "hal/socket.h"
 #include "hal/uart.h"
 #include "hal/gpio.h"
-#include "hal/spi.h"
 #include "hal/i2c.h"
 #include "hal/wifi.h"
-#include "hal/lv.h"
+#include "hal/lcd-driver.h"
 
 #include "__generated/gen_jsmods.h"
 #include "__generated/gen_js.h"
@@ -79,6 +78,8 @@ void loadBuiltinJS(duk_context *ctx, const u8 *bin, const char *filename) {
 }
 
 int mainLoop() {
+  halLcdInit();
+
   duk_context *ctx =
       duk_create_heap(mcujs_alloc_function, mcujs_realloc_function,
                       mcujs_free_function, NULL, mcujs_fatal_handler);
@@ -96,14 +97,6 @@ int mainLoop() {
   loadBuiltinJS(ctx, js_underscore, "underscore");
   loadBuiltinJS(ctx, js_boot, "boot");
   loadBuiltinJS(ctx, js_shell, "shell");
-  loadBuiltinJS(ctx, js_net, "net");
-  loadBuiltinJS(ctx, js_http, "http");
-  loadBuiltinJS(ctx, js_ws, "ws");
-  loadBuiltinJS(ctx, js_touch, "touch");
-  loadBuiltinJS(ctx, js_icons, "icons");
-  loadBuiltinJS(ctx, js_board, "board");
-  loadBuiltinJS(ctx, js_devserver, "devserver");
-
   /* init nvs */
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
@@ -126,6 +119,7 @@ void mcuJsTask(void *arg) {
 
 TaskHandle_t mcuJsTaskHandle;
 
+extern "C"
 void app_main() {
   xTaskCreatePinnedToCore(mcuJsTask, "mcuJsTask", 32768, NULL, 1,
                           &mcuJsTaskHandle, 1);

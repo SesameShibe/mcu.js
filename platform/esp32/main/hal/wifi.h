@@ -239,9 +239,9 @@ void halWifiStaConfig(const char* ssid, const char* pass, bool persistent){
     }
 
     wifi_config_t current_conf;
-    esp_wifi_get_config(ESP_IF_WIFI_STA, &current_conf);
+    esp_wifi_get_config(WIFI_IF_STA, &current_conf);
     if(!isConfigEqual(&current_conf, &conf)) {
-        esp_wifi_set_config(ESP_IF_WIFI_STA, &conf);
+        esp_wifi_set_config(WIFI_IF_STA, &conf);
     }
 
     _persistent = persistent;
@@ -309,9 +309,9 @@ void halWifiApConfig(const char* ssid, const char* pass, uint32_t auth,
     }
 
     wifi_config_t current_conf;
-    esp_wifi_get_config(ESP_IF_WIFI_AP, &current_conf);
+    esp_wifi_get_config(WIFI_IF_AP, &current_conf);
     if(!isConfigEqual(&current_conf, &conf)) {
-        esp_wifi_set_config(ESP_IF_WIFI_AP, &conf);
+        esp_wifi_set_config(WIFI_IF_AP, &conf);
     }
 
     _persistent = persistent;

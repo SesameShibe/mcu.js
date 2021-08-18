@@ -2,7 +2,7 @@
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 
-uint8_t workBuffer[4500];
+uint8_t EXT_RAM_ATTR workBuffer[4500];
 char host[16];
 
 i32 halSocketSocket(i32 a0, i32 a1, i32 a2)

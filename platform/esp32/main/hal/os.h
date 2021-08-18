@@ -3,7 +3,7 @@
 
 void halOsSleepMs(u32 ms)
 {
-    vTaskDelay(ms / portTICK_PERIOD_MS);
+    vTaskDelay((ms / portTICK_PERIOD_MS) + 1);
 }
 
 
