@@ -1,48 +1,15 @@
 {
     "function": {
-        "on": [
-            "bool",
-            "bool"
-        ],
-        "off": [
-            "bool"
-        ],
         "staBegin": [
-            "bool"
-        ],
-        "staEnd": [
-            "bool"
-        ],
-        "staConfig": [
             "void",
             "str",
             "str",
             "bool"
         ],
-        "staIsConnected": [
-            "bool"
-        ],
-        "staIp": [
+        "staGetIP": [
             "str"
-        ],
-        "staSetHostname": [
-            "bool",
-            "str"
-        ],
-        "apConfig": [
-            "void",
-            "str",
-            "str",
-            "u32",
-            "u32",
-            "bool"
-        ],
-        "apBegin": [
-            "bool"
-        ],
-        "apEnd": [
-            "bool"
         ]
+
     },
     "const": {
         "AUTH_OPEN": "WIFI_AUTH_OPEN",

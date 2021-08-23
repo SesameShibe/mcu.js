@@ -7,6 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
+#define TAG "mcujs"
 #include "duktape.h"
 #include "esp_spi_flash.h"
 #include "esp_system.h"
@@ -79,6 +80,16 @@ void loadBuiltinJS(duk_context *ctx, const u8 *bin, const char *filename) {
 
 int mainLoop() {
   halLcdInit();
+    /* init nvs */
+  esp_err_t ret = nvs_flash_init();
+  if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
+      ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    nvs_flash_erase();
+    nvs_flash_init();
+  }
+  ESP_ERROR_CHECK(esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  halWifiInit();
 
   duk_context *ctx =
       duk_create_heap(mcujs_alloc_function, mcujs_realloc_function,
@@ -97,13 +108,7 @@ int mainLoop() {
   loadBuiltinJS(ctx, js_underscore, "underscore");
   loadBuiltinJS(ctx, js_boot, "boot");
   loadBuiltinJS(ctx, js_shell, "shell");
-  /* init nvs */
-  esp_err_t ret = nvs_flash_init();
-  if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
-      ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-    nvs_flash_erase();
-    nvs_flash_init();
-  }
+
 
   /* callback */
   duk_eval_string(ctx, "boot();");
@@ -113,14 +118,14 @@ int mainLoop() {
 }
 
 void mcuJsTask(void *arg) {
+
   mainLoop();
   MCUJS_ASSERT(0);
 }
 
 TaskHandle_t mcuJsTaskHandle;
 
-extern "C"
-void app_main() {
+extern "C" void app_main() {
   xTaskCreatePinnedToCore(mcuJsTask, "mcuJsTask", 32768, NULL, 1,
                           &mcuJsTaskHandle, 1);
 }

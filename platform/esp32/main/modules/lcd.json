@@ -1,7 +1,63 @@
 {
     "function": {
-        "update" : [
+        "clear": [
             "void"
+        ],
+        "update": [
+            "void"
+        ],
+        "drawText": [
+            "void",
+            "str",
+            "i16",
+            "i16"
+        ],
+        "drawCircle": [
+            "gfx.drawCircle",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawTriangle": [
+            "gfx.drawTriangle",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawRoundRect": [
+            "gfx.drawRoundRect",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawLine": [
+            "gfx.drawLine",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
+        ],
+        "drawRect": [
+            "gfx.drawRect",
+            "void",
+            "i16",
+            "i16",
+            "i16",
+            "i16",
+            "i16"
         ]
     }
 }

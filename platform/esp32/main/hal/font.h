@@ -29,25 +29,24 @@ static inline void fbSetP(u16 x, u16 y, u16 v) { gfx.drawPixel(x, y, v); }
 
 static void fbInitFont() {
   FB_FONT *pFont = &fbFontCJK16;
-  const void *mmapedAddr = 0;
-
+  const void *fontData = 0;
 
   memset(pFont, 0, sizeof(FB_FONT));
   auto part = esp_partition_find_first((esp_partition_type_t)0x40,
                                        (esp_partition_subtype_t)0, "font");
   auto ret = esp_partition_mmap(part, 0, part->size, SPI_FLASH_MMAP_DATA,
-                                &mmapedAddr, &fontMmapHandle);
+                                &fontData, &fontMmapHandle);
   if (ret != 0) {
     printf("mmap font failed...\n");
     return;
   }
   pFont->valid = 1;
-  pFont->charWidth = 16;  //*(u8*)(pFont + 14);
-  pFont->charHeight = 15; //*(u8*)(pFont + 15);
+  pFont->charWidth = *(u8 *)(fontData + 13);
+  pFont->charHeight = *(u8 *)(fontData + 14);
   pFont->charDataSize = 1 + ((pFont->charWidth + 7) / 8) * pFont->charHeight;
   pFont->pageSize = pFont->charDataSize * 256;
-  pFont->pData = (u8 *)mmapedAddr;
-  pFont->pIndex = pFont->pData  + 16;
+  pFont->pData = (u8 *)fontData;
+  pFont->pIndex = pFont->pData + 16;
   pFont->pCharData = pFont->pIndex + 256;
 
   fbCurrentFont = pFont;

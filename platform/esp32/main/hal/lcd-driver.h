@@ -244,10 +244,18 @@ void halLcdInit() {
     halLcdWriteCmd8(lcd_init_table[i]);
     halOsSleepMs(5);
   }
-  gfx.drawCircle(35, 35, 10, 1);
-  gfx.drawTriangle(60, 30, 50, 50, 70, 50, 1);
-  gfx.drawRoundRect(90, 20, 20, 20, 4, 1);
   fbInitFont();
-  fbDrawUtf8String("mcu.js 中文字体测试");
+  fbDrawUtf8String("mcu.js");
   halLcdUpdate();
+}
+
+
+void halLcdDrawText(const char* str, i16 x, i16 y) {
+  fbPosX = x;
+  fbPosY = y;
+  fbDrawUtf8String(str);
+}
+
+void halLcdClear() {
+  memset(lcdFB, 0, sizeof(lcdFB));
 }
