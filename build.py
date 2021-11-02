@@ -6,8 +6,11 @@ import os
 import zipfile
 import requests
 import platform
+from argparse import ArgumentParser
 
 from fnmatch import fnmatch
+
+from serial import VERSION
 
 sys.path.append('py')
 import gluecodegen
@@ -177,19 +180,26 @@ def generate():
 
 
 def build():
-    if isWindows():
-        pass
-    else:
-        generate()
-        os.system('cd platform/esp32 && idf.py build')
+    generate()
+    os.system('cd platform/esp32 && idf.py build')
 
 
 def flash():
-    if isWindows():
-        pass
-    else:
-        generate()
-        os.system('cd platform/esp32 && idf.py flash')
+    generate()
+    os.system('cd platform/esp32 && idf.py flash')
+
+
+def flash_font():
+    os.system(
+        'cd font && python %s/components/partition_table/parttool.py write_partition --input font.bin --partition-name "font" '%os.environ['IDF_PATH'])
+
+def full_flash():
+    flash_font()
+    flash()
+
+
+def clean():
+    os.system('cd platform/esp32 && idf.py clean')
 
 
 def startShellInEnvironment():
@@ -201,47 +211,68 @@ def startShellInEnvironment():
         os.system('bash')
 
 
-def usage():
-    print("""
-Usage: python build.py COMMAND [OPTIONS]
+# def usage():
+#     print("""
+# Usage: python build.py COMMAND [OPTIONS]
 
-Available commands:
-    prepare-toolchain   Download and install toolchain.
-    env                 Start bash shell in build environment.
-    generate            Generate files for build.
-    build               Generate and build mcu.js.
-    flash               Generate, build and flash mcu.js.
+# Available commands:
+#     prepare-toolchain   Download and install toolchain.
+#     env                 Start bash shell in build environment.
+#     generate            Generate files for build.
+#     build               Generate and build mcu.js.
+#     flash               Generate, build and flash mcu.js.
 
-    shell               Start the javascript console.
+#     shell               Start the javascript console.
 
-Available options:
-    --platform          Select target platform (esp32 or k210).
-    --port              Select the serial port for flash/shell. 
-
-
-""")
+# Available options:
+#     --platform          Select target platform (esp32 or k210).
+#     --port              Select the serial port for flash/shell. 
 
 
-action = ''
-os.environ['ESPPORT'] = os.getcwd() + '/COM6'  # set serial port name
-os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + \
-    PLATFORMS['esp32']['toolchain']['esp-idf']['version']
-os.environ['PATH'] += ':' + \
-    os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin' + ':' + \
-    os.environ['IDF_PATH'] + '/tools'
-if len(sys.argv) >= 2:
-    action = sys.argv[1]
-if action == 'prepare-toolchain':
-    perpareToolchain()
-elif action == 'generate':
-    generate()
-elif action == 'build':
-    build()
-elif action == 'flash':
-    flash()
-elif action == 'env':
-    startShellInEnvironment()
-elif action == 'shell':
-    shell.start()
-else:
-    usage()
+# """)
+
+
+# action = ''
+# os.environ['ESPPORT'] = os.getcwd() + '/COM6'  # set serial port name
+# os.environ['IDF_PATH'] = os.getcwd() + '/toolchain/esp-idf/esp-idf-' + \
+#     PLATFORMS['esp32']['toolchain']['esp-idf']['version']
+# os.environ['PATH'] += ':' + \
+#     os.getcwd() + '/toolchain/esp32-toolchain/xtensa-esp32-elf/bin' + ':' + \
+#     os.environ['IDF_PATH'] + '/tools'
+
+VERSION = '0.0.1'
+
+parser = ArgumentParser(description='mcujs build tool %s'%VERSION,
+                        usage='python build.py [OPTIONS] COMMAND')
+
+parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
+parser.add_argument('--platform', dest='platform', default='esp32',
+                    help='Select target platform (esp32 or k210). (default: %(default)s)') # unimplemented
+parser.add_argument('-p', '--port', dest='port', default='COM6',
+                    help='Select the serial port for flash/shell. (default: %(default)s)')
+
+subparser = parser.add_subparsers(dest='action', help='Available commands')
+
+subparser.add_parser('prepare-toolchain', help='Download and install toolchain. (unimplemented)').set_defaults(
+    func=perpareToolchain)  # unimplemented
+subparser.add_parser(
+    'env', help='Start bash shell in build environment. (unimplemented)').set_defaults(func=startShellInEnvironment)  # unimplemented
+
+subparser.add_parser(
+    'generate', help='Generate files for build.').set_defaults(func=generate)
+subparser.add_parser(
+    'build', help='Generate and build mcu.js.').set_defaults(func=build)
+subparser.add_parser(
+    'flash', help='Generate, build and flash mcu.js.').set_defaults(func=flash)
+subparser.add_parser('flash-font', help='Flash font partition.').set_defaults(func=flash_font)
+subparser.add_parser(
+    'full-flash', help='Generate, build and flash mcu.js & font partition.').set_defaults(func=full_flash)
+subparser.add_parser(
+    'clean', help='Clean build directory.').set_defaults(func=clean)
+subparser.add_parser(
+    'shell', help='Start the javascript console.').set_defaults(func=shell.start)
+
+
+args = parser.parse_args()
+os.environ['ESPPORT'] = args.port
+args.func()

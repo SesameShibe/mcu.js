@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import os
 import binascii
 import codecs
 import serial
@@ -12,7 +13,7 @@ from prompt_toolkit.history import FileHistory
 
 from PIL import Image
 
-COM_PORT = 'COM6'
+COM_PORT = 'COM6' if 'ESPPORT' not in os.environ else os.environ['ESPPORT']
 ser = ''
 shotpath = '1.png'
 
@@ -91,6 +92,7 @@ def savescreen(bmp):
 
 
 def start():
+    COM_PORT = os.environ['ESPPORT']
     global ser
     ser = serial.Serial(COM_PORT, 115200)
 
