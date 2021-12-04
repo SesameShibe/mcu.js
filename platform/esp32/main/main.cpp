@@ -80,6 +80,7 @@ void loadBuiltinJS(duk_context *ctx, const u8 *bin, const char *filename) {
 
 int mainLoop() {
   halLcdInit();
+  halI2cInit(0, 21, 22, 100000);
     /* init nvs */
   esp_err_t ret = nvs_flash_init();
   if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||

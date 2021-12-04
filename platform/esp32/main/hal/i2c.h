@@ -43,7 +43,7 @@ void halI2cStart(u8 busID) {
 	SET_SCL(1);
 	SWI2C_DELAY;
 	SET_SDA(0);
-	//SWI2C_DELAY;
+	SWI2C_DELAY;
 	SET_SCL(0);
 	SWI2C_DELAY;
 }
