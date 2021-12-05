@@ -40,6 +40,8 @@ void halWifiStaBegin(const char *ssid, const char *pwd, bool save) {
   ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
   ESP_ERROR_CHECK(esp_wifi_start());
   ESP_ERROR_CHECK(esp_wifi_connect());
+  
+  
 }
 
 const char *halWifiStaGetIP() { return wifiStaIp; }

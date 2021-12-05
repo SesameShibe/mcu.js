@@ -1,1 +1,1 @@
-E:\esp-idf\components\partition_table\parttool.py  --port COM6 write_partition --input font.bin --partition-name "font" 
+%IDF_PATH%\components\partition_table\parttool.py write_partition --input font.bin --partition-name "font" 

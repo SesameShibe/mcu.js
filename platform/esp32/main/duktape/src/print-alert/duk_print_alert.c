@@ -40,6 +40,9 @@ static duk_ret_t duk__print_alert_helper(duk_context *ctx, FILE *fh) {
 	return 0;
 }
 #else
+
+void mjsPrintBuf(const uint8_t *buf, size_t len);
+
 /* Faster, less churn, higher footprint option. */
 static duk_ret_t duk__print_alert_helper(duk_context *ctx, FILE *fh) {
 	duk_idx_t nargs;
@@ -94,9 +97,10 @@ static duk_ret_t duk__print_alert_helper(duk_context *ctx, FILE *fh) {
 	 */
 
 	if (sz_buf > 0) {
-		fwrite((const void *) buf, 1, (size_t) sz_buf, fh);
+		mjsPrintBuf(buf, sz_buf);
+		//fwrite((const void *) buf, 1, (size_t) sz_buf, fh);
 #if defined(DUK_PRINT_ALERT_FLUSH)
-		fflush(fh);
+		//fflush(fh);
 #endif
 	}
 

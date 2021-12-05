@@ -1,29 +1,8 @@
 const global = this;
 
 (function () {
-    var isCalling = false;
-    nativePrint = print;
-
-    global.interfacePrint = print;
-    global.print = function (data) {
-        if (isCalling) {
-            return nativePrint(data);
-        } else {
-            isCalling = true;
-            try {
-                interfacePrint(data);
-            } catch (e) {
-                print('Unhandled error: ' + e);
-            }
-            isCalling = false;
-            return;
-        }
-    };
-})();
-
-(function () {
     const MAX_TIMEOUT = 0x40000000;
-    const LOOP_PERIOD_IN_MS = 20;
+    const LOOP_PERIOD_IN_MS = 100;
     const sleepMs = os.sleepMs;
     const getTickCountMs = os.getTickCountMs;
     var pendingTimeoutList = [];
@@ -94,12 +73,9 @@ const global = this;
         }
     }
     global.mainLoop = function () {
-        while (true) {
-            periodCount++;
-            handleTimeouts();
-            handleIntervals();
-            sleepMs(LOOP_PERIOD_IN_MS);
-        }
+        periodCount++;
+        handleTimeouts();
+        handleIntervals();
     };
 })();
 
@@ -114,7 +90,8 @@ function boot() {
         fs.read(fd, buf, size);
         global.eval(buf.toString());
     }
-    mainLoop();
-    delete global.boot
 }
 
+function ioLoop() {
+
+}

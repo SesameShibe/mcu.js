@@ -4,19 +4,18 @@
 #include "esp_partition.h"
 #include "global.h"
 #include "gpio.h"
-#include "hal/spi_ll.h"
 
 #define LCD_SPI_CLOCK (1000000)
 #define LCD_COLOR_WHITE (1)
 #define LCD_COLOR_BLACK (0)
 #define LCD_COLOR_INVERSE (2)
 
-#define LCD_PIN_RSTN (27)
-#define LCD_PIN_DC (26)
-#define LCD_PIN_CS (15)
-#define LCD_PIN_SCLK (18)
-#define LCD_PIN_MOSI (23)
-#define LCD_PIN_MISO (19)
+#define LCD_PIN_RSTN (15)
+#define LCD_PIN_DC (16)
+#define LCD_PIN_CS (7)
+#define LCD_PIN_SCLK (1)
+#define LCD_PIN_MOSI (2)
+#define LCD_PIN_MISO (41)
 
 #define LCD_WIDTH (128)
 #define LCD_HEIGHT (64)
@@ -28,22 +27,10 @@ u8 lcdFB[(LCD_WIDTH * LCD_HEIGHT) / 8];
 #define LCD_SET_RSTN(v) halGpioWrite(LCD_PIN_RSTN, (v))
 
 #define LCD_SPI_BUS SPI3_HOST
-#ifdef CONFIG_IDF_TARGET_ESP32S2
-#define LCD_SPI_HW GPSPI3
-#else
-#define LCD_SPI_HW SPI3
-#endif
+
 
 spi_device_handle_t lcdSpiDev;
 
-static ALWAYS_INLINE void halLcdSpiWrite(u32 dat, u8 bitlen) {
-  LCD_SPI_HW.mosi_dlen.val = bitlen - 1;
-  LCD_SPI_HW.miso_dlen.val = 0;
-  LCD_SPI_HW.data_buf[0] = dat;
-  LCD_SPI_HW.cmd.usr = 1;
-  while (LCD_SPI_HW.cmd.usr)
-    ;
-}
 
 /* Send data to the LCD. Uses spi_device_polling_transmit, which waits until the
  * transfer is complete.

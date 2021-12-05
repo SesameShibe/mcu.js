@@ -1,0 +1,18 @@
+{
+    "function": {
+        "setup": [
+            "int",
+            "str"
+        ],
+        "sendText": [
+            "int",
+            "int",
+            "str"
+        ],
+        "sendBinary": [
+            "int",
+            "int",
+            "buf"
+        ]
+    }
+}

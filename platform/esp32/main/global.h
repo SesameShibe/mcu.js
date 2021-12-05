@@ -26,12 +26,14 @@ typedef struct _JS_BUFFER {
 } JS_BUFFER;
 
 
-int mcujsHandleAssertFailed(const char* expr, const char* file, int line);
+int mjsHandleAssertFailed(const char* expr, const char* file, int line);
 
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #define MCUJS_ASSERT(expression) \
-	(void) ((!!(expression)) || (mcujsHandleAssertFailed((#expression), (__FILE__), (__LINE__)), 0))
+	(void) ((!!(expression)) || (mjsHandleAssertFailed((#expression), (__FILE__), (__LINE__)), 0))
 
 #define CHECK_BUSID(max) MCUJS_ASSERT(busID < (max))
 #define CHECK_JSBUF_NOTNULL(b) MCUJS_ASSERT(b.buf)
 #define CHECK_JSBUF_SIZE(b, l) MCUJS_ASSERT((b.size) >= (l))
+
+#define MJS_OBJ_TYPE_CLOUD (1000)
