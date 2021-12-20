@@ -48,6 +48,7 @@ DUK_INTERNAL void mcujs_free_function(void *udata, void *ptr) {
 #include "hal/i2c.h"
 #include "hal/wifi.h"
 #include "hal/lcd-driver.h"
+//#include "hal/ws-client.h"
 
 #include "__generated/gen_jsmods.h"
 #include "__generated/gen_js.h"
@@ -89,7 +90,7 @@ int mainLoop() {
   }
   ESP_ERROR_CHECK(esp_netif_init());
   ESP_ERROR_CHECK(esp_event_loop_create_default());
-  halWifiInit();
+  //halWifiInit();
 
   duk_context *ctx =
       duk_create_heap(mcujs_alloc_function, mcujs_realloc_function,
@@ -102,8 +103,9 @@ int mainLoop() {
   /* init modules */
   genJSInit(ctx);
   module_fs_init(ctx);
+  //module_wsClient_init(ctx); 
 
-  printf("Initializing Javascript modules...\n");
+	printf("Initializing Javascript modules...\n");
   /* boot */
   loadBuiltinJS(ctx, js_underscore, "underscore");
   loadBuiltinJS(ctx, js_boot, "boot");

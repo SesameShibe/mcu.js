@@ -1,6 +1,19 @@
 {
     "function": {
+        "init": [
+            "void",
+            "u8"
+        ],
+        "deinit": [
+            "void"
+        ],
         "staBegin": [
+            "void",
+            "str",
+            "str",
+            "bool"
+        ],
+        "apBegin": [
             "void",
             "str",
             "str",
@@ -9,7 +22,6 @@
         "staGetIP": [
             "str"
         ]
-
     },
     "const": {
         "AUTH_OPEN": "WIFI_AUTH_OPEN",
